@@ -136,8 +136,8 @@ export default {
     },
     goToHomepage(project) {
       const urls = {
-        fishair: 'https://fishair.example.com',
-        hydroclim: 'https://hydroclim.example.com',
+        fishair: 'https://fishair.org',
+        hydroclim: 'https://hydroclim.org',
       };
       window.open(urls[project], '_blank');
     },
