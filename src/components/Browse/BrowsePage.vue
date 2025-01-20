@@ -101,6 +101,12 @@ export default {
     this.loadTreeData();
     this.loadMockData();
   },
+  beforeRouteUpdate(to, from, next) {
+    // 路由更新时重新获取数据
+    this.loadTreeData();
+    this.loadMockData();
+    next();
+  },
   methods: {
     loadTreeData() {
       this.treeData = getTreeDataByType(this.type);

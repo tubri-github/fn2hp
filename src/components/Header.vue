@@ -2,7 +2,7 @@
   <header class="header">
     <div class="logo"> <img src="@/assets/fn2logo.png" alt="FishNet2 Logo" /></div>
     <nav class="nav">
-      <a href="/" class="nav-link">HOME</a>
+      <a href="/dist/" class="nav-link">HOME</a>
       <a href="#" class="nav-link">SEARCH</a>
       <a href="#" class="nav-link">TEAM</a>
       <a href="#" class="nav-link">ABOUT</a>
@@ -11,11 +11,9 @@
       <div class="dropdown-container" @mouseover="showDropdown = true" @mouseleave="showDropdown = false">
         <span class="nav-link">BROWSE</span>
         <div v-if="showDropdown" class="dropdown-menu">
-          <a :href="resolvePath('/browse/species')" class="dropdown-item">Species</a>
-          <a :href="resolvePath('/browse/countries')" class="dropdown-item">Countries</a>
-          <a :href="resolvePath('/browse/providers')" class="dropdown-item">Providers</a>
-
-
+          <router-link to="/browse/species" class="dropdown-item">Species</router-link>
+          <router-link to="/browse/countries" class="dropdown-item">Countries</router-link>
+          <router-link to="/browse/providers" class="dropdown-item">Providers</router-link>
         </div>
       </div>
     </nav>
@@ -30,8 +28,8 @@ export default {
     };
   },
   methods: {
-    resolvePath(path) {
-      return this.$router.resolve(path).href;
+    navigateTo(path) {
+      this.$router.push(path);
     }
   }
 };
