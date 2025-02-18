@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import HomePage from "../components/HomePage.vue"; // 引入页面组件
-import BrowsePage from "../components/Browse/BrowsePage.vue";
+import BrowseView from "../components/BrowseNew/BrowseView.vue";
 
 const routes = [
     {
@@ -11,7 +11,7 @@ const routes = [
     {
         path: '/browse/:type',
         name: 'Browse',
-        component: BrowsePage
+        component: BrowseView
     }
 ];
 
