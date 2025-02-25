@@ -107,8 +107,8 @@
 
 .section-title {
   font-size: 2.5rem;
-  font-weight: 200;
-  color: #333;
+  font-weight: bolder;
+  color: #3f8ba1;
   margin-bottom: 60px;
   letter-spacing: -0.5px;
 }
@@ -138,8 +138,8 @@
 }
 
 .image-caption {
-  font-size: 0.9rem;
-  color: #666;
+  font-size: 1rem;
+  color: #578ecc;
   margin-top: 10px;
   display: block;
   text-align: center;

@@ -15,41 +15,41 @@
     </div>
 
     <!-- 右侧地图 -->
-    <div class="distribution-map">
-      <svg viewBox="0 0 1000 700" class="world-map">
-        <!-- 世界地图底图 -->
-        <path
-            v-for="(region, index) in regions"
-            :key="index"
-            :d="region.path"
-            class="map-region"
-        />
+<!--    <div class="distribution-map">-->
+<!--      <svg viewBox="0 0 1000 700" class="world-map">-->
+<!--        &lt;!&ndash; 世界地图底图 &ndash;&gt;-->
+<!--        <path-->
+<!--            v-for="(region, index) in regions"-->
+<!--            :key="index"-->
+<!--            :d="region.path"-->
+<!--            class="map-region"-->
+<!--        />-->
 
-        <!-- 数据气泡 -->
-        <g v-for="(bubble, index) in bubbles"
-           :key="'bubble-' + index"
-           v-show="bubble.visible"
-           class="bubble-group"
-           :class="{ 'bubble-animate': bubble.visible }"
-        >
-          <circle
-              :cx="bubble.x"
-              :cy="bubble.y"
-              :r="bubble.radius"
-              class="bubble-main"
-          />
-          <text
-              :x="bubble.x"
-              :y="bubble.y"
-              class="bubble-text"
-              dominant-baseline="middle"
-              text-anchor="middle"
-          >
-            {{ bubble.value }}
-          </text>
-        </g>
-      </svg>
-    </div>
+<!--        &lt;!&ndash; 数据气泡 &ndash;&gt;-->
+<!--        <g v-for="(bubble, index) in bubbles"-->
+<!--           :key="'bubble-' + index"-->
+<!--           v-show="bubble.visible"-->
+<!--           class="bubble-group"-->
+<!--           :class="{ 'bubble-animate': bubble.visible }"-->
+<!--        >-->
+<!--          <circle-->
+<!--              :cx="bubble.x"-->
+<!--              :cy="bubble.y"-->
+<!--              :r="bubble.radius"-->
+<!--              class="bubble-main"-->
+<!--          />-->
+<!--          <text-->
+<!--              :x="bubble.x"-->
+<!--              :y="bubble.y"-->
+<!--              class="bubble-text"-->
+<!--              dominant-baseline="middle"-->
+<!--              text-anchor="middle"-->
+<!--          >-->
+<!--            {{ bubble.value }}-->
+<!--          </text>-->
+<!--        </g>-->
+<!--      </svg>-->
+<!--    </div>-->
   </div>
 </template>
 
@@ -59,9 +59,9 @@ export default {
   data() {
     return {
       stats: [
-        { number: "2.5M", label: "OCCURRENCES" },
-        { number: "100+", label: "SPECIES" },
-        { number: "79", label: "PROVIDERS" },
+        { number: "12.4M", label: "OCCURRENCES" },
+        { number: "113", label: "COLLECTIONS" },
+        { number: "223", label: "FIELDS" },
       ],
       regions: [
         { name: "Africa", path: "M618.37,432.08l0.01,1.49l-0.59,1.02l-0.79,3.06l-1.35,3.15l-1.73,3.59l-2.41,4.11l-2.39,3.13l-3.3,3.81l-2.81,2.26l-4.19,2.77l-2.61,2.12l-3.07,3.37l-0.65,1.47l-0.63,0.66l-1.96,1.11l-0.69,1.16l-1.05,0.2l-0.4,1.97l-0.9,1.13l-0.55,1.86l-1.13,0.92l-1.29,3.45l0.17,1.59l1.8,1.02l0.08,0.73l-0.77,1.7l0.16,0.85l-0.18,1.34l0.98,1.77l1.16,2.79l1.03,0.62l0.45,1.27l-0.12,2.83l0.35,2.5l0.11,4.48l0.49,1.41l-0.84,2.06l-1.09,2.01l-1.78,1.8l-2.56,1.11l-3.16,1.42l-3.17,3.15l-1.08,0.54l-1.96,2.1l-1.15,0.69l-0.24,2.12l1.33,2.26l0.55,1.76l0.04,0.9l0.5,-0.15l-0.08,2.96l-0.45,1.41l0.66,0.52l-0.42,1.27l-1.17,1.09l-2.31,1.04l-3.37,1.67l-1.23,1.14l0.24,1.31l0.72,0.21l-0.24,1.64l-0.7,2.28l-0.33,2.62l-0.73,1.43l-1.91,1.61l-0.55,0.46l-1.19,1.63l-0.78,1.66l-1.59,2.33l-3.17,3.38l-1.98,1.98l-2.12,1.51l-2.93,1.3l-1.43,0.17l-0.36,0.93l-1.7,-0.5l-1.39,0.64l-3.04,-0.65l-1.7,0.41l-1.16,-0.18l-2.89,1.33l-2.39,0.54l-1.73,1.28l-1.27,0.08l-1.19,-1.21l-0.95,-0.06l-1.21,-1.51l-0.13,0.47l-0.37,-0.9l0.02,-1.96l-0.91,-2.23l0.91,-0.6l-0.07,-2.53l-1.84,-3.05l-1.41,-2.74l0,-0.01l-2.01,-4.15l-2.08,-2.39l-1.1,-2.3l-0.62,-3.04l-0.69,-2.24l-0.94,-4.72l-0.06,-3.63l-0.36,-1.64l-1.09,-1.24l-1.45,-2.47l-1.47,-3.56l-0.61,-1.85l-2.28,-2.87l-0.17,-2.24l-0.26,-1.83l0.39,-2.55l0.97,-2.64l0.15,-1.24l0.91,-2.59l0.67,-1.17l1.61,-1.87l0.9,-1.27l0.29,-2.11l-0.15,-1.61l-0.84,-1.01l-0.75,-1.72l-0.69,-1.69l0.15,-0.59l0.86,-1.12l-0.85,-2.72l-0.57,-1.88l-1.4,-1.77l0.27,-0.54l-0.39,-0.87l-0.75,-2.1l-2.3,-2.96l-2.88,-2.82l-1.85,-2.3l-1.7,-2.88l0.09,-0.92l0.61,-0.89l0.68,-2.03l0.56,-2.06l-0.52,-0.42l0.96,-3.13l0.41,-2.2l-1.1,-1.84l-1.28,-0.47l-0.57,-1.25l-0.72,-0.4l0.03,-0.77l-2.91,1.01l-1.06,-0.15l-1.08,0.63l-2.24,-0.06l-1.5,-1.75l-0.92,-2.02l-1.98,-1.84l-2.11,0.04l-2.47,0l-2.32,0.33l-2.26,0.6l-4.4,1.64l-1.56,0.96l-2.53,0.81l-2.5,-0.79l-1.27,0.03l-1.96,-0.55l-1.8,0.03l-3.32,0.49l-1.95,0.81l-2.78,1.02l-0.54,-0.07l-0.73,0.02l-2.89,-1.33l-2.55,-2.13l-2.39,-1.53l-1.89,-1.81l-0.75,-0.21l-2.02,-1.13l-1.46,-1.5l-0.49,-1.03l-0.34,-2.08l-1.23,-1.67l-1.09,-1.11l-0.72,-0.37l-0.7,-0.56l-0.32,-1.25l-0.41,-0.62l-0.81,-0.46l-1.5,-1.19l-1.18,-0.19l-0.64,-0.8l0.02,-0.43l-0.85,-0.6l-0.18,-0.61l-0.46,-2.19l0.36,-1.27l-1.16,-2.23l-1.4,-1.02l1.23,-0.55l1.36,-2.03l0.67,-1.49l-0.24,-1.56l0.78,-1.44l0.35,-2.75l-0.31,-2.91l-0.34,-1.47l0.28,-1.48l-0.72,-1.41l-1.48,-1.29l0.12,-1.26l0.13,-1.39l1.08,-0.82l0.92,-1.57l-0.18,-1.02l0.96,-2.14l1.56,-1.94l0.94,-0.49l0.74,-1.79l0.07,-1.64l1.01,-1.92l1.87,-1.13l1.78,-3.2l0.05,-0.04l1.41,-1.21l2.61,-0.35l2.21,-2.17l1.41,-0.85l2.34,-2.68l-0.7,-4.03l1.07,-2.82l0.38,-1.74l1.8,-2.25l2.81,-1.53l2.08,-1.39l1.87,-3.51l0.88,-2.1l2.06,0.02l1.69,1.46l2.67,-0.24l2.9,0.76l1.22,0.04l2.7,-1.87l3.03,-0.6l1.77,-1.42l2.7,-1.06l4.75,-0.62l4.64,-0.28l1.41,0.52l2.64,-1.38l3,-0.03l1.14,0.81l1.92,-0.21l3.05,-1.41l1.96,0.42l-0.08,1.77l2.38,-1.28l0.2,0.67l-1.4,1.71l-0.02,1.6l0.97,0.86l-0.37,2.96l-1.85,1.7l0.53,1.84l1.45,0.06l0.71,1.59l1.07,0.52l3.29,1.15l1.18,-0.29l2.34,0.55l3.72,1.48l1.31,2.92l2.52,0.63l3.95,1.36l2.99,1.61l1.37,-0.84l1.34,-1.49l-0.65,-2.5l0.88,-1.6l2.02,-1.55l1.93,-0.45l3.79,0.68l0.96,1.48l1.04,0.01l0.89,0.56l2.79,0.39l0.68,1.08l3.73,-0.05l2.7,0.87l2.78,0.96l1.3,0.51l2.16,-1.03l1.15,-0.94l2.47,-0.27l1.99,0.41l0.76,1.62l0.65,-1.06l2.25,0.77l2.19,0.19l1.38,-0.82l1.84,5.56l-0.79,1.29l-0.6,2.4l-0.76,1.65l-0.65,0.55l-0.93,-1.02l-1.27,-1.41l-2,-4.58l-0.29,0.29l1.16,3.37l1.72,3.18l2.12,4.87l1.04,1.69l0.9,1.74l2.52,3.39l-0.56,0.53l0.09,1.98l3.27,2.71l0.49,0.62l0.9,2.94l-0.61,0.54l0.41,3.06l1.03,3.52l1.07,0.72l1.54,1.08l1.63,3.38l0.77,2.67l1.54,1.41l3.83,2.72l1.56,1.64l1.52,1.65l0.88,0.98l1.38,0.86l0.66,0.88l-0.09,1.18l-1.6,0.68l1.2,0.78l0.91,0.52l0.55,1.17l1.26,1.19l1.39,0.01l2.64,-0.72l3.05,-0.34l2.47,-0.88l1.39,-0.19l1,-0.52l1.6,-0.1l0.9,-0.06l1.29,-0.42l1.49,-0.29l1.33,-0.97l1.06,-0.01l0.06,0.79L618.37,432.08zM615.6,501.5l-0.69,-1.89l-0.74,-1.22l-0.98,-1.22l-0.93,1.27l-0.05,1.72l-1.54,1.99l-1.19,-0.34l0.38,1.23l-0.84,1.45l-2.31,1.78l-1.6,1.65l-1.23,0.04l-1.04,0.52l-1.56,0.6l-1.4,0.11l-0.38,1.84l-0.98,1.63l0.22,2.7l0.53,1.86l0.65,1.4l-0.25,1.89l-1.34,2.26l-0.01,0.99l-1.29,0.52l-0.5,2.16l0.26,2.17l0.99,2.42l0.19,2.71l0.77,1.62l2.23,1.1l1.62,0.79l2.45,-1.31l2.28,-0.73l1.27,-3.55l1.07,-4.21l1.73,-5.67l1.38,-4.08l1.1,-3.43l0.18,-2.48l0.77,-0.67l0.25,-1.23l-0.53,-2.15l0.53,-0.86l0.95,1.7l0.5,-0.85l0.28,-1.39l-0.73,-1.35L615.6,501.5z" }, // 示例路径，需替换为实际路径
@@ -101,6 +101,8 @@ export default {
 </script>
 
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Montserrat:wght@500;600;700&display=swap');
+
 .dashboard-container {
   display: flex;
   align-items: center;
@@ -121,20 +123,32 @@ export default {
   flex-direction: column;
   gap: 5px;
   cursor: pointer;
+  padding: 10px 15px;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.stat-item:hover {
+  background: rgba(44, 124, 185, 0.05);
+  transform: translateY(-5px);
 }
 
 .stat-number {
-  font-family: 'Inter', sans-serif;
-  font-size: 2.8rem;
-  font-weight: 200;
-  color: #333;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 5rem;
+  font-weight: 500;
+  color: #2c7cb9;
   letter-spacing: -1px;
+  line-height: 1;
+  background: linear-gradient(135deg, #2c7cb9 0%, #4a90e2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .stat-label {
   font-family: 'Inter', sans-serif;
-  font-size: 0.875rem;
-  font-weight: 400;
+  font-size: 1.3rem;
+  font-weight: 500;
   color: #666;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -144,9 +158,11 @@ export default {
   position: relative;
   width: 500px;
   height: 300px;
-  background-color: rgba(255, 255, 255, 0);
+  background-color: rgba(255, 255, 255, 0.7);
   border-radius: 16px;
   overflow: hidden;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .world-map {
@@ -156,8 +172,13 @@ export default {
 
 .map-region {
   fill: #f8fafc;
-  stroke: #aab4c1;
+  stroke: #bcd4f5;
   stroke-width: 1;
+  transition: fill 0.3s ease;
+}
+
+.map-region:hover {
+  fill: #e6f1ff;
 }
 
 .bubble-group {
@@ -173,14 +194,16 @@ export default {
 }
 
 .bubble-text {
-  fill: #1e40af;
+  fill: #2c7cb9;
   font-family: 'Inter', sans-serif;
   font-size: 14px;
   font-weight: 500;
 }
+
 .bubble-animate {
   animation: bubblePopup 0.6s ease-out forwards;
 }
+
 @keyframes bubblePopup {
   0% {
     opacity: 0;
@@ -195,6 +218,7 @@ export default {
     transform: scale(1);
   }
 }
+
 @keyframes fadeIn {
   from {
     opacity: 0;

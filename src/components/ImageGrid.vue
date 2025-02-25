@@ -23,7 +23,7 @@
               <div class="text-section">
                 <h3 class="project-title">FishAir</h3>
                 <p class="project-description">
-                  FishAir is a fish image dataset with built-in image quality management system."Placehoder:expain the relationship between fishair and fishnet2........"
+                  FishAir is a fish image dataset with built-in image quality management system.
                 </p>
               </div>
 
@@ -146,6 +146,8 @@ export default {
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Montserrat:wght@300;400;500;600&display=swap');
+
 .related-projects {
   max-width: 1200px;
   margin: 0 auto;
@@ -153,27 +155,45 @@ export default {
 }
 
 .section-title {
+  font-family: 'Montserrat', sans-serif;
   font-size: 2.5rem;
   font-weight: 200;
   color: #333;
   margin-bottom: 60px;
   letter-spacing: -0.5px;
   text-align: center;
+  position: relative;
+}
+
+.section-title::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 3px;
+  background: linear-gradient(90deg, #2c7cb9, #4a90e2);
+  border-radius: 2px;
 }
 
 /* Carousel Container */
 .carousel-container {
   position: relative;
-  width: 100vw;
-  margin-left: calc(-50vw + 50%);
-  margin-right: calc(-50vw + 50%);
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
   overflow: hidden;
+  border-radius: 16px;
+  /*box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);*/
 }
 
 .carousel {
   position: relative;
   width: 100%;
   background-color: white;
+  border-radius: 16px;
+  overflow: hidden;
 }
 
 .carousel-content {
@@ -185,6 +205,7 @@ export default {
 .project-slide {
   min-width: 100%;
   flex-shrink: 0;
+  padding: 30px 0;
 }
 
 /* 图片固定大小布局 */
@@ -202,14 +223,26 @@ export default {
   width: 250px;
   height: 150px;
   overflow: hidden;
-  border: 1px solid #ddd;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.grid-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
 .grid-item img {
   width: 100%;
   height: 100%;
-  object-fit: fill;
+  /*object-fit: cover;*/
+  transition: transform 0.5s ease;
+}
+
+.grid-item:hover img {
+  transform: scale(1.05);
 }
 
 /* HydroClim Image Section */
@@ -221,6 +254,7 @@ export default {
 .logo-image {
   max-width: 200px;
   margin-bottom: 20px;
+  filter: drop-shadow(0 4px 10px rgba(255, 255, 255, 0.3));
 }
 
 .image-carousel {
@@ -235,12 +269,25 @@ export default {
   height: 150px;
   border-radius: 50%;
   overflow: hidden;
+  /*box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);*/
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  transition: all 0.3s ease;
+}
+
+.circular-image:hover {
+  transform: translateY(-5px);
+ /* box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);*/
 }
 
 .circular-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.circular-image:hover img {
+  transform: scale(1.1);
 }
 
 /* 中间文字部分 */
@@ -251,16 +298,17 @@ export default {
 }
 
 .project-title {
+  font-family: 'Montserrat', sans-serif;
   font-size: 1.8rem;
-  font-weight: 500;
-  color: #333;
+  font-weight: 600;
+  color: #2c7cb9;
   margin-bottom: 10px;
 }
 
 .hydroclim-slide {
-  background-color: #1e90ff;
+  background: linear-gradient(135deg, #2c7cb9 0%, #4a90e2 100%);
   padding: 40px 0;
-  width: 100vw;
+  width: 100%;
 }
 
 .hydroclim-slide .content-section {
@@ -273,23 +321,25 @@ export default {
 .hydroclim-slide .project-description,
 .hydroclim-slide .text-section {
   color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .hydroclim-slide .redirect-button {
   background-color: white;
-  color: #1e90ff;
+  color: #2c7cb9;
   border: none;
 }
 
 .hydroclim-slide .redirect-button:hover {
   background-color: #f0f0f0;
-  color: #1e90ff;
+  color: #2c7cb9;
 }
 
 .project-description {
+  font-family: 'Inter', sans-serif;
   font-size: 1.1rem;
   line-height: 1.6;
-  color: #555;
+  color: #444;
   max-width: 800px;
   margin: 0 auto;
 }
@@ -301,21 +351,23 @@ export default {
 }
 
 .redirect-button {
-  background-color: #f5f5f5;
-  color: #333;
+  background-color: #f5f9ff;
+  color: #2c7cb9;
+  font-family: 'Inter', sans-serif;
   font-size: 1rem;
   padding: 12px 28px;
   border-radius: 25px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  border: 1px solid #ddd;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .redirect-button:hover {
-  background-color: #e0e0e0;
-  color: #000;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  background-color: #e6f2ff;
+  color: #2c7cb9;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
 }
 
 .nav-button {
@@ -330,24 +382,25 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   z-index: 2;
   transition: all 0.3s ease;
 }
 
 .nav-button svg {
-  stroke: #666;
+  stroke: #555;
   transition: stroke 0.3s ease;
 }
 
 .nav-button:hover {
-  background: #f8f8f8;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  background: #f5f9ff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  transform: translateY(-50%) scale(1.1);
 }
 
 .nav-button:hover svg {
-  stroke: #333;
+  stroke: #2c7cb9;
 }
 
 .hydroclim-slide .nav-button {
@@ -365,6 +418,7 @@ export default {
 .next {
   right: 20px;
 }
+
 /* 轮播圆点 */
 .carousel-dots {
   display: flex;
@@ -377,13 +431,14 @@ export default {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background-color: #ddd;
+  background-color: rgba(0, 0, 0, 0.1);
   border: none;
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
 
 .dot.active {
-  background-color: #333;
+  background-color: #2c7cb9;
+  transform: scale(1.2);
 }
 </style>

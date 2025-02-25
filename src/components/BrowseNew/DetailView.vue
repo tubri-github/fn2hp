@@ -58,34 +58,54 @@
                 <span class="label">Phylum:</span>
                 <span class="value">Chordata</span>
               </div>
+              <div class="info-row">
+                <span class="label">Class:</span>
+                <span class="value">Actinopterygii</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Order:</span>
+                <span class="value">Cypriniformes</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Family:</span>
+                <span class="value">Cyprinidae</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Genus:</span>
+                <span class="value">Cyprinus</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Species:</span>
+                <span class="value">carpio</span>
+              </div>
               <!-- 添加更多分类信息 -->
             </div>
           </div>
         </div>
       </div>
 
-      <!-- 统计图表 Tab -->
-      <div v-if="currentTab === 'stats'" class="stats-tab">
-        <div class="charts-grid">
-          <!-- 按国家分布的饼图 -->
-          <div class="chart-container">
-            <h3>Distribution by Country</h3>
-            <v-chart class="chart" :option="countryPieOption" />
-          </div>
+<!--      &lt;!&ndash; 统计图表 Tab &ndash;&gt;-->
+<!--      <div v-if="currentTab === 'stats'" class="stats-tab">-->
+<!--        <div class="charts-grid">-->
+<!--          &lt;!&ndash; 按国家分布的饼图 &ndash;&gt;-->
+<!--          <div class="chart-container">-->
+<!--            <h3>Distribution by Country</h3>-->
+<!--            <v-chart class="chart" :option="countryPieOption" />-->
+<!--          </div>-->
 
-          <!-- 按机构的柱状图 -->
-          <div class="chart-container">
-            <h3>Records by Institution</h3>
-            <v-chart class="chart" :option="institutionBarOption" />
-          </div>
+<!--          &lt;!&ndash; 按机构的柱状图 &ndash;&gt;-->
+<!--          <div class="chart-container">-->
+<!--            <h3>Records by Institution</h3>-->
+<!--            <v-chart class="chart" :option="institutionBarOption" />-->
+<!--          </div>-->
 
-          <!-- 按流域分布的横向条形图 -->
-          <div class="chart-container">
-            <h3>Distribution by Basin</h3>
-            <v-chart class="chart" :option="basinBarOption" />
-          </div>
-        </div>
-      </div>
+<!--          &lt;!&ndash; 按流域分布的横向条形图 &ndash;&gt;-->
+<!--          <div class="chart-container">-->
+<!--            <h3>Distribution by Basin</h3>-->
+<!--            <v-chart class="chart" :option="basinBarOption" />-->
+<!--          </div>-->
+<!--        </div>-->
+<!--      </div>-->
 
       <!-- 记录数据 Tab -->
       <div v-if="currentTab === 'records'" class="records-tab">
@@ -130,7 +150,7 @@ const props = defineProps({
 // Tab 管理
 const tabs = [
   { id: 'info', label: 'Information' },
-  { id: 'stats', label: 'Statistics' },
+  // { id: 'stats', label: 'Statistics' },
   { id: 'records', label: 'Records' }
 ]
 const currentTab = ref('info')
@@ -216,7 +236,7 @@ const institutionBarOption = computed(() => ({
 const isAccepted = computed(() => true) // 根据实际数据计算
 const synonyms = computed(() => [
   { name: 'Cyprinus auratus Linnaeus, 1758', year: 1758 },
-  { name: 'Carassius auratus auratus', year: null }
+  { name: 'Cyprinus carpio caspicus', year: null }
 ])
 const records = computed(() => [
   {

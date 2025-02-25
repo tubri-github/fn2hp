@@ -6,21 +6,25 @@ export const taxonomyData = {
             name: 'Cyprinidae',
             type: 'family',
             description: 'The largest family of freshwater fish, including carps and minnows',
-            children: ['g1', 'g2', 'g3', 'g4']
+            children: [
+                'g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8', 'g9', 'g10',
+                'g11', 'g12', 'g13', 'g14', 'g15', 'g16', 'g17', 'g18', 'g19', 'g20',
+                'g21', 'g22', 'g23', 'g24', 'g25', 'g26', 'g27', 'g28', 'g29', 'g30'
+            ]
         },
         {
             id: 'f2',
             name: 'Cichlidae',
             type: 'family',
             description: 'A diverse family of freshwater fish, including cichlids and tilapias',
-            children: ['g5', 'g6']
+            children: ['g31', 'g32']
         },
         {
             id: 'f3',
             name: 'Ictaluridae',
             type: 'family',
             description: 'North American catfish family',
-            children: ['g7', 'g8']
+            children: ['g33']
         }
     ],
 
@@ -65,7 +69,32 @@ export const taxonomyData = {
             description: 'A genus of tilapia species, widely cultivated for food',
             children: ['s9', 's10']
         },
-        g6: {
+        g6: { id: 'g6', name: 'Puntius', type: 'genus', parentId: 'f1', description: 'Barbs, often used in aquariums' },
+        g7: { id: 'g7', name: 'Rasbora', type: 'genus', parentId: 'f1', description: 'Popular aquarium fish' },
+        g8: { id: 'g8', name: 'Esomus', type: 'genus', parentId: 'f1', description: 'Flying barbs' },
+        g9: { id: 'g9', name: 'Osteobrama', type: 'genus', parentId: 'f1', description: 'Indigenous freshwater fish' },
+        g10: { id: 'g10', name: 'Tor', type: 'genus', parentId: 'f1', description: 'Mahseer fish' },
+        g11: { id: 'g11', name: 'Acrossocheilus', type: 'genus', parentId: 'f1', description: 'Chinese barbs' },
+        g12: { id: 'g12', name: 'Pethia', type: 'genus', parentId: 'f1', description: 'Small colorful barbs' },
+        g13: { id: 'g13', name: 'Balantiocheilos', type: 'genus', parentId: 'f1', description: 'Bala shark' },
+        g14: { id: 'g14', name: 'Chagunius', type: 'genus', parentId: 'f1', description: 'South Asian freshwater fish' },
+        g15: { id: 'g15', name: 'Leptobarbus', type: 'genus', parentId: 'f1', description: 'Giant barbs' },
+        g16: { id: 'g16', name: 'Scaphiodonichthys', type: 'genus', parentId: 'f1', description: 'Rare cyprinids' },
+        g17: { id: 'g17', name: 'Epalzeorhynchos', type: 'genus', parentId: 'f1', description: 'Rainbow sharks' },
+        g18: { id: 'g18', name: 'Neolissochilus', type: 'genus', parentId: 'f1', description: 'Asian mountain fish' },
+        g19: { id: 'g19', name: 'Discherodontus', type: 'genus', parentId: 'f1', description: 'Little-known cyprinids' },
+        g20: { id: 'g20', name: 'Spinibarbus', type: 'genus', parentId: 'f1', description: 'Large-scaled cyprinids' },
+        g21: { id: 'g21', name: 'Schizothorax', type: 'genus', parentId: 'f1', description: 'Snow trouts' },
+        g22: { id: 'g22', name: 'Sinocyclocheilus', type: 'genus', parentId: 'f1', description: 'Blind cave fish' },
+        g23: { id: 'g23', name: 'Opsariichthys', type: 'genus', parentId: 'f1', description: 'Asian stream fish' },
+        g24: { id: 'g24', name: 'Barbonymus', type: 'genus', parentId: 'f1', description: 'Tinfoil barbs' },
+        g25: { id: 'g25', name: 'Leptobarbus', type: 'genus', parentId: 'f1', description: 'Southeast Asian large barbs' },
+        g26: { id: 'g26', name: 'Parachela', type: 'genus', parentId: 'f1', description: 'Southeast Asian minnows' },
+        g27: { id: 'g27', name: 'Pogobrama', type: 'genus', parentId: 'f1', description: 'Little-studied cyprinids' },
+        g28: { id: 'g28', name: 'Cirrhinus', type: 'genus', parentId: 'f1', description: 'Grass carp relatives' },
+        g29: { id: 'g29', name: 'Luciosoma', type: 'genus', parentId: 'f1', description: 'Torpedo-shaped cyprinids' },
+        g30: { id: 'g30', name: 'Thryssocypris', type: 'genus', parentId: 'f1', description: 'Rare cyprinid fish' },
+        g31: {
             id: 'g6',
             name: 'Cichla',
             type: 'genus',
@@ -73,7 +102,7 @@ export const taxonomyData = {
             description: 'Genus of large predatory cichlids, including peacock bass',
             children: ['s11', 's12']
         },
-        g7: {
+        g32: {
             id: 'g7',
             name: 'Ictalurus',
             type: 'genus',
@@ -81,7 +110,7 @@ export const taxonomyData = {
             description: 'North American catfish genus',
             children: ['s13', 's14']
         },
-        g8: {
+        g33: {
             id: 'g8',
             name: 'Pangasius',
             type: 'genus',
@@ -178,7 +207,7 @@ export const taxonomyData = {
             parentId: 'g4',
             description: 'Popular aquarium fish',
             habitat: 'Rivers, lakes',
-            distribution: 'Thailand'
+            distribution: 'Thailand' 
         },
         s9: {
             id: 's9',

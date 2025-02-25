@@ -1,17 +1,17 @@
 <template>
   <div class="search-container">
     <p class="intro-text">
-      <span class="highlight">FishNet2: </span>
-      <span class="highlight">F</span>ind
-      <span class="highlight">I</span>n our
-      <span class="highlight">S</span>pecimens and
-      <span class="highlight">H</span>abitats, a
-      <span class="highlight">N</span>ew
-      <span class="highlight">E</span>xploring
-      <span class="highlight">T</span>ool
-      <span class="highlight">2</span>.0
+      <span class="highlight">FishNet 2: </span>A World Fish Occurrence Database
+<!--      <span class="highlight">F</span>ind-->
+<!--      <span class="highlight">I</span>n our-->
+<!--      <span class="highlight">S</span>pecimens and-->
+<!--      <span class="highlight">H</span>abitats, a-->
+<!--      <span class="highlight">N</span>ew-->
+<!--      <span class="highlight">E</span>xploring-->
+<!--      <span class="highlight">T</span>ool-->
+<!--      <span class="highlight">2</span>.0-->
     </p>
-    <h1 class="search-title">Dive Into Fish Data</h1>
+    <h2 class="search-title">Dive Into Fish Data</h2>
 <!--    <p class="intro-text">FishNet2: Access millions of fish specimens from collections worldwide</p>-->
     <div class="search-bar">
       <el-input
@@ -19,7 +19,7 @@
           placeholder="Dive Into Fish Data"
           class="search-input"
           size="large"
-          input-style="height:3rem"
+          input-style="height:3rem;border-width:5px"
           clearable
       >
         <template #suffix>
@@ -70,51 +70,88 @@ export default {
 
 <style>
 /* 引入 Inter 字体的 100 weight */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
 
-.intro-text {
-  font-family: 'Inter', sans-serif;
-  font-weight: 500;
-  font-size: 1.1rem;
-  color: #666;
-  letter-spacing: -0.2px;
-  text-align: left;
-  margin-top:0;
-  margin-bottom:30px;
-}
-.intro-text .highlight {
-  font-weight: bold;
-  color: #7ac9e4; /* 或者其他你想要的强调色 */
-}
 .search-container {
   text-align: center;
   margin: 180px auto;
   max-width: 1200px;
   padding: 0 20px;
+}
 
+.intro-text {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 1.1rem;
+  color: #444;
+  letter-spacing: -0.2px;
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 30px;
+}
+
+.intro-text .highlight {
+  font-weight: 600;
+  color: #2c7cb9;
 }
 
 .search-title {
   font-family: 'Inter', sans-serif;
   font-size: 5rem;
-  font-weight: 100;  /* 使用最细的字重 */
+  font-weight: 100;
   color: #333;
-  margin-top:0;
+  margin-top: 0;
   letter-spacing: -0.5px;
 }
 
 .search-bar {
   margin-bottom: 40px;
+  width: 1000px;
+  position: relative;
+}
+
+.search-bar::before {
+  content: "";
+  position: absolute;
+  left: -20px;
+  top: 50%;
+  width: 5px;
+  height: 40px;
+  background: linear-gradient(to bottom, #e67e22, #f39c12);
+  border-radius: 3px;
+  transform: translateY(-50%);
 }
 
 .search-input {
   width: 100%;
+  border-width: 5px;
 }
 
+.search-input:deep(.el-input__wrapper) {
+  border-radius: 10px !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06) !important;
+  transition: all 0.3s ease;
+}
+
+.search-input:focus-within:deep(.el-input__wrapper) {
+  border-color: #4aa675 !important; /* 绿色边框作为点缀 */
+  box-shadow: 0 6px 25px rgba(74, 166, 117, 0.15) !important;
+  transform: translateY(-2px);
+}
 
 .search-icon {
   font-size: 1.8rem;
-  color: #666;
+  color: #555;
+  transition: color 0.3s ease;
+}
+
+.search-input:hover .search-icon {
+  color: #e67e22; /* 橙色图标作为点缀 */
+}
+
+.search-input:focus-within .search-icon {
+  color: #4aa675; /* 绿色图标作为点缀 */
 }
 
 .tags {
@@ -128,19 +165,45 @@ export default {
 .custom-tag {
   font-family: 'Inter', sans-serif;
   font-size: 1rem;
-  font-weight: 300;
+  font-weight: 400;
   padding: 10px 24px;
   border-radius: 30px;
   cursor: pointer;
-  background: transparent;
-  border: 1px solid #e0e0e0;
-  color: #666;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #555;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
 }
 
-.custom-tag:hover {
-  background: #f5f5f5;
-  color: #333;
+.custom-tag:nth-child(5n+1):hover {
+  background: rgba(44, 124, 185, 0.1);
+  color: #2c7cb9;
+  border-color: #2c7cb9;
+}
+
+.custom-tag:nth-child(5n+2):hover {
+  background: rgba(74, 166, 117, 0.1);
+  color: #4aa675;
+  border-color: #4aa675;
+}
+
+.custom-tag:nth-child(5n+3):hover {
+  background: rgba(230, 126, 34, 0.1);
+  color: #e67e22;
+  border-color: #e67e22;
+}
+
+.custom-tag:nth-child(5n+4):hover {
+  background: rgba(155, 89, 182, 0.1);
+  color: #9b59b6;
+  border-color: #9b59b6;
+}
+
+.custom-tag:nth-child(5n+5):hover {
+  background: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+  border-color: #e74c3c;
 }
 
 /* 响应式设计 */

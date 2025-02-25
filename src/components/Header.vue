@@ -8,7 +8,7 @@
       <a href="#" class="nav-link">ABOUT</a>
 
       <!-- Browse 下拉菜单 -->
-      <div class="dropdown-container" @mouseover="showDropdown = true" @mouseleave="showDropdown = false">
+      <div class="dropdown-container nav-link" @mouseover="showDropdown = true" @mouseleave="showDropdown = false">
         <span class="nav-link">BROWSE</span>
         <div v-if="showDropdown" class="dropdown-menu">
           <router-link to="/browse/species" class="dropdown-item">Species</router-link>
@@ -36,42 +36,61 @@ export default {
 </script>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter+Rounded:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 40px;
-  background-color: #ffffff;
+  padding: 14px 40px;
+  background-color: #2c7cb9; /* 较深的蓝色背景 */
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .logo {
   font-size: 1.2rem;
   font-weight: 500;
-  color: #0077ff;
+  color: #ffffff;
 }
+
 .logo img {
   height: 40px; /* 调整 Logo 高度 */
+  filter: brightness(1.1); /* 让logo在深色背景上更明亮 */
 }
+
 .nav {
   display: flex;
-  gap: 20px;
+  gap: 10px;
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 8px 12px;
+  border-radius: 8px;
 }
 
 .nav-link {
-  font-family: 'Inter Rounded', sans-serif;
-  font-weight: 500; /* Medium */
-  font-size: 16px;
-  color: #004B8D; /* 深蓝色 */
-  letter-spacing: 0.5px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  color: white;
   text-decoration: none;
   position: relative;
+  padding: 8px 16px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .nav-link:hover {
-  text-decoration: underline;
-  color: #002B5C;
+  background-color: rgba(255, 255, 255, 0.2);
+  text-decoration: none;
 }
+
+.nav-link.active {
+  background-color: rgba(255, 255, 255, 0.25);
+  font-weight: 600;
+}
+
 /* 下拉菜单容器 */
 .dropdown-container {
   position: relative;
@@ -82,28 +101,54 @@ export default {
   position: absolute;
   top: 100%; /* 定位到下方 */
   left: 0;
-  background-color: #ffffff; /* 白色背景 */
-  border: 1px solid #e0e0e0; /* 浅灰边框 */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 投影效果 */
-  border-radius: 4px;
-  z-index: 1000; /* 保证菜单在顶部 */
+  background-color: white;
+  border: none;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  z-index: 1000;
   display: flex;
-  flex-direction: column; /* 垂直排列 */
-  min-width: 150px;
+  flex-direction: column;
+  min-width: 180px;
+  margin-top: 8px;
+  overflow: hidden;
 }
 
 .dropdown-item {
-  font-family: 'Inter Rounded', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 14px;
-  font-weight: 400; /* Regular */
-  color: #004B8D; /* 深蓝色 */
-  padding: 10px 20px;
+  font-weight: 400;
+  color: #333;
+  padding: 12px 20px;
   text-decoration: none;
-  letter-spacing: 0.5px;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
 }
 
 .dropdown-item:hover {
-  background-color: #f2f2f2; /* 浅灰色背景 */
-  color: #002B5C; /* 更深的蓝色 */
+  background-color: #f5f9ff;
+  color: #2c7cb9;
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 10px 20px;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .nav {
+    width: 100%;
+    justify-content: center;
+    padding: 5px;
+  }
+
+  .nav-link {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
 }
 </style>
