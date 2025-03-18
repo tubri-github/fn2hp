@@ -7,14 +7,18 @@
       <a href="#" class="nav-link">TEAM</a>
       <a href="#" class="nav-link">ABOUT</a>
 
-      <!-- Browse 下拉菜单 -->
-      <div class="dropdown-container nav-link" @mouseover="showDropdown = true" @mouseleave="showDropdown = false">
-        <span class="nav-link">BROWSE</span>
-        <div v-if="showDropdown" class="dropdown-menu">
-          <router-link to="/browse/species" class="dropdown-item">Species</router-link>
-          <router-link to="/browse/countries" class="dropdown-item">Countries</router-link>
-          <router-link to="/browse/providers" class="dropdown-item">Providers</router-link>
-        </div>
+      <!-- Browse 下拉菜单 - 修复了鼠标移动问题 -->
+      <div class="dropdown-container nav-link"
+           @mouseenter="showDropdown = true"
+           @mouseleave="showDropdown = false">
+        <span class="nav-link-text">BROWSE</span>
+        <transition name="fade">
+          <div v-show="showDropdown" class="dropdown-menu">
+            <router-link to="/browse/species" class="dropdown-item">Species</router-link>
+            <router-link to="/browse/countries" class="dropdown-item">Countries</router-link>
+            <router-link to="/browse/providers" class="dropdown-item">Providers</router-link>
+          </div>
+        </transition>
       </div>
     </nav>
   </header>
@@ -81,6 +85,10 @@ export default {
   letter-spacing: 0.5px;
 }
 
+.nav-link-text {
+  cursor: pointer;
+}
+
 .nav-link:hover {
   background-color: rgba(255, 255, 255, 0.2);
   text-decoration: none;
@@ -94,12 +102,13 @@ export default {
 /* 下拉菜单容器 */
 .dropdown-container {
   position: relative;
+  cursor: pointer;
 }
 
 /* 下拉菜单 */
 .dropdown-menu {
   position: absolute;
-  top: 100%; /* 定位到下方 */
+  top: calc(100% + 8px); /* 定位到下方并留出间隙 */
   left: 0;
   background-color: white;
   border: none;
@@ -109,8 +118,26 @@ export default {
   display: flex;
   flex-direction: column;
   min-width: 180px;
-  margin-top: 8px;
   overflow: hidden;
+}
+
+/* 添加过渡动画 */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.2s;
+}
+.fade-enter, .fade-leave-to {
+  opacity: 0;
+}
+
+/* 确保下拉菜单和触发元素之间没有空隙 */
+.dropdown-container::after {
+  content: '';
+  position: absolute;
+  height: 8px;
+  left: 0;
+  right: 0;
+  bottom: -8px;
+  z-index: 999;
 }
 
 .dropdown-item {
