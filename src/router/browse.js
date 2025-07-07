@@ -1,15 +1,6 @@
-import { createRouter, createWebHistory } from "vue-router";
-import { browseRoutes } from "@/router/browse.js";
-import HomePage from "../components/HomePage.vue"; // 引入页面组件
-import BrowseView from "../components/BrowseNew/BrowseView.vue";
-import AllFamilies from "@/views/browse/AllFamilies.vue";
 
-const routes = [
-    {
-        path: "/",
-        name: "Home",
-        component: HomePage, // 首页组件
-    },
+// src/router/browse.js
+export const browseRoutes = [
     {
         path: '/browse',
         name: 'Browse',
@@ -18,7 +9,7 @@ const routes = [
     {
         path: '/browse/families',
         name: 'AllFamilies',
-        component: AllFamilies,
+        component: () => import('@/views/browse/AllFamilies.vue'),
         meta: {
             title: 'Browse All Fish Families',
             description: 'Explore taxonomic diversity across all fish families'
@@ -59,15 +50,15 @@ const routes = [
             description: 'Detailed information about fish genus'
         }
     },
-    {
-        path: '/browse/species',
-        name: 'AllSpecies',
-        component: () => import('@/views/browse/AllSpecies.vue'),
-        meta: {
-            title: 'Browse All Fish Species',
-            description: 'Search and explore all fish species'
-        }
-    },
+    // {
+    //     path: '/browse/species',
+    //     name: 'AllSpecies',
+    //     component: () => import('@/views/browse/AllSpecies.vue'),
+    //     meta: {
+    //         title: 'Browse All Fish Species',
+    //         description: 'Search and explore all fish species'
+    //     }
+    // },
     {
         path: '/browse/species/:scientificName',
         name: 'SpeciesDetail',
@@ -81,15 +72,15 @@ const routes = [
             description: 'Detailed information about fish species'
         }
     },
-    {
-        path: '/browse/institutions',
-        name: 'AllInstitutions',
-        component: () => import('@/views/browse/AllInstitutions.vue'),
-        meta: {
-            title: 'Browse All Contributing Institutions',
-            description: 'Explore data providers and their collections'
-        }
-    },
+    // {
+    //     path: '/browse/institutions',
+    //     name: 'AllInstitutions',
+    //     component: () => import('@/views/browse/AllInstitutions.vue'),
+    //     meta: {
+    //         title: 'Browse All Contributing Institutions',
+    //         description: 'Explore data providers and their collections'
+    //     }
+    // },
     {
         path: '/browse/institutions/:institutionCode',
         name: 'InstitutionDetail',
@@ -102,25 +93,4 @@ const routes = [
             description: 'Detailed information about contributing institution'
         }
     }
-    // {
-    //     path: '/browse/:type',
-    //     name: 'Browse',
-    //     component: BrowseView
-    // }
-];
-
-const router = createRouter({
-    history: createWebHistory('/dist/'),
-    routes,
-    scrollBehavior(to, from, savedPosition) {
-        if (savedPosition) {
-            return savedPosition
-        } else if (to.hash) {
-            return { el: to.hash, behavior: 'smooth' }
-        } else {
-            return { top: 0 }
-        }
-    }
-});
-
-export default router;
+]
