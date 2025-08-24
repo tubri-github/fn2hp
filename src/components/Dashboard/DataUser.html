@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fishnet2 - User Dashboard</title>
+    <style>
+        /* Base styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            min-height: 100vh;
+        }
+
+        /* Sidebar styles */
+        .sidebar {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px 0;
+        }
+
+        .sidebar-header {
+            padding: 0 20px 20px 20px;
+            border-bottom: 1px solid #34495e;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .user-info {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+
+        .sidebar-menu li {
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        .sidebar-menu li:hover {
+            background: #34495e;
+        }
+
+        .sidebar-menu li.active {
+            background: #3498db;
+            font-weight: bold;
+        }
+
+        /* Main content styles */
+        .main-content {
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .button {
+            padding: 8px 15px;
+            background: #3498db;
+            color: white;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .secondary-button {
+            padding: 8px 15px;
+            background: #ecf0f1;
+            color: #2c3e50;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        /* Notification panel */
+        .notification-panel {
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .notification-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .notification-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .notification-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .notification-icon {
+            width: 24px;
+            height: 24px;
+            background: #e3f2fd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #2196f3;
+            margin-right: 12px;
+            flex-shrink: 0;
+            font-size: 14px;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-text {
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .notification-time {
+            font-size: 12px;
+            color: #777;
+        }
+
+        .notification-close {
+            cursor: pointer;
+            color: #bbb;
+            font-size: 18px;
+            margin-left: 10px;
+        }
+
+        /* Grid layout for panels */
+        .panels-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .panel-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .panel-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Panel sizes */
+        .panel-full-width {
+            grid-column: span 3;
+        }
+
+        .panel-double-width {
+            grid-column: span 2;
+        }
+
+        /* Interest groups */
+        .interest-groups {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .interest-tag {
+            background: #e1f5fe;
+            color: #0288d1;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+        }
+
+        .tag-remove {
+            margin-left: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Search box */
+        .search-box {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px 0 0 4px;
+            font-size: 14px;
+        }
+
+        .search-button {
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+        }
+
+        /* Saved searches */
+        .saved-searches {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .saved-search-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .saved-search-name {
+            font-weight: bold;
+        }
+
+        .saved-search-details {
+            font-size: 13px;
+            color: #777;
+            margin-top: 3px;
+        }
+
+        /* Recent flags */
+        .flags-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .flag-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+        }
+
+        .flag-icon {
+            width: 24px;
+            height: 24px;
+            background: #ffca28;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .flag-content {
+            flex: 1;
+        }
+
+        .flag-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .flag-details {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .flag-status {
+            font-size: 12px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            margin-top: 5px;
+            display: inline-block;
+        }
+
+        .status-pending {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .status-resolved {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        /* Recent activities */
+        .activity-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .activity-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+        }
+
+        .activity-icon {
+            width: 32px;
+            height: 32px;
+            background: #e0e0e0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .activity-time {
+            font-size: 12px;
+            color: #777;
+            margin-bottom: 5px;
+        }
+
+        .activity-details {
+            font-size: 13px;
+            color: #555;
+        }
+
+        /* Messages */
+        .messages-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .message-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            background: #e0e0e0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #777;
+            font-weight: bold;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .message-content {
+            flex: 1;
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .message-sender {
+            font-weight: bold;
+        }
+
+        .message-time {
+            color: #777;
+            font-size: 12px;
+        }
+
+        .message-text {
+            font-size: 14px;
+            color: #333;
+        }
+
+        /* Taxonomy chart */
+        .chart-container {
+            height: 250px;
+            border: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f9f9f9;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">Fishnet2</div>
+            <div class="user-info">Dr. Henry Bart</div>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="active">Dashboard</li>
+            <li>Search & Browse</li>
+            <li>My Interests</li>
+            <li>Data Downloads</li>
+            <li>My Flags</li>
+            <li>Messages</li>
+            <li>Profile Settings</li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="header">
+            <h1 class="page-title">User Dashboard</h1>
+            <div class="header-actions">
+                <button class="secondary-button">View Tutorial</button>
+                <button class="button">New Search</button>
+            </div>
+        </div>
+
+        <!-- Notifications Panel -->
+        <div class="notification-panel">
+            <div class="notification-header">
+                <h2 class="notification-title">Recent Updates</h2>
+                <button class="secondary-button">Mark All as Read</button>
+            </div>
+            <ul class="notification-list">
+                <li class="notification-item">
+                    <div class="notification-icon">!</div>
+                    <div class="notification-content">
+                        <div class="notification-text">Your watched species AA has 15 new records added in the past week.</div>
+                        <div class="notification-time">3 hours ago</div>
+                    </div>
+                    <div class="notification-close">×</div>
+                </li>
+                <li class="notification-item">
+                    <div class="notification-icon">!</div>
+                    <div class="notification-content">
+                        <div class="notification-text">Institution BB updated their fish collection data (42 new specimens)</div>
+                        <div class="notification-time">Yesterday</div>
+                    </div>
+                    <div class="notification-close">×</div>
+                </li>
+                <li class="notification-item">
+                    <div class="notification-icon">!</div>
+                    <div class="notification-content">
+                        <div class="notification-text">Family XX distribution data for 1980-1990 has been revised</div>
+                        <div class="notification-time">3 days ago</div>
+                    </div>
+                    <div class="notification-close">×</div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Panels Grid -->
+        <div class="panels-grid">
+            <!-- Interests Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">My Interests</h2>
+                    <div class="panel-actions">
+                        <button class="secondary-button">Edit</button>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <div class="interest-groups">
+                        <div class="interest-tag">Cyprinidae <span class="tag-remove">×</span></div>
+                        <div class="interest-tag">PreservedSpecimen <span class="tag-remove">×</span></div>
+                        <div class="interest-tag">United Sates<span class="tag-remove">×</span></div>
+<!--                        <div class="interest-tag">Conservation <span class="tag-remove">×</span></div>-->
+<!--                        <div class="interest-tag">Migratory species <span class="tag-remove">×</span></div>-->
+                    </div>
+                    <div class="chart-container">
+                        <div>Your Interest Distribution Chart</div>
+                    </div>
+                    <div style="font-size: 14px;">
+                        <p>Recent data updates matching your interests:</p>
+                        <ul>
+                            <li>245 new Cyprinidae records added this month</li>
+                            <li>Major taxonomic revision for 3 genera you follow</li>
+                            <li>18 new publications referencing your interests</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Panel -->
+            <div class="panel panel-double-width">
+                <div class="panel-header">
+                    <h2 class="panel-title">Quick Search</h2>
+                </div>
+                <div class="panel-content">
+                    <div class="search-box">
+                        <input type="text" class="search-input" placeholder="Search by taxon, locality, institution...">
+                        <button class="search-button">Search</button>
+                    </div>
+                    <h3 style="margin: 5px 0 10px 0; font-size: 14px;">Saved Searches</h3>
+                    <ul class="saved-searches">
+                        <li class="saved-search-item">
+                            <div>
+                                <div class="saved-search-name">United States Cypriniformes</div>
+                                <div class="saved-search-details">1,245 records • Last run: 3 days ago</div>
+                            </div>
+                            <div>
+                                <button class="secondary-button">Run</button>
+                            </div>
+                        </li>
+                        <li class="saved-search-item">
+                            <div>
+                                <div class="saved-search-name">Notropis amecae Species</div>
+                                <div class="saved-search-details">428 records • Last run: 2 weeks ago</div>
+                            </div>
+                            <div>
+                                <button class="secondary-button">Run</button>
+                            </div>
+                        </li>
+                        <li class="saved-search-item">
+                            <div>
+                                <div class="saved-search-name">TU Fish</div>
+                                <div class="saved-search-details">745 records • Last run: 1 month ago</div>
+                            </div>
+                            <div>
+                                <button class="secondary-button">Run</button>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Recent Flags Panel -->
+            <div class="panel panel-double-width">
+                <div class="panel-header">
+                    <h2 class="panel-title">My Data Flags</h2>
+                    <div class="panel-actions">
+                        <button class="secondary-button">View All</button>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <ul class="flags-list">
+                        <li class="flag-item">
+                            <div class="flag-icon">!</div>
+                            <div class="flag-content">
+                                <div class="flag-title">Taxonomic identification issue (Record #45729083)</div>
+                                <div class="flag-details">You flagged this specimen as incorrectly identified: Originally labeled as Cyprinella lutrensis, you suggested it is Cyprinella venusta.</div>
+                                <div class="flag-status status-resolved">Resolved: Curator agreed with your identification</div>
+                            </div>
+                        </li>
+                        <li class="flag-item">
+                            <div class="flag-icon">!</div>
+                            <div class="flag-content">
+                                <div class="flag-title">Geographic coordinate error (Record #87234561)</div>
+                                <div class="flag-details">You flagged this specimen: It should have coordinates in Gulf of Mexico .</div>
+                                <div class="flag-status status-pending">Pending review by institution</div>
+                            </div>
+                        </li>
+                        <li class="flag-item">
+                            <div class="flag-icon">!</div>
+                            <div class="flag-content">
+                                <div class="flag-title">Date inconsistency (Record #32456789)</div>
+                                <div class="flag-details">Collection date (1982) should be (1983) which was mentioned in field notes.</div>
+                                <div class="flag-status status-pending">Pending review by institution</div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Recent Activity Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Recent Activity</h2>
+                </div>
+                <div class="panel-content">
+                    <ul class="activity-list">
+                        <li class="activity-item">
+                            <div class="activity-icon">🔍</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Data Search</div>
+                                <div class="activity-time">Today, 10:24 AM</div>
+                                <div class="activity-details">Searched for "Cyprinidae + United States"</div>
+                            </div>
+                        </li>
+                        <li class="activity-item">
+                            <div class="activity-icon">⬇️</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Data Download</div>
+                                <div class="activity-time">Yesterday, 3:45 PM</div>
+                                <div class="activity-details">Downloaded 237 records of Notropis amecae species</div>
+                            </div>
+                        </li>
+                        <li class="activity-item">
+                            <div class="activity-icon">🚩</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Issue Flagged</div>
+                                <div class="activity-time">Apr 5, 2023</div>
+                                <div class="activity-details">Flagged coordinate error in record #87234561</div>
+                            </div>
+                        </li>
+                        <li class="activity-item">
+                            <div class="activity-icon">💬</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Message Sent</div>
+                                <div class="activity-time">Apr 2, 2023</div>
+                                <div class="activity-details">Sent message to TU about flagged issue</div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Messages Panel -->
+            <div class="panel panel-full-width">
+                <div class="panel-header">
+                    <h2 class="panel-title">Recent Messages</h2>
+                    <div class="panel-actions">
+                        <button class="secondary-button">New Message</button>
+                        <button class="secondary-button">View All</button>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <ul class="messages-list">
+                        <li class="message-item">
+                            <div class="message-avatar">NM</div>
+                            <div class="message-content">
+                                <div class="message-header">
+                                    <span class="message-sender">Tulane University</span>
+                                    <span class="message-time">2 days ago</span>
+                                </div>
+                                <div class="message-text">
+                                    Thank you for flagging the coordinate error. We've reviewed the original field notes and corrected the location data. The updated record should be visible in the system within 24 hours.
+                                </div>
+                            </div>
+                        </li>
+                        <li class="message-item">
+                            <div class="message-avatar">AS</div>
+                            <div class="message-content">
+                                <div class="message-header">
+                                    <span class="message-sender">Admin System</span>
+                                    <span class="message-time">1 week ago</span>
+                                </div>
+                                <div class="message-text">
+                                    Your data download request has been processed. 237 records matching your criteria are available in your downloads section for the next 30 days.
+                                </div>
+                            </div>
+                        </li>
+                        <li class="message-item">
+                            <div class="message-avatar">RP</div>
+                            <div class="message-content">
+                                <div class="message-header">
+                                    <span class="message-sender">Dr. Henry Bart (Tulane University)</span>
+                                    <span class="message-time">2 weeks ago</span></div>
+                                <div class="message-text">
+                                    I noticed your interest in Cyprinidae. We published a paper that might interest you.
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Simple notification close
+    document.addEventListener('DOMContentLoaded', function() {
+        const closeButtons = document.querySelectorAll('.notification-close');
+        closeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                this.parentElement.style.display = 'none';
+            });
+        });
+
+        // Mark all as read
+        const markAllButton = document.querySelector('.notification-header .secondary-button');
+        markAllButton.addEventListener('click', function() {
+            document.querySelectorAll('.notification-item').forEach(item => {
+                item.style.display = 'none';
+            });
+        });
+
+        // Interest tag removal
+        const tagRemoveButtons = document.querySelectorAll('.tag-remove');
+        tagRemoveButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                this.parentElement.style.display = 'none';
+            });
+        });
+    });
+</script>
+</body>
+</html>

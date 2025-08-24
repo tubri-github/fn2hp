@@ -176,20 +176,6 @@
       </div>
     </div>
 
-    <!-- 时期亮点 -->
-    <div class="period-highlights" v-if="highlights.length > 0">
-      <h5>Collection Highlights</h5>
-      <div class="highlights-list">
-        <div
-            v-for="highlight in highlights"
-            :key="highlight.period"
-            class="highlight-item"
-        >
-          <div class="highlight-period">{{ highlight.period }}</div>
-          <div class="highlight-description">{{ highlight.description }}</div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 

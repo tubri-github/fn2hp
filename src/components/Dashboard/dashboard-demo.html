@@ -1,0 +1,2164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <!-- 添加到 <head> 标签内 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <style>
+        /* Base styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: auto auto auto auto;
+            gap: 15px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .panel-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .panel-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Notification panel */
+        .notification-panel {
+            grid-column: span 4;
+            padding: 10px 15px;
+        }
+
+        .notification-panel .panel-content {
+            padding: 0;
+        }
+
+        .notification-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .notification-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-icon {
+            margin-right: 10px;
+            width: 24px;
+            height: 24px;
+            background: #e6f7ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #1890ff;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-close {
+            cursor: pointer;
+            color: #999;
+            font-size: 16px;
+            padding: 0 5px;
+        }
+
+        /* Specific panel layouts */
+        .overview-panel {
+            grid-column: span 4;
+        }
+
+        .taxonomy-panel {
+            grid-column: span 2;
+            grid-row: span 1;
+        }
+
+        .geo-panel {
+            grid-column: span 2;
+            grid-row: span 1;
+        }
+
+        .temporal-panel {
+            grid-column: span 2;
+            grid-row: span 1;
+        }
+
+        .quality-panel {
+            grid-column: span 2;
+            grid-row: span 1;
+        }
+
+        .institution-panel {
+            grid-column: span 4;
+            grid-row: span 1;
+        }
+
+        /* Panel internal layouts */
+        .overview-metrics {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .metric-card {
+            background: #f9f9f9;
+            border-radius: 4px;
+            padding: 15px;
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Taxonomy panel internal */
+        .taxonomy-layout {
+            display: grid;
+            grid-template-columns: 3fr 2fr;
+            grid-template-rows: auto 1fr;
+            gap: 10px;
+            height: 100%;
+        }
+
+        .taxonomy-tree {
+            grid-column: 1;
+            grid-row: span 2;
+            border: 1px solid #eee;
+            padding: 10px;
+            overflow: auto;
+        }
+
+        .taxonomy-stats {
+            grid-column: 2;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .taxonomy-mini-chart {
+            grid-column: 2;
+            grid-row: 2;
+            border: 1px solid #eee;
+        }
+
+        /* Geographical panel internal */
+        .geo-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            grid-template-rows: 1fr;
+            gap: 10px;
+            height: 100%;
+        }
+
+        .map-container {
+            grid-column: 1;
+            border: 1px solid #eee;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f0f0f0;
+            width: 100%; height: 100%; position: relative;
+        }
+
+        .geo-sidebar {
+            grid-column: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .geo-stat-card {
+            border: 1px solid #eee;
+            padding: 10px;
+            flex: 1;
+        }
+
+        /* Temporal panel internal */
+        .temporal-layout {
+            display: grid;
+            grid-template-columns: 1fr 3fr;
+            grid-template-rows: auto 1fr auto;
+            gap: 10px;
+            height: 100%;
+        }
+
+        .time-controls {
+            grid-column: 1;
+            grid-row: 1;
+            border: 1px solid #eee;
+            padding: 10px;
+        }
+
+        .time-indicators {
+            grid-column: 1;
+            grid-row: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .time-indicator-card {
+            border: 1px solid #eee;
+            padding: 10px;
+            flex: 1;
+        }
+
+        .main-time-chart {
+            grid-column: 2;
+            grid-row: 1 / span 2;
+            border: 1px solid #eee;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f9f9f9;
+        }
+
+        .time-small-multiples {
+            grid-column: span 2;
+            grid-row: 3;
+            border: 1px solid #eee;
+            padding: 10px;
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+        }
+
+        .small-multiple {
+            min-width: 80px;
+            //height: 60px;
+            border: 1px solid #ddd;
+            flex: 1;
+            background: #f9f9f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%; height: 100%;
+        }
+
+        /* Quality panel internal */
+        .quality-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto 1fr;
+            gap: 10px;
+            height: 100%;
+        }
+
+        .quality-summary {
+            grid-column: span 2;
+            border: 1px solid #eee;
+            padding: 10px;
+        }
+
+        .quality-heatmap {
+            grid-column: 1;
+            grid-row: 2;
+            border: 1px solid #eee;
+            padding: 10px;
+        }
+
+        .quality-issues {
+            grid-column: 2;
+            grid-row: 2;
+            border: 1px solid #eee;
+            padding: 10px;
+            overflow: auto;
+        }
+
+        /* Institution panel internal */
+        .institution-layout {
+            display: grid;
+            grid-template-columns: 3fr 2fr;
+            grid-template-rows: 1fr;
+            gap: 15px;
+            height: 100%;
+        }
+
+        .institution-chart {
+            grid-column: 1;
+            border: 1px solid #eee;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f9f9f9;
+            width: 100%;
+            height: 100%;
+        }
+
+        .institution-table {
+            grid-column: 2;
+            border: 1px solid #eee;
+            padding: 10px;
+            overflow: auto;
+        }
+
+        /* Interactive elements */
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .filter {
+            font-size: 12px;
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .panel-link {
+            cursor: pointer;
+            color: #0066cc;
+            font-size: 12px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .table th, .table td {
+            border: 1px solid #eee;
+            padding: 5px;
+            text-align: left;
+        }
+
+        .table th {
+            background: #f5f5f5;
+        }
+
+        .tree-node {
+            padding: 3px 0;
+        }
+
+        .tree-node span {
+            cursor: pointer;
+        }
+
+        .tree-node span:hover {
+            text-decoration: underline;
+        }
+
+        .children {
+            margin-left: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard">
+    <!-- Notification Panel -->
+    <div class="panel notification-panel">
+        <div class="panel-header">
+            <h2 class="panel-title">Recent Updates</h2>
+            <div class="panel-actions">
+                <div class="filter">Mark All as Read</div>
+            </div>
+        </div>
+        <div class="panel-content">
+            <ul class="notification-list">
+                <li class="notification-item">
+                    <div class="notification-icon">!</div>
+                    <div class="notification-content">Your watched species AA has 15 new records</div>
+                    <div class="notification-close">×</div>
+                </li>
+                <li class="notification-item">
+                    <div class="notification-icon">!</div>
+                    <div class="notification-content">Institution BB updated their fish collection data (42 new specimens)</div>
+                    <div class="notification-close">×</div>
+                </li>
+                <li class="notification-item">
+                    <div class="notification-icon">!</div>
+                    <div class="notification-content">Family XX distribution data for 1980-1990 has been revised</div>
+                    <div class="notification-close">×</div>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Overview Panel -->
+    <div class="panel overview-panel">
+        <div class="panel-header">
+            <h2 class="panel-title">Overview</h2>
+            <div class="panel-actions">
+                <div class="filter">Last 30 Days</div>
+                <div class="filter">All Data Sources</div>
+            </div>
+        </div>
+        <div class="panel-content">
+            <div class="overview-metrics">
+                <div class="metric-card">
+                    <div class="metric-value">12.4M</div>
+                    <div class="metric-label">Total Fish Records</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">743</div>
+                    <div class="metric-label">Fish Species</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">92.7%</div>
+                    <div class="metric-label">Data Completeness</div>
+                </div>
+<!--                <div class="metric-card">-->
+<!--                    <div class="metric-value">28</div>-->
+<!--                    <div class="metric-label">Endangered Fish Species</div>-->
+<!--                </div>-->
+            </div>
+        </div>
+    </div>
+
+    <!-- Taxonomy Panel -->
+    <div class="panel taxonomy-panel">
+        <div class="panel-header">
+            <h2 class="panel-title">Fish Taxonomic Structure</h2>
+            <div class="panel-actions">
+                <div class="filter" id="view-top-families">Top 15 Families</div>
+                <div class="filter" id="view-by-order">View All Families</div>
+                <a href="#" class="panel-link">View Full Taxonomy</a>
+            </div>
+        </div>
+        <div class="panel-content">
+            <!-- Simplified layout with chart only -->
+            <div style="display: flex; flex-direction: column;">
+                <!-- Navigation bar -->
+                <div style="margin-bottom: 10px; font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <a href="#" id="reset-treemap">↩ Reset to Family Level</a> |
+                        <a href="#" id="up-one-level">↑ Up One Level</a>
+                    </div>
+                    <div>
+                        Current: <span id="current-path-label">All Families</span> (<span id="current-level-label">Family</span> level)
+                    </div>
+                </div>
+
+                <!-- Treemap visualization (full width/height) -->
+                <div id="taxonomy-treemap" style="width: 100%; height: 340px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Geospatial Panel -->
+    <div class="panel geo-panel">
+        <div class="panel-header">
+            <h2 class="panel-title">Fish Distribution</h2>
+            <div class="panel-actions">
+                <div class="filter">Freshwater</div>
+                <div class="filter">Marine</div>
+                <div class="filter">All</div>
+            </div>
+        </div>
+        <div class="panel-content">
+            <div class="geo-layout">
+                <div class="map-container">
+                </div>
+                <div class="geo-sidebar">
+                    <div class="geo-stat-card">
+                        <h4 style="margin-top: 0; font-size: 14px;">Habitat Statistics</h4>
+                        <div style="font-size: 12px;">
+                            <div>Freshwater species: 456</div>
+                            <div>Marine species: 264</div>
+                        </div>
+                    </div>
+                    <div class="geo-stat-card">
+                        <h4 style="margin-top: 0; font-size: 14px;">Top Fish Hotspots</h4>
+                        <div style="font-size: 12px;">
+                            <div>- Locality1/Basin1 (214 species)</div>
+                            <div>- Locality2/Basin2(178 species)</div>
+                            <div>- Locality3/Basin3(142 species)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Temporal Panel -->
+    <div class="panel temporal-panel">
+        <div class="panel-header">
+            <h2 class="panel-title">Fish Time Analysis</h2>
+            <div class="panel-actions">
+                <div class="filter">Monthly</div>
+                <div class="filter">Yearly</div>
+            </div>
+        </div>
+        <div class="panel-content">
+            <div class="temporal-layout">
+                <div class="time-controls">
+                    <div style="font-size: 12px;">
+                        <div>Time range: 2015-2025</div>
+                        <div style="margin-top: 5px;">
+                            <input type="range" style="width: 100%">
+                        </div>
+                    </div>
+                </div>
+                <div class="time-indicators">
+                    <div class="time-indicator-card">
+                        <div style="font-size: 12px;">
+                            <div>occurrence Trend</div>
+                            <div style="margin-top: 5px;">+7.2% increase</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="main-time-chart">
+                    <div>Occurrence Time Series</div>
+                </div>
+                <div class="time-small-multiples">
+                    <div class="small-multiple">Cypriniformes</div>
+                    <div class="small-multiple">Perciformes</div>
+                    <div class="small-multiple">fish3</div>
+                    <div class="small-multiple">fish4</div>
+                    <div class="small-multiple">fish5</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Quality Panel -->
+    <div class="panel quality-panel">
+        <div class="panel-header">
+            <h2 class="panel-title">Fish Data Quality</h2>
+            <div class="panel-actions">
+                <div class="filter">By Data Source</div>
+            </div>
+        </div>
+        <div class="panel-content">
+            <div class="quality-layout">
+                <div class="quality-summary">
+                    <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                        <div>
+                            <div>Overall completeness: 92.7%</div>
+                            <div>Coordinate precision: 88.5%</div>
+                        </div>
+                        <div>
+                            <div>Taxonomic accuracy: 95.3%</div>
+                            <div>Temporal accuracy: 97.8%</div>
+                        </div>
+                        <div>
+                            <div>Problem records: 567</div>
+                            <div>Resolved last week: 82</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="quality-heatmap">
+                    <div style="text-align: center; padding: 20px;">Fish Data Completeness Heatmap</div>
+                </div>
+                <div class="quality-issues">
+                    <h4 style="margin-top: 0; font-size: 14px;">Major Fish Data Issues</h4>
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>Issue Type</th>
+                            <th>Count</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>Missing coordinates</td>
+                            <td>218</td>
+                        </tr>
+                        <tr>
+                            <td>Uncertain taxonomy</td>
+                            <td>142</td>
+                        </tr>
+                        <tr>
+                            <td>Incomplete data</td>
+                            <td>124</td>
+                        </tr>
+                        <tr>
+                            <td>Duplicate specimens</td>
+                            <td>83</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Institution Code Panel -->
+    <div class="panel institution-panel">
+        <div class="panel-header">
+            <h2 class="panel-title">Institution Code Distribution</h2>
+            <div class="panel-actions">
+                <div class="filter">Top Contributors</div>
+                <div class="filter">Recent Additions</div>
+                <div class="filter">Basis of Records</div>
+            </div>
+        </div>
+        <div class="panel-content">
+            <div class="institution-layout">
+                <div class="institution-chart">
+                    <div style="text-align: center; padding: 20px;">
+                        Institution Contributions Bar Chart
+                        <div style="font-size: 12px; margin-top: 15px; text-align: left; max-width: 600px; margin-left: auto; margin-right: auto;">
+                        </div>
+                    </div>
+                </div>
+                <div class="institution-table">
+                    <h4 style="margin-top: 0; font-size: 14px;">Top Contributing Institutions</h4>
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>Institution Code</th>
+                            <th>Name</th>
+                            <th>Records</th>
+                            <th>Species Count</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>NMNH</td>
+                            <td>National Museum of Natural History</td>
+                            <td>3,562</td>
+                            <td>428</td>
+                        </tr>
+                        <tr>
+                            <td>AMNH</td>
+                            <td>American Museum of Natural History</td>
+                            <td>2,814</td>
+                            <td>356</td>
+                        </tr>
+                        <tr>
+                            <td>FLMNH</td>
+                            <td>Florida Museum of Natural History</td>
+                            <td>1,987</td>
+                            <td>287</td>
+                        </tr>
+                        <tr>
+                            <td>CAS</td>
+                            <td>California Academy of Sciences</td>
+                            <td>1,845</td>
+                            <td>245</td>
+                        </tr>
+                        <tr>
+                            <td>KU</td>
+                            <td>University of Kansas Biodiversity Institute</td>
+                            <td>1,632</td>
+                            <td>198</td>
+                        </tr>
+                        <tr>
+                            <td>LACM</td>
+                            <td>Natural History Museum of Los Angeles County</td>
+                            <td>1,456</td>
+                            <td>214</td>
+                        </tr>
+                        <tr>
+                            <td>ROM</td>
+                            <td>Royal Ontario Museum</td>
+                            <td>1,324</td>
+                            <td>189</td>
+                        </tr>
+                        <tr>
+                            <td>USNM</td>
+                            <td>United States National Museum</td>
+                            <td>1,265</td>
+                            <td>201</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Simple panel interaction simulation
+    document.addEventListener('DOMContentLoaded', function() {
+        // Filter click simulation
+        const filters = document.querySelectorAll('.filter');
+        filters.forEach(filter => {
+            filter.addEventListener('click', function() {
+                if (this.textContent === 'Mark All as Read') {
+                    document.querySelectorAll('.notification-item').forEach(item => {
+                        item.style.display = 'none';
+                    });
+                } else {
+                    console.log('Filter selected: ' + this.textContent);
+                }
+            });
+        });
+
+        // Close notification
+        const closeButtons = document.querySelectorAll('.notification-close');
+        closeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                this.parentElement.style.display = 'none';
+            });
+        });
+
+        // Tree node expansion/collapse simulation
+        const treeNodes = document.querySelectorAll('.tree-node > span');
+        treeNodes.forEach(node => {
+            node.addEventListener('click', function() {
+                const parentNode = this.parentElement;
+                const childrenContainer = parentNode.querySelector('.children');
+
+                if (childrenContainer) {
+                    childrenContainer.style.display =
+                        childrenContainer.style.display === 'none' ? 'block' : 'none';
+
+                    // Update arrow
+                    if (this.textContent.startsWith('▶')) {
+                        this.textContent = this.textContent.replace('▶', '▼');
+                    } else if (this.textContent.startsWith('▼')) {
+                        this.textContent = this.textContent.replace('▼', '▶');
+                    }
+                }
+            });
+        });
+
+        // Make notification items clickable
+        const notificationItems = document.querySelectorAll('.notification-content');
+        notificationItems.forEach(item => {
+            item.style.cursor = 'pointer';
+            item.addEventListener('click', function() {
+                console.log('Clicked notification: ' + this.textContent);
+                // This would typically navigate to the relevant section or apply a filter
+            });
+        });
+    });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize the ECharts instance
+        var treemapChart = echarts.init(document.getElementById('taxonomy-treemap'));
+
+        // Global variable to track current path and level
+        var currentPath = 'root';
+        var currentLevel = 'Family';
+
+        // Generate a more extensive dataset with Family -> Genus -> Species structure
+        // This includes many more taxa to better demonstrate the aggregation effect
+        var generateFishData = function() {
+            // Helper function to generate random values between min and max
+            function randomInt(min, max) {
+                return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+
+            // Base data for families (much more extensive list)
+            var families = [
+                // Ray-finned fish families (Actinopterygii)
+                {name: 'Cyprinidae', value: 3650, color: '#5470c6', desc: 'Carps and minnows - the largest family of freshwater fishes.'},
+                {name: 'Gobiidae', value: 2120, color: '#91cc75', desc: 'Gobies - one of the largest families of fish with over 2,000 species.'},
+                {name: 'Cichlidae', value: 1970, color: '#fac858', desc: 'Cichlids - diverse family with species important in aquariums and food.'},
+                {name: 'Characidae', value: 1420, color: '#ee6666', desc: 'Characids - includes tetras, popular in aquariums.'},
+                {name: 'Loricariidae', value: 980, color: '#73c0de', desc: 'Armored catfish - distinctive armored plates and sucker mouths.'},
+                {name: 'Serranidae', value: 925, color: '#fc8452', desc: 'Sea basses and groupers - important food fishes.'},
+                {name: 'Labridae', value: 890, color: '#9a60b4', desc: 'Wrasses - colorful reef fishes known for their diversity.'},
+                {name: 'Pomacentridae', value: 752, color: '#ea7ccc', desc: 'Damselfish and clownfish - common in coral reefs.'},
+                {name: 'Salmonidae', value: 714, color: '#5470c6', desc: 'Salmon, trout and chars - important game and food fishes.'},
+                {name: 'Cyprinodontidae', value: 690, color: '#91cc75', desc: 'Killifish - small freshwater fish popular in aquariums.'},
+                {name: 'Cobitidae', value: 680, color: '#fac858', desc: 'Loaches - bottom-dwelling freshwater fish.'},
+                {name: 'Muraenidae', value: 650, color: '#ee6666', desc: 'Moray eels - elongated predatory fish found in reefs.'},
+                {name: 'Centrachidae', value: 620, color: '#73c0de', desc: 'Sunfish and black bass - popular sport fishes.'},
+                {name: 'Carangidae', value: 608, color: '#fc8452', desc: 'Jacks and pompanos - fast-swimming predatory marine fish.'},
+                {name: 'Sciaenidae', value: 583, color: '#9a60b4', desc: 'Drums and croakers - known for sounds they produce.'},
+                {name: 'Apogonidae', value: 580, color: '#ea7ccc', desc: 'Cardinalfish - small, nocturnal reef fish.'},
+                {name: 'Sparidae', value: 575, color: '#5470c6', desc: 'Sea breams and porgies - important food fishes.'},
+                {name: 'Blenniidae', value: 547, color: '#91cc75', desc: 'Blennies - small, elongated fish living on sea bottom.'},
+                {name: 'Clupeidae', value: 530, color: '#fac858', desc: 'Herrings, sardines and pilchards - important food fishes.'},
+                {name: 'Bothidae', value: 520, color: '#ee6666', desc: 'Lefteye flounders - asymmetrical flatfish.'},
+                {name: 'Malapteruridae', value: 33, color: '#73c0de', desc: 'Electric catfish - can produce electric discharges.'},
+                {name: 'Osphronemidae', value: 123, color: '#fc8452', desc: 'Gouramis - includes the popular Siamese fighting fish.'},
+                {name: 'Notopteridae', value: 29, color: '#9a60b4', desc: 'Featherbacks - freshwater fish with long anal fins.'},
+                {name: 'Channidae', value: 48, color: '#ea7ccc', desc: 'Snakeheads - predatory fish that can breathe air.'},
+                {name: 'Polyprionidae', value: 14, color: '#5470c6', desc: 'Wreckfish - large, deep-sea fish.'},
+                {name: 'Chirocentridae', value: 8, color: '#91cc75', desc: 'Wolf herrings - large predatory herrings.'},
+                {name: 'Scatophagidae', value: 9, color: '#fac858', desc: 'Scats - omnivorous fish of brackish waters.'},
+                {name: 'Menidae', value: 2, color: '#ee6666', desc: 'Moonfish - unusual deep-bodied fish.'},
+                {name: 'Pegasidae', value: 11, color: '#73c0de', desc: 'Sea moths - unusual armored fish.'},
+                {name: 'Toxotidae', value: 18, color: '#fc8452', desc: 'Archerfish - known for spitting water at prey.'},
+
+                // Cartilaginous fish families (Chondrichthyes)
+                {name: 'Carcharhinidae', value: 485, color: '#9a60b4', desc: 'Requiem sharks - the largest family of sharks.'},
+                {name: 'Rajidae', value: 368, color: '#ea7ccc', desc: 'Skates - flattened cartilaginous fish.'},
+                {name: 'Dasyatidae', value: 284, color: '#5470c6', desc: 'Stingrays - rays with long, venomous tails.'},
+                {name: 'Squalidae', value: 175, color: '#91cc75', desc: 'Dogfish sharks - small sharks of the deep sea.'},
+                {name: 'Scyliorhinidae', value: 195, color: '#fac858', desc: 'Cat sharks - small, spotted bottom-dwelling sharks.'},
+                {name: 'Lamnidae', value: 22, color: '#ee6666', desc: 'Mackerel sharks - includes the great white shark.'},
+                {name: 'Hexanchidae', value: 12, color: '#73c0de', desc: 'Cow sharks - primitive sharks with six or seven gill slits.'},
+                {name: 'Pristidae', value: 15, color: '#fc8452', desc: 'Sawfish - large rays with a long, saw-like snout.'},
+                {name: 'Rhincodontidae', value: 3, color: '#9a60b4', desc: 'Whale sharks - the largest living fish species.'},
+                {name: 'Mobulidae', value: 25, color: '#ea7ccc', desc: 'Manta rays - large, filter-feeding rays.'},
+
+                // Other fish groups
+                {name: 'Petromyzontidae', value: 112, color: '#5470c6', desc: 'Lampreys - jawless, parasitic fish.'},
+                {name: 'Myxinidae', value: 85, color: '#91cc75', desc: 'Hagfish - eel-shaped, slime-producing fish.'},
+                {name: 'Latimeriidae', value: 2, color: '#fac858', desc: 'Coelacanths - "living fossil" lobe-finned fish.'},
+                {name: 'Ceratodontidae', value: 6, color: '#ee6666', desc: 'Lungfish - fish that can breathe air.'}
+            ];
+
+            // Generate the flat data structure with Family -> Genus -> Species hierarchy
+            var fishData = [
+                { name: 'All Families', id: 'root', path: 'root' }
+            ];
+
+            // Add all families to the data
+            families.forEach(function(family) {
+                fishData.push({
+                    name: family.name,
+                    id: family.name,
+                    path: 'root/' + family.name,
+                    parentId: 'root',
+                    value: family.value,
+                    level: 'Family',
+                    itemStyle: { color: family.color }
+                });
+
+                // Generate a random number of genera for each family (3-15)
+                var genusCount = Math.min(family.value / 50, 15);
+                genusCount = Math.max(genusCount, 3);
+                genusCount = Math.round(genusCount);
+
+                var genusList = [];
+                var totalSpecies = 0;
+
+                // For large families, generate many genera
+                for (var g = 0; g < genusCount; g++) {
+                    var genusName = family.name.substring(0, 3) + '_Genus_' + (g + 1);
+                    var genusValue = Math.round(family.value * (0.3 + Math.random() * 0.5) / genusCount);
+                    totalSpecies += genusValue;
+
+                    genusList.push({
+                        name: genusName,
+                        value: genusValue
+                    });
+                }
+
+                // Adjust genus values to match family total
+                var adjustment = family.value / totalSpecies;
+                genusList.forEach(function(genus) {
+                    genus.value = Math.round(genus.value * adjustment);
+                    if (genus.value < 1) genus.value = 1;
+                });
+
+                // Add all genera to the data
+                genusList.forEach(function(genus) {
+                    fishData.push({
+                        name: genus.name,
+                        id: genus.name,
+                        path: 'root/' + family.name + '/' + genus.name,
+                        parentId: family.name,
+                        value: genus.value,
+                        level: 'Genus',
+                        itemStyle: { color: family.color }
+                    });
+
+                    // For each genus, add a few notable species
+                    var speciesCount = Math.min(Math.ceil(genus.value / 25), 5);
+
+                    for (var s = 0; s < speciesCount; s++) {
+                        var speciesValue = Math.round(genus.value * (0.2 + Math.random() * 0.3) / speciesCount);
+                        if (speciesValue < 1) speciesValue = 1;
+
+                        fishData.push({
+                            name: genus.name + '_sp_' + (s + 1),
+                            id: genus.name + '_sp_' + (s + 1),
+                            path: 'root/' + family.name + '/' + genus.name + '/' + genus.name + '_sp_' + (s + 1),
+                            parentId: genus.name,
+                            value: speciesValue,
+                            level: 'Species',
+                            itemStyle: { color: family.color }
+                        });
+                    }
+
+                    // Add "Other Species" aggregation for remaining species
+                    var otherSpeciesValue = genus.value;
+                    for (var t = 0; t < speciesCount; t++) {
+                        otherSpeciesValue -= Math.round(genus.value * (0.2 + Math.random() * 0.3) / speciesCount);
+                    }
+                    if (otherSpeciesValue > 0) {
+                        fishData.push({
+                            name: 'Other ' + genus.name + ' species',
+                            id: genus.name + '_other',
+                            path: 'root/' + family.name + '/' + genus.name + '/' + genus.name + '_other',
+                            parentId: genus.name,
+                            value: otherSpeciesValue,
+                            level: 'Species',
+                            itemStyle: { color: family.color }
+                        });
+                    }
+                });
+            });
+
+            return fishData;
+        };
+
+        // Generate the complete fish taxonomy data
+        var fishData = generateFishData();
+
+        // Build the hierarchy of data (creates parent-child relationships)
+        function buildHierarchy(data) {
+            var idToNode = {};
+            var root = null;
+
+            // First pass: create all nodes
+            data.forEach(function(item) {
+                idToNode[item.id] = {
+                    name: item.name,
+                    value: item.value,
+                    path: item.path,
+                    id: item.id,
+                    level: item.level,
+                    itemStyle: item.itemStyle,
+                    children: []
+                };
+
+                if (item.id === 'root') {
+                    root = idToNode[item.id];
+                }
+            });
+
+            // Second pass: build the tree
+            data.forEach(function(item) {
+                if (item.parentId && idToNode[item.parentId] && item.id !== 'root') {
+                    idToNode[item.parentId].children.push(idToNode[item.id]);
+                }
+            });
+
+            return root;
+        }
+
+        // Helper function to find a node by path
+        function findNodeByPath(root, path) {
+            var pathParts = path.split('/');
+            var currentNode = root;
+
+            // Skip root part
+            for (var i = 1; i < pathParts.length; i++) {
+                var found = false;
+                for (var j = 0; j < currentNode.children.length; j++) {
+                    if (currentNode.children[j].id === pathParts[i]) {
+                        currentNode = currentNode.children[j];
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    return null;
+                }
+            }
+
+            return currentNode;
+        }
+
+        // Function to get data that should be displayed at current level
+        function getLevelData(root, targetPath) {
+            if (!targetPath || targetPath === 'root') {
+                // First level: show all families
+                return {
+                    name: 'All Families',
+                    id: 'root',
+                    children: root.children
+                };
+            }
+
+            // Find the node at target path
+            var targetNode = findNodeByPath(root, targetPath);
+
+            if (!targetNode) {
+                console.error('Target path not found:', targetPath);
+                return {
+                    name: 'All Families',
+                    id: 'root',
+                    children: root.children
+                };
+            }
+
+            return targetNode;
+        }
+
+        // Function to update the path display
+        function updatePathDisplay(path) {
+            var pathLabel = document.getElementById('current-path-label');
+            var levelLabel = document.getElementById('current-level-label');
+            var pathParts = path.split('/');
+
+            // Filter out the "root" part
+            pathParts = pathParts.filter(function(part) {
+                return part !== 'root';
+            });
+
+            if (pathParts.length === 0) {
+                pathLabel.textContent = 'All Families';
+                levelLabel.textContent = 'Family';
+                currentLevel = 'Family';
+            } else {
+                pathLabel.textContent = pathParts.join(' > ');
+
+                // Update current level
+                if (pathParts.length === 1) {
+                    levelLabel.textContent = 'Genus';
+                    currentLevel = 'Genus';
+                } else if (pathParts.length === 2) {
+                    levelLabel.textContent = 'Species';
+                    currentLevel = 'Species';
+                } else {
+                    levelLabel.textContent = 'Family';
+                    currentLevel = 'Family';
+                }
+            }
+        }
+
+        // Function to get parent path
+        function getParentPath(path) {
+            if (!path || path === 'root') {
+                return 'root';
+            }
+
+            var pathParts = path.split('/');
+            if (pathParts.length <= 2) {
+                return 'root';
+            }
+
+            // Remove the last part to get the parent
+            pathParts.pop();
+            return pathParts.join('/');
+        }
+
+        // Function to render the treemap for the current level
+        function renderTreemap(targetPath) {
+            // Build the hierarchy
+            var hierarchyRoot = buildHierarchy(fishData);
+
+            // Get data for the current level
+            var levelData = getLevelData(hierarchyRoot, targetPath);
+
+            // Update the path display
+            updatePathDisplay(targetPath || 'root');
+
+            // Configure treemap options
+            var option = {
+                title: {
+                    text: levelData.name,
+                    left: 'center',
+                    textStyle: {
+                        fontSize: 16
+                    },
+                    subtext: currentLevel + ' Level View',
+                    subtextStyle: {
+                        fontSize: 12
+                    }
+                },
+                tooltip: {
+                    formatter: function(info) {
+                        var value = info.value ? info.value.toLocaleString() : '';
+                        var name = info.name;
+                        var tipText = [
+                            '<div style="font-weight:bold; margin-bottom:5px;">' + name + '</div>'
+                        ];
+
+                        if (value) {
+                            tipText.push('Species Count: ' + value);
+                        }
+
+                        if (info.data.children && info.data.children.length > 0) {
+                            tipText.push('<div style="margin-top:5px;font-style:italic;color:#999;">Click to explore sub-categories</div>');
+                        }
+
+                        return tipText.join('<br/>');
+                    }
+                },
+                series: [{
+                    name: levelData.name,
+                    type: 'treemap',
+                    visibleMin: 1, // Nodes smaller than this will be aggregated
+                    data: levelData.children,
+                    breadcrumb: {
+                        show: true,
+                        height: 30,
+                        top: 10,
+                        emptyItemWidth: 25,
+                        itemStyle: {
+                            color: '#f6f6f6',
+                            borderColor: '#ddd',
+                            borderWidth: 1,
+                            textStyle: {
+                                color: '#666'
+                            }
+                        }
+                    },
+                    leafDepth: 1, // Only show 1 level at a time
+                    drillDownIcon: '▶', // Custom drill down icon
+                    levels: [
+                        {
+                            itemStyle: {
+                                borderColor: '#fff',
+                                borderWidth: 2,
+                                gapWidth: 2
+                            },
+                            upperLabel: {
+                                show: true,
+                                height: 30
+                            }
+                        }
+                    ]
+                }]
+            };
+
+            // Set the options and render
+            treemapChart.setOption(option, true);
+
+            // Update current path
+            currentPath = targetPath || 'root';
+        }
+
+        // Initialize with root level
+        renderTreemap('root');
+
+        // Handle treemap node click for drill down
+        treemapChart.on('click', function(params) {
+            if (params.data && params.data.children && params.data.children.length > 0) {
+                renderTreemap(params.data.path);
+            }
+        });
+
+        // Handle reset to top level
+        document.getElementById('reset-treemap').addEventListener('click', function(e) {
+            e.preventDefault();
+            renderTreemap('root');
+        });
+
+        // Handle up one level button
+        document.getElementById('up-one-level').addEventListener('click', function(e) {
+            e.preventDefault();
+            var parentPath = getParentPath(currentPath);
+            renderTreemap(parentPath);
+        });
+
+        // Handle view all families
+        document.getElementById('view-by-order').addEventListener('click', function(e) {
+            e.preventDefault();
+            renderTreemap('root');
+        });
+
+        // Handle top families filter
+        document.getElementById('view-top-families').addEventListener('click', function(e) {
+            e.preventDefault();
+            alert('This would filter to show only top 15 families');
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            treemapChart.resize();
+        });
+    });
+</script>
+
+<script>
+    // 初始化机构贡献图表
+    document.addEventListener('DOMContentLoaded', function() {
+        var institutionChart = echarts.init(document.querySelector('.institution-chart'));
+
+        // 从你的HTML表格中提取的数据
+        var institutions = ['NMNH', 'AMNH', 'FLMNH', 'CAS', 'KU', 'LACM', 'ROM', 'USNM'];
+        var recordCounts = [3562, 2814, 1987, 1845, 1632, 1456, 1324, 1265];
+        var speciesCounts = [428, 356, 287, 245, 198, 214, 189, 201];
+
+        var option = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                }
+            },
+            legend: {
+                data: ['Records', 'Species Count'],
+                top: 10
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                top: '15%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'value'
+            },
+            yAxis: {
+                type: 'category',
+                data: institutions,
+                axisLabel: {
+                    fontSize: 12
+                }
+            },
+            series: [
+                {
+                    name: 'Records',
+                    type: 'bar',
+                    data: recordCounts,
+                    itemStyle: {
+                        color: '#5470c6'
+                    },
+                    label: {
+                        show: true,
+                        position: 'right'
+                    }
+                },
+                {
+                    name: 'Species Count',
+                    type: 'bar',
+                    data: speciesCounts,
+                    itemStyle: {
+                        color: '#91cc75'
+                    },
+                    xAxisIndex: 1,
+                    yAxisIndex: 0
+                }
+            ]
+        };
+
+        // 创建第二个x轴用于物种数
+        option.xAxis = [
+            {
+                type: 'value',
+                name: 'Records',
+                position: 'bottom'
+            },
+            {
+                type: 'value',
+                name: 'Species Count',
+                position: 'top',
+                max: function(value) {
+                    return Math.ceil(value.max * 1.2);
+                }
+            }
+        ];
+
+        institutionChart.setOption(option);
+
+        window.addEventListener('resize', function() {
+            institutionChart.resize();
+        });
+    });
+</script>
+<script>
+    // 改进的Leaflet地图代码，解决形状问题
+    document.addEventListener('DOMContentLoaded', function() {
+        // 容器引用
+        var mapContainer = document.querySelector('.map-container');
+
+        // 国家数据
+        var countryData = [
+            {name: 'United States', value: 5700, code: 'USA'},
+            {name: 'Brazil', value: 4500, code: 'BRA'},
+            {name: 'China', value: 3800, code: 'CHN'},
+            {name: 'Australia', value: 3600, code: 'AUS'},
+            {name: 'India', value: 3200, code: 'IND'},
+            {name: 'Mexico', value: 2900, code: 'MEX'},
+            {name: 'Canada', value: 2800, code: 'CAN'},
+            {name: 'France', value: 2200, code: 'FRA'},
+            {name: 'Indonesia', value: 2100, code: 'IDN'},
+            {name: 'Germany', value: 1800, code: 'DEU'},
+            {name: 'United Kingdom', value: 1700, code: 'GBR'},
+            {name: 'Japan', value: 1650, code: 'JPN'},
+            {name: 'South Africa', value: 1600, code: 'ZAF'},
+            {name: 'Thailand', value: 1550, code: 'THA'},
+            {name: 'Russia', value: 1500, code: 'RUS'},
+            {name: 'Colombia', value: 1450, code: 'COL'},
+            {name: 'Peru', value: 1400, code: 'PER'},
+            {name: 'New Zealand', value: 1200, code: 'NZL'},
+            {name: 'Malaysia', value: 1100, code: 'MYS'},
+            {name: 'Spain', value: 1050, code: 'ESP'},
+            {name: 'Argentina', value: 1000, code: 'ARG'},
+            {name: 'Chile', value: 950, code: 'CHL'},
+            {name: 'Italy', value: 900, code: 'ITA'},
+            {name: 'Vietnam', value: 850, code: 'VNM'},
+            {name: 'Sweden', value: 800, code: 'SWE'}
+        ];
+
+        // 创建一个切换状态变量和容器变量
+        var showingMap = true;
+        var map = null;
+        var barChart = null;
+
+        // 创建地图 div 和柱状图 div
+        var mapDiv = document.createElement('div');
+        mapDiv.id = 'leaflet-map';
+        mapDiv.style.width = '100%';
+        mapDiv.style.height = '100%';
+
+        var chartDiv = document.createElement('div');
+        chartDiv.id = 'country-bar-chart';
+        chartDiv.style.width = '100%';
+        chartDiv.style.height = '100%';
+        chartDiv.style.display = 'none';
+
+        mapContainer.appendChild(mapDiv);
+        mapContainer.appendChild(chartDiv);
+
+        // 创建切换按钮 - 使用与您截图中相同的样式
+        var switchButton = document.createElement('button');
+        switchButton.textContent = 'Switch to Bar Chart';
+        switchButton.style.position = 'absolute';
+        switchButton.style.top = '10px';
+        switchButton.style.right = '10px';
+        switchButton.style.zIndex = '1000';
+        switchButton.style.padding = '5px 10px';
+        switchButton.style.fontSize = '12px';
+        switchButton.style.backgroundColor = 'white';
+        switchButton.style.border = '1px solid #ccc';
+        switchButton.style.borderRadius = '4px';
+        switchButton.style.cursor = 'pointer';
+        mapContainer.appendChild(switchButton);
+
+        // 创建标题 - 使用与您截图中相同的样式
+        var titleDiv = document.createElement('div');
+        titleDiv.textContent = 'Fish Records by Country';
+        titleDiv.style.position = 'absolute';
+        titleDiv.style.top = '10px';
+        titleDiv.style.left = '50%';
+        titleDiv.style.transform = 'translateX(-50%)';
+        titleDiv.style.zIndex = '1000';
+        titleDiv.style.padding = '5px 10px';
+        titleDiv.style.fontSize = '14px';
+        titleDiv.style.fontWeight = 'bold';
+        titleDiv.style.backgroundColor = 'white';
+        titleDiv.style.borderRadius = '4px';
+        titleDiv.style.boxShadow = '0 1px 5px rgba(0,0,0,0.4)';
+        mapContainer.appendChild(titleDiv);
+
+        // 创建图例 - 使用与您截图中相同的样式
+        var legendDiv = document.createElement('div');
+        legendDiv.className = 'info legend';
+        legendDiv.style.position = 'absolute';
+        legendDiv.style.bottom = '20px';
+        legendDiv.style.right = '10px';
+        legendDiv.style.zIndex = '1000';
+        legendDiv.style.backgroundColor = 'white';
+        legendDiv.style.padding = '6px 8px';
+        legendDiv.style.borderRadius = '4px';
+        legendDiv.style.boxShadow = '0 1px 5px rgba(0,0,0,0.4)';
+        legendDiv.style.lineHeight = '18px';
+        legendDiv.style.fontSize = '12px';
+
+        legendDiv.innerHTML = '<div style="margin-bottom: 5px;"><strong>Records</strong></div>';
+
+        var colors = ['#edf8e9', '#bae4b3', '#74c476', '#31a354', '#006d2c'];
+        var grades = [0, 1000, 2000, 3000, 4000];
+        var labels = ['<1000', '1000-2000', '2000-3000', '3000-4000', '>4000'];
+
+        for (var i = 0; i < grades.length; i++) {
+            legendDiv.innerHTML +=
+                '<div style="display: flex; align-items: center; margin-bottom: 3px;">' +
+                '<i style="background: ' + colors[i] + '; width: 18px; height: 18px; display: inline-block; margin-right: 5px;"></i>' +
+                labels[i] +
+                '</div>';
+        }
+
+        mapContainer.appendChild(legendDiv);
+
+        // 初始化 Leaflet 地图
+        function initMap() {
+            // 初始化地图并采用适当的投影
+            map = L.map('leaflet-map', {
+                center: [20, 0],
+                zoom: 1,
+                maxBounds: [[-90, -180], [90, 180]],
+                minZoom: 1
+            });
+
+            // 添加底图图层
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // 改用更简单的方法 - 使用预定义的国家边界
+            fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson')
+                .then(response => response.json())
+                .then(geoData => {
+                    L.geoJSON(geoData, {
+                        style: function(feature) {
+                            // 查找国家数据
+                            var countryInfo = countryData.find(c =>
+                                c.code === feature.properties.ISO_A3 ||
+                                c.name === feature.properties.ADMIN);
+
+                            var value = countryInfo ? countryInfo.value : 0;
+
+                            // 根据值确定颜色
+                            var fillColor = '#edf8e9'; // 默认颜色
+
+                            if (value > 4000) {
+                                fillColor = '#006d2c';
+                            } else if (value > 3000) {
+                                fillColor = '#31a354';
+                            } else if (value > 2000) {
+                                fillColor = '#74c476';
+                            } else if (value > 1000) {
+                                fillColor = '#bae4b3';
+                            }
+
+                            return {
+                                fillColor: fillColor,
+                                weight: 1,
+                                opacity: 1,
+                                color: 'white',
+                                fillOpacity: 0.7
+                            };
+                        },
+                        onEachFeature: function(feature, layer) {
+                            // 查找国家数据
+                            var countryInfo = countryData.find(c =>
+                                c.code === feature.properties.ISO_A3 ||
+                                c.name === feature.properties.ADMIN);
+
+                            var value = countryInfo ? countryInfo.value : 0;
+                            var name = feature.properties.ADMIN;
+
+                            // 添加弹出窗口
+                            if (value > 0) {
+                                layer.bindPopup(
+                                    '<b>' + name + '</b><br>Records: ' + value
+                                );
+                            }
+                        }
+                    }).addTo(map);
+                })
+                .catch(error => {
+                    console.error('Error loading GeoJSON:', error);
+                    alert('Could not load country data. Please check your internet connection.');
+                });
+        }
+
+        // 初始化柱状图
+        function initBarChart() {
+            barChart = echarts.init(document.getElementById('country-bar-chart'));
+
+            var option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                grid: {
+                    top: '40px',
+                    left: '3%',
+                    right: '10%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'value',
+                    name: 'Records',
+                    axisLabel: {
+                        formatter: '{value}'
+                    }
+                },
+                yAxis: {
+                    type: 'category',
+                    data: countryData.sort((a, b) => b.value - a.value).map(item => item.name),
+                    axisLabel: {
+                        interval: 0,
+                        fontSize: 10
+                    }
+                },
+                series: [
+                    {
+                        name: 'Records',
+                        type: 'bar',
+                        data: countryData.sort((a, b) => b.value - a.value).map(item => item.value),
+                        itemStyle: {
+                            color: function(params) {
+                                var colorList = ['#edf8e9', '#bae4b3', '#74c476', '#31a354', '#006d2c'];
+                                return colorList[Math.min(4, Math.floor(params.value / 1200))];
+                            }
+                        },
+                        label: {
+                            show: true,
+                            position: 'right',
+                            formatter: '{c}',
+                            fontSize: 10
+                        }
+                    }
+                ]
+            };
+
+            barChart.setOption(option);
+        }
+
+        // 初始化地图
+        initMap();
+
+        // 切换按钮点击事件
+        switchButton.addEventListener('click', function() {
+            if (showingMap) {
+                // 切换到柱状图
+                mapDiv.style.display = 'none';
+                chartDiv.style.display = 'block';
+                legendDiv.style.display = 'none';
+
+                // 初始化柱状图（如果尚未初始化）
+                if (!barChart) {
+                    initBarChart();
+                } else {
+                    barChart.resize();
+                }
+
+                switchButton.textContent = 'Switch to Map';
+            } else {
+                // 切换到地图
+                chartDiv.style.display = 'none';
+                mapDiv.style.display = 'block';
+                legendDiv.style.display = 'block';
+
+                switchButton.textContent = 'Switch to Bar Chart';
+            }
+
+            showingMap = !showingMap;
+        });
+
+        // 处理窗口调整大小
+        window.addEventListener('resize', function() {
+            if (barChart) {
+                barChart.resize();
+            }
+        });
+    });
+</script>
+<script>
+    // 改进的时间序列面板 - 保持原来布局，使用时间段划分，添加悬停提示
+    document.addEventListener('DOMContentLoaded', function() {
+        var timeChart = echarts.init(document.querySelector('.main-time-chart'));
+
+        // 生成基础时间数据
+        function generateTimeData() {
+            var timeData = [];
+            var baseValue = 100;
+            var date = new Date(2015, 0, 1);
+            var endDate = new Date(2025, 0, 1);
+
+            while (date <= endDate) {
+                var monthStr = date.getFullYear() + '-' + (date.getMonth() + 1).toString().padStart(2, '0');
+
+                // 添加季节性波动和整体增长趋势
+                var seasonalFactor = 1 + 0.2 * Math.sin((date.getMonth() / 12) * Math.PI * 2);
+                var growthFactor = 1 + 0.01 * ((date.getFullYear() - 2015) * 12 + date.getMonth());
+
+                var value = Math.round(baseValue * seasonalFactor * growthFactor);
+
+                timeData.push([monthStr, value]);
+
+                // 移动到下个月
+                date.setMonth(date.getMonth() + 1);
+            }
+
+            return timeData;
+        }
+
+        var timeData = generateTimeData();
+
+        // 配置主图表
+        var option = {
+            title: {
+                text: 'Fish Records Time Trend (2015-2025)',
+                textStyle: {
+                    fontSize: 14
+                },
+                left: 'center'
+            },
+            tooltip: {
+                trigger: 'axis',
+                formatter: function(params) {
+                    var param = params[0];
+                    return param.name + ': ' + param.value[1] + ' records';
+                }
+            },
+            xAxis: {
+                type: 'category',
+                boundaryGap: false,
+                axisLabel: {
+                    formatter: function(value) {
+                        if (value.endsWith('-01')) {
+                            return value.split('-')[0];
+                        }
+                        return '';
+                    },
+                    fontSize: 10
+                },
+                data: timeData.map(function(item) {
+                    return item[0];
+                })
+            },
+            yAxis: {
+                type: 'value',
+                name: 'Records',
+                nameTextStyle: {
+                    fontSize: 10
+                },
+                axisLabel: {
+                    fontSize: 10
+                }
+            },
+            dataZoom: [{
+                type: 'inside',
+                start: 0,
+                end: 100
+            }, {
+                start: 0,
+                end: 100
+            }],
+            series: [{
+                name: 'Fish Records',
+                type: 'line',
+                sampling: 'lttb',
+                itemStyle: {
+                    color: '#5470c6'
+                },
+                areaStyle: {
+                    color: {
+                        type: 'linear',
+                        x: 0,
+                        y: 0,
+                        x2: 0,
+                        y2: 1,
+                        colorStops: [{
+                            offset: 0, color: 'rgba(84, 112, 198, 0.8)'
+                        }, {
+                            offset: 1, color: 'rgba(84, 112, 198, 0.1)'
+                        }]
+                    }
+                },
+                data: timeData
+            }]
+        };
+
+        // 初始化主图
+        timeChart.setOption(option);
+
+        // 定义时间窗口
+        var currentDate = new Date();
+
+        // 获取当前年月
+        var currentYear = currentDate.getFullYear();
+        var currentMonth = currentDate.getMonth() + 1;
+
+        // 构建时间范围
+        var timeWindows = [
+            {
+                name: 'Last 3 Months',
+                desc: 'Fish records from the most recent quarter',
+                color: '#5470c6'
+            },
+            {
+                name: 'Last Quarter',
+                desc: 'Fish records from the previous quarter',
+                color: '#91cc75'
+            },
+            {
+                name: 'Last Year',
+                desc: 'Annual fish record trends from the past year',
+                color: '#fac858'
+            },
+            {
+                name: 'Last 2 Years',
+                desc: 'Biennial fish record patterns',
+                color: '#ee6666'
+            },
+            {
+                name: 'All Time',
+                desc: 'Complete fish record history',
+                color: '#73c0de'
+            }
+        ];
+
+        // 初始化小倍率图
+        var smallMultiples = document.querySelectorAll('.small-multiple');
+        if (smallMultiples.length > 0) {
+            smallMultiples.forEach(function(container, index) {
+                if (index >= timeWindows.length) return;
+
+                // 获取时间窗口
+                var timeWindow = timeWindows[index];
+
+                // 设置悬停效果和提示
+                container.style.position = 'relative';
+                container.style.cursor = 'pointer';
+                container.style.transition = 'all 0.3s';
+
+                // 添加提示框
+                var tooltip = document.createElement('div');
+                tooltip.className = 'time-tooltip';
+                tooltip.textContent = timeWindow.name + ' - ' + timeWindow.desc;
+                tooltip.style.position = 'absolute';
+                tooltip.style.top = '-30px';
+                tooltip.style.left = '50%';
+                tooltip.style.transform = 'translateX(-50%)';
+                tooltip.style.backgroundColor = 'rgba(0,0,0,0.7)';
+                tooltip.style.color = 'white';
+                tooltip.style.padding = '4px 8px';
+                tooltip.style.borderRadius = '4px';
+                tooltip.style.fontSize = '10px';
+                tooltip.style.whiteSpace = 'nowrap';
+                tooltip.style.zIndex = '10';
+                tooltip.style.display = 'none';
+                container.appendChild(tooltip);
+
+                // 悬停显示提示
+                container.addEventListener('mouseenter', function() {
+                    tooltip.style.display = 'block';
+                    this.style.boxShadow = '0 0 5px rgba(0,0,0,0.3)';
+                });
+
+                container.addEventListener('mouseleave', function() {
+                    tooltip.style.display = 'none';
+                    this.style.boxShadow = 'none';
+                });
+
+                // 过滤时间窗口数据
+                var windowData;
+
+                if (index === 0) { // 最近3个月
+                    windowData = timeData.slice(-3);
+                } else if (index === 1) { // 上一季度
+                    windowData = timeData.slice(-6, -3);
+                } else if (index === 2) { // 过去一年
+                    windowData = timeData.slice(-12);
+                } else if (index === 3) { // 过去两年
+                    windowData = timeData.slice(-24);
+                } else { // 全部数据
+                    windowData = timeData;
+                }
+
+                // 创建小图表
+                var miniChart = echarts.init(container);
+
+                var miniOption = {
+                    grid: {
+                        left: 5,
+                        right: 5,
+                        top: 5,
+                        bottom: 5,
+                        containLabel: false
+                    },
+                    xAxis: {
+                        type: 'category',
+                        show: false,
+                        boundaryGap: false
+                    },
+                    yAxis: {
+                        type: 'value',
+                        show: false
+                    },
+                    series: [{
+                        type: 'line',
+                        sampling: 'lttb',
+                        symbol: 'none',
+                        lineStyle: {
+                            width: 1.5,
+                            color: timeWindow.color
+                        },
+                        areaStyle: {
+                            color: {
+                                type: 'linear',
+                                x: 0,
+                                y: 0,
+                                x2: 0,
+                                y2: 1,
+                                colorStops: [{
+                                    offset: 0, color: timeWindow.color.replace(')', ', 0.3)')
+                                        .replace('rgb', 'rgba')
+                                }, {
+                                    offset: 1, color: 'rgba(255, 255, 255, 0.1)'
+                                }]
+                            }
+                        },
+                        data: windowData
+                    }]
+                };
+
+                miniChart.setOption(miniOption);
+
+                // 点击小图时在主图中高亮相应区域
+                container.addEventListener('click', function() {
+                    var startIndex = index === 0 ? timeData.length - 3 :
+                        index === 1 ? timeData.length - 6 :
+                            index === 2 ? timeData.length - 12 :
+                                index === 3 ? timeData.length - 24 : 0;
+
+                    var endIndex = index === 1 ? timeData.length - 3 : timeData.length - 1;
+
+                    if (index === 4) {
+                        // 全部数据 - 清除标记
+                        option.series[0].markArea = { data: [] };
+                    } else {
+                        // 更新主图中的标记区域
+                        option.series[0].markArea = {
+                            silent: true,
+                            itemStyle: {
+                                color: timeWindow.color,
+                                opacity: 0.2,
+                                borderColor: timeWindow.color,
+                                borderWidth: 1
+                            },
+                            data: [[
+                                {
+                                    name: timeWindow.name,
+                                    xAxis: timeData[startIndex][0]
+                                },
+                                {
+                                    xAxis: timeData[endIndex][0]
+                                }
+                            ]]
+                        };
+                    }
+
+                    // 应用更新
+                    timeChart.setOption(option);
+
+                    // 视觉反馈
+                    document.querySelectorAll('.small-multiple').forEach(function(div, i) {
+                        div.style.opacity = i === index ? 1 : 0.7;
+                        div.style.border = i === index ? '1px solid ' + timeWindows[i].color : '1px solid #eee';
+                    });
+                });
+
+                // 窗口调整事件
+                window.addEventListener('resize', function() {
+                    miniChart.resize();
+                });
+            });
+
+            // 默认显示第一个时间段
+            smallMultiples[0].click();
+        }
+
+        window.addEventListener('resize', function() {
+            timeChart.resize();
+        });
+    });
+</script>
+<script>
+    // 初始化质量热图与问题统计图表切换
+    document.addEventListener('DOMContentLoaded', function() {
+        // 找到质量面板的内容容器
+        var qualityPanelContent = document.querySelector('.quality-panel .panel-content');
+        if (!qualityPanelContent) return;
+
+        // 清空面板内容
+        qualityPanelContent.innerHTML = '';
+
+        // 创建两个容器和切换按钮
+        var containerWrapper = document.createElement('div');
+        containerWrapper.style.position = 'relative';
+        containerWrapper.style.width = '100%';
+        containerWrapper.style.height = '100%';
+
+        var heatmapContainer = document.createElement('div');
+        heatmapContainer.id = 'quality-heatmap-container';
+        heatmapContainer.style.width = '100%';
+        heatmapContainer.style.height = '100%';
+
+        var issuesChartContainer = document.createElement('div');
+        issuesChartContainer.id = 'quality-issues-chart-container';
+        issuesChartContainer.style.width = '100%';
+        issuesChartContainer.style.height = '100%';
+        issuesChartContainer.style.display = 'none';
+
+        var switchBtn = document.createElement('button');
+        switchBtn.textContent = 'Switch to Issues Chart';
+        switchBtn.style.position = 'absolute';
+        switchBtn.style.top = '10px';
+        switchBtn.style.right = '10px';
+        switchBtn.style.zIndex = '100';
+        switchBtn.style.padding = '5px 10px';
+        switchBtn.style.fontSize = '12px';
+        switchBtn.style.backgroundColor = 'white';
+        switchBtn.style.border = '1px solid #ccc';
+        switchBtn.style.borderRadius = '4px';
+        switchBtn.style.cursor = 'pointer';
+
+        containerWrapper.appendChild(heatmapContainer);
+        containerWrapper.appendChild(issuesChartContainer);
+        containerWrapper.appendChild(switchBtn);
+        qualityPanelContent.appendChild(containerWrapper);
+
+        // 初始化热图
+        var heatmapChart = echarts.init(document.getElementById('quality-heatmap-container'));
+
+        // 使用数据质量维度
+        var dataDimensions = ['Geographic', 'Taxonomic', 'Temporal', 'Collection', 'Ecological', 'Multimedia', 'Reference'];
+        var dataQualityMetrics = ['Completeness', 'Accuracy', 'Consistency', 'Uniqueness', 'Timeliness', 'Verifiability'];
+
+        // 生成数据质量数据
+        var data = [];
+        for (var i = 0; i < dataQualityMetrics.length; i++) {
+            for (var j = 0; j < dataDimensions.length; j++) {
+                var quality = 75 + Math.round(Math.random() * 20);
+
+                if ((j === 0 && i === 1) || (j === 1 && i === 0)) {
+                    quality += 10;
+                }
+                if ((j === 3 && i === 5) || (j === 6 && i === 2)) {
+                    quality -= 15;
+                }
+
+                quality = Math.min(98, Math.max(60, quality));
+                data.push([j, i, quality]);
+            }
+        }
+
+        var heatmapOption = {
+            title: {
+                text: 'Data Quality Assessment Matrix',
+                left: 'center',
+                top: '5px',
+                textStyle: {
+                    fontSize: 14,
+                    fontWeight: 'normal'
+                }
+            },
+            tooltip: {
+                position: 'top',
+                formatter: function (params) {
+                    return 'Dimension: ' + dataDimensions[params.value[0]] + '<br>' +
+                        'Metric: ' + dataQualityMetrics[params.value[1]] + '<br>' +
+                        'Score: ' + params.value[2] + '%';
+                }
+            },
+            grid: {
+                height: '60%',
+                width: '85%',
+                top: '40px',
+                left: '10%',
+                right: '5%',
+                bottom: '15%'
+            },
+            xAxis: {
+                type: 'category',
+                data: dataDimensions,
+                splitArea: {
+                    show: true
+                },
+                axisLabel: {
+                    rotate: 45,
+                    fontSize: 11,
+                    interval: 0
+                },
+                axisLine: {
+                    show: true
+                },
+                axisTick: {
+                    show: true
+                }
+            },
+            yAxis: {
+                type: 'category',
+                data: dataQualityMetrics,
+                splitArea: {
+                    show: true
+                },
+                axisLabel: {
+                    fontSize: 11,
+                    interval: 0
+                },
+                axisLine: {
+                    show: true
+                },
+                axisTick: {
+                    show: true
+                }
+            },
+            visualMap: {
+                min: 60,
+                max: 100,
+                calculable: true,
+                orient: 'horizontal',
+                left: 'center',
+                bottom: '-100px',
+                inRange: {
+                    color: ['#f46d43', '#fee090', '#abd9e9', '#4575b4']
+                },
+                textStyle: {
+                    color: '#333',
+                    fontSize: 10
+                }
+            },
+            series: [{
+                name: 'Data Quality',
+                type: 'heatmap',
+                data: data,
+                label: {
+                    show: true,
+                    formatter: function(params) {
+                        return params.value[2] + '%';
+                    },
+                    fontSize: 11
+                }
+            }]
+        };
+
+        heatmapChart.setOption(heatmapOption);
+
+        // 初始化问题统计图表
+        var issuesChart = echarts.init(document.getElementById('quality-issues-chart-container'));
+
+        // 问题数据
+        var issueData = [
+            {name: 'Missing coordinates', value: 218},
+            {name: 'Uncertain taxonomy', value: 142},
+            {name: 'Incomplete data', value: 124},
+            {name: 'Duplicate specimens', value: 83}
+        ];
+
+        var issuesOption = {
+            title: {
+                text: 'Major Fish Data Issues',
+                left: 'center',
+                top: '5px',
+                textStyle: {
+                    fontSize: 14,
+                    fontWeight: 'normal'
+                }
+            },
+            tooltip: {
+                trigger: 'item',
+                formatter: '{a} <br/>{b}: {c} ({d}%)'
+            },
+            legend: {
+                orient: 'vertical',
+                left: 'left',
+                top: '40px',
+                data: issueData.map(item => item.name)
+            },
+            series: [
+                {
+                    name: 'Issue Count',
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    center: ['60%', '50%'],
+                    avoidLabelOverlap: false,
+                    label: {
+                        show: true,
+                        position: 'outside',
+                        formatter: '{b}: {c}\n({d}%)',
+                        fontSize: 12
+                    },
+                    emphasis: {
+                        label: {
+                            show: true,
+                            fontSize: 14,
+                            fontWeight: 'bold'
+                        }
+                    },
+                    labelLine: {
+                        show: true
+                    },
+                    data: issueData,
+                    itemStyle: {
+                        color: function(params) {
+                            var colorList = ['#c23531', '#2f4554', '#61a0a8', '#d48265'];
+                            return colorList[params.dataIndex % colorList.length];
+                        }
+                    }
+                }
+            ]
+        };
+
+        issuesChart.setOption(issuesOption);
+
+        // 视图切换逻辑
+        var showingHeatmap = true;
+
+        switchBtn.addEventListener('click', function() {
+            if (showingHeatmap) {
+                // 切换到问题统计图
+                heatmapContainer.style.display = 'none';
+                issuesChartContainer.style.display = 'block';
+                switchBtn.textContent = 'Switch to Quality Matrix';
+
+                // 调整大小确保正确显示
+                issuesChart.resize();
+            } else {
+                // 切换到热图
+                issuesChartContainer.style.display = 'none';
+                heatmapContainer.style.display = 'block';
+                switchBtn.textContent = 'Switch to Issues Chart';
+
+                // 调整大小确保正确显示
+                heatmapChart.resize();
+            }
+
+            showingHeatmap = !showingHeatmap;
+        });
+
+        // 处理窗口大小变化
+        window.addEventListener('resize', function() {
+            heatmapChart.resize();
+            issuesChart.resize();
+        });
+    });
+</script>
+</body>
+</html>

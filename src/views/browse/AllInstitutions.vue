@@ -11,10 +11,6 @@
           <div class="global-stat-label">Total Data Providers</div>
         </div>
         <div class="global-stat">
-          <div class="global-stat-number">{{ formatNumber(institutionStats.totalCollectionCodes) }}</div>
-          <div class="global-stat-label">Collection Codes</div>
-        </div>
-        <div class="global-stat">
           <div class="global-stat-number">{{ formatNumber(institutionStats.totalRecords, 'short') }}</div>
           <div class="global-stat-label">Total Records</div>
         </div>
@@ -26,170 +22,52 @@
           <div class="global-stat-number">{{ institutionStats.avgGeoreferenced }}%</div>
           <div class="global-stat-label">Avg. Georeferenced</div>
         </div>
-        <div class="global-stat">
-          <div class="global-stat-number">{{ institutionStats.avgDateQuality }}%</div>
-          <div class="global-stat-label">Avg. Date Quality</div>
-        </div>
       </div>
 
       <div class="page-actions">
-        <button disabled class="action-button export" @click="exportInstitutionReport">
+        <button class="action-button export" @click="exportInstitutionReport">
           <span class="action-icon">📊</span> Export Data Providers Report
         </button>
-        <button disabled class="action-button network" @click="showCollaborationNetwork">
+        <button class="action-button network" @click="showCollaborationNetwork">
           <span class="action-icon">🌐</span> Collaboration Network
         </button>
-        <button disabled class="action-button quality" @click="showDataQualityAssessment">
+        <button class="action-button quality" @click="showDataQualityAssessment">
           <span class="action-icon">✅</span> Data Quality Assessment
         </button>
-        <button disabled class="action-button refresh" @click="refreshStats">
-          <span class="action-icon">🔄</span> Refresh Statistics
-        </button>
       </div>
     </div>
+    <WorldMap
+        :map-data="transformedMapData"
+        :loading="loading"
+        @provider-clicked="navigateToInstitution"
+    />
 
-    <!-- Top Institutions Highlight -->
-    <div class="top-institutions" v-if="topInstitutions.length">
-      <div class="stats-title">Top Contributing Data Providers</div>
-      <div class="top-institutions-grid">
-        <div
-            v-for="(institution, index) in topInstitutions"
-            :key="institution.institutionCode"
-            class="top-institution-item"
-            @click="navigateToInstitution(institution.institutionCode)"
-        >
-          <div class="top-institution-rank">{{ index + 1 }}</div>
-          <div class="top-institution-code">{{ institution.institutionCode }}</div>
-          <div class="top-institution-stats">
-            {{ formatNumber(institution.recordCount) }} records<br>
-            {{ formatNumber(institution.speciesCount) }} species
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Enhanced Geographic Distribution -->
-    <div class="geo-distribution">
-      <div class="stats-title">Data Providers by Geographic Region</div>
-      <div class="geo-stats">
-        <div class="geo-region" @click="filterByRegion('North America')">
-          <div class="geo-region-name">North America</div>
-          <div class="geo-region-count">{{ institutionStats.northAmericaInstitutions || 0 }}</div>
-          <div class="geo-region-desc">Data Providers contributing</div>
-        </div>
-        <div class="geo-region" @click="filterByRegion('Europe')">
-          <div class="geo-region-name">Europe</div>
-          <div class="geo-region-count">{{ institutionStats.europeInstitutions || 0 }}</div>
-          <div class="geo-region-desc">Data Providers contributing</div>
-        </div>
-        <div class="geo-region" @click="filterByRegion('Asia-Pacific')">
-          <div class="geo-region-name">Asia-Pacific</div>
-          <div class="geo-region-count">{{ institutionStats.asiaPacificInstitutions || 0 }}</div>
-          <div class="geo-region-desc">Data Providers contributing</div>
-        </div>
-        <div class="geo-region" @click="filterByRegion('Other')">
-          <div class="geo-region-name">Other Regions</div>
-          <div class="geo-region-count">{{ institutionStats.otherRegionsInstitutions || 0 }}</div>
-          <div class="geo-region-desc">Data Providers contributing</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Enhanced Institution Categories -->
-    <div class="quick-stats">
-      <div class="stats-title">Data Providers Categories</div>
-      <div class="stats-grid">
-        <div class="stat-category">
-          <div class="stat-category-title">Major Contributors</div>
-          <div class="stat-category-value">{{ institutionStats.majorContributors || 0 }}</div>
-          <div class="stat-category-desc">>10,000 records each</div>
-        </div>
-        <div class="stat-category">
-          <div class="stat-category-title">Active Contributors</div>
-          <div class="stat-category-value">{{ institutionStats.activeContributors || 0 }}</div>
-          <div class="stat-category-desc">1,000-10,000 records</div>
-        </div>
-        <div class="stat-category">
-          <div class="stat-category-title">Research Collections</div>
-          <div class="stat-category-value">{{ institutionStats.researchCollections || 0 }}</div>
-          <div class="stat-category-desc">Universities & museums</div>
-        </div>
-        <div class="stat-category">
-          <div class="stat-category-title">High Quality Data</div>
-          <div class="stat-category-value">{{ institutionStats.highQualityData || 0 }}</div>
-          <div class="stat-category-desc">>90% georeferencing</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Collection Analytics -->
-    <div class="collection-analytics">
-      <div class="stats-title">Collection Analytics</div>
-      <div class="analytics-grid">
-        <div class="analytics-card">
-          <div class="analytics-header">
-            <h3>Collection Diversity</h3>
-            <span class="analytics-icon">📚</span>
-          </div>
-          <div class="analytics-metrics">
-            <div class="metric">
-              <span class="metric-label">Data Providers with Collections:</span>
-              <span class="metric-value">{{ institutionStats.institutionsWithCollections || 0 }}</span>
-            </div>
-            <div class="metric">
-              <span class="metric-label">Unique Collection Codes:</span>
-              <span class="metric-value">{{ institutionStats.uniqueCollectionCodes || 0 }}</span>
-            </div>
-            <div class="metric">
-              <span class="metric-label">Avg Collections per Institution:</span>
-              <span class="metric-value">{{ institutionStats.avgCollectionsPerInstitution || 0 }}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="analytics-card">
-          <div class="analytics-header">
-            <h3>Temporal Coverage</h3>
-            <span class="analytics-icon">📅</span>
-          </div>
-          <div class="analytics-metrics">
-            <div class="metric">
-              <span class="metric-label">Recent Records (2020+):</span>
-              <span class="metric-value">{{ formatNumber(institutionStats.recentRecords, 'short') || '0' }}</span>
-            </div>
-            <div class="metric">
-              <span class="metric-label">Last Decade (2010-2019):</span>
-              <span class="metric-value">{{ formatNumber(institutionStats.decadeRecords, 'short') || '0' }}</span>
-            </div>
-            <div class="metric">
-              <span class="metric-label">Historical Records (<2000):</span>
-              <span class="metric-value">{{ formatNumber(institutionStats.historicalRecords, 'short') || '0' }}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="analytics-card">
-          <div class="analytics-header">
-            <h3>Data Quality Overview</h3>
-            <span class="analytics-icon">⭐</span>
-          </div>
-          <div class="analytics-metrics">
-            <div class="metric">
-              <span class="metric-label">Average Georeferencing:</span>
-              <span class="metric-value">{{ institutionStats.avgGeoreferenced || 0 }}%</span>
-            </div>
-            <div class="metric">
-              <span class="metric-label">Average Date Quality:</span>
-              <span class="metric-value">{{ institutionStats.avgDateQuality || 0 }}%</span>
-            </div>
-            <div class="metric">
-              <span class="metric-label">Last Updated:</span>
-              <span class="metric-value">{{ formatCalculationTime(institutionStats.calculatedAt) }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+<!--    &lt;!&ndash; Quick Stats &ndash;&gt;-->
+<!--    <div class="quick-stats">-->
+<!--      <div class="stats-title">Data Providers Categories</div>-->
+<!--      <div class="stats-grid">-->
+<!--        <div class="stat-category">-->
+<!--          <div class="stat-category-title">Major Contributors</div>-->
+<!--          <div class="stat-category-value">{{ institutionStats?.majorContributors || 0 }}</div>-->
+<!--          <div class="stat-category-desc">>10,000 records each</div>-->
+<!--        </div>-->
+<!--        <div class="stat-category">-->
+<!--          <div class="stat-category-title">Active Contributors</div>-->
+<!--          <div class="stat-category-value">{{ institutionStats?.activeContributors || 0 }}</div>-->
+<!--          <div class="stat-category-desc">1,000-10,000 records</div>-->
+<!--        </div>-->
+<!--        <div class="stat-category">-->
+<!--          <div class="stat-category-title">Research Collections</div>-->
+<!--          <div class="stat-category-value">{{ institutionStats?.researchCollections || 0 }}</div>-->
+<!--          <div class="stat-category-desc">Universities & museums</div>-->
+<!--        </div>-->
+<!--        <div class="stat-category">-->
+<!--          <div class="stat-category-title">High Quality Data</div>-->
+<!--          <div class="stat-category-value">{{ institutionStats?.highQualityData || 0 }}</div>-->
+<!--          <div class="stat-category-desc">>90% georeferencing</div>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
 
     <!-- Search and Filter Controls -->
     <div class="controls-section">
@@ -203,9 +81,10 @@
         />
         <select class="filter-select" v-model="filters.region" @change="applyFilters">
           <option value="">All Regions</option>
-          <option v-for="region in availableRegions" :key="region" :value="region">
-            {{ region }}
-          </option>
+          <option value="North America">North America</option>
+          <option value="Europe">Europe</option>
+          <option value="Asia-Pacific">Asia-Pacific</option>
+          <option value="Other">Other Regions</option>
         </select>
         <select class="filter-select" v-model="filters.recordCount" @change="applyFilters">
           <option value="">All Record Counts</option>
@@ -214,7 +93,7 @@
           <option value="small">Small (<1,000)</option>
         </select>
         <select class="filter-select" v-model="filters.institutionType" @change="applyFilters">
-          <option value="">All Data Providers Types</option>
+          <option value="">All Institution Types</option>
           <option value="museum">Museums</option>
           <option value="university">Universities</option>
           <option value="government">Government</option>
@@ -226,22 +105,6 @@
           <option value="quality_desc">Sort by Quality</option>
           <option value="name_asc">Sort by Name</option>
         </select>
-        <div class="view-toggle">
-          <button
-              class="view-btn"
-              :class="{ active: viewMode === 'cards' }"
-              @click="viewMode = 'cards'"
-          >
-            Cards
-          </button>
-          <button
-              class="view-btn"
-              :class="{ active: viewMode === 'table' }"
-              @click="viewMode = 'table'"
-          >
-            Table
-          </button>
-        </div>
       </div>
     </div>
 
@@ -264,155 +127,204 @@
         <button @click="loadInstitutions" class="retry-button">Retry</button>
       </div>
 
-      <!-- Card View -->
-      <div v-else-if="viewMode === 'cards'" class="institutions-grid">
-        <div
-            v-for="institution in paginatedInstitutions"
-            :key="institution.institutionCode"
-            class="institution-card"
-            @click="navigateToInstitution(institution.institutionCode)"
-        >
-          <div class="institution-card-header">
-            <div class="institution-logo">{{ institution.institutionCode }}</div>
-            <div class="institution-info">
-              <h3 class="institution-name">{{ institution.institutionName }}</h3>
-              <div class="institution-codes">
-                <span class="institution-code-tag">
-                  <span class="dc-field">institutionCode:</span> {{ institution.institutionCode }}
+      <!-- Enhanced Table View with Expandable Cards -->
+      <div v-else class="table-container">
+        <table class="institutions-table">
+          <thead>
+          <tr>
+            <th></th>
+            <th><span class="dc-field">institutionCode</span></th>
+            <th>Institution Name</th>
+            <th>Country</th>
+            <th>Records</th>
+            <th>Species</th>
+            <th>Countries</th>
+            <th>Georeferenced</th>
+            <th>Date Quality</th>
+          </tr>
+          </thead>
+          <tbody>
+          <template v-for="institution in paginatedInstitutions" :key="institution.institutionCode">
+            <!-- Main Row -->
+            <tr
+                class="table-row"
+                :class="{ expanded: expandedInstitution === institution.institutionCode }"
+                @click="toggleRow(institution.institutionCode)"
+            >
+              <td>
+                <span
+                    class="expand-icon"
+                    :class="{ expanded: expandedInstitution === institution.institutionCode }"
+                >
+                  ▼
                 </span>
-                <span v-if="institution.ownerInstitutionCode" class="institution-code-tag">
-                  <span class="dc-field">ownerInstitutionCode:</span> {{ institution.ownerInstitutionCode }}
+              </td>
+              <td>
+                <span class="table-institution-code">{{ institution.institutionCode }}</span>
+              </td>
+              <td>
+                <span class="table-institution-name">{{ institution.institutionName }}</span>
+              </td>
+              <td>{{ institution.country }}</td>
+              <td>
+                <div class="records-bar-container">
+                  <div
+                      class="records-bar"
+                      :style="{ width: getRecordsPercentage(institution.recordCount) + '%' }"
+                  ></div>
+                  <div class="records-text">
+                    {{ formatNumber(institution.recordCount, 'short') }}
+                  </div>
+                </div>
+              </td>
+              <td>{{ formatNumber(institution.speciesCount) }}</td>
+              <td>{{ formatNumber(institution.countriesCount) }}</td>
+              <td>
+                <span
+                    class="quality-badge"
+                    :class="getQualityClass(institution.geoReferencingQuality)"
+                >
+                  {{ institution.geoReferencingQuality }}%
                 </span>
-              </div>
-              <div class="institution-location">{{ formatLocation(institution) }}</div>
-            </div>
+              </td>
+              <td>
+                <span
+                    class="quality-badge"
+                    :class="getQualityClass(institution.dateQuality)"
+                >
+                  {{ institution.dateQuality }}%
+                </span>
+              </td>
+            </tr>
+
+            <!-- Expanded Card Row -->
+            <tr
+                v-if="expandedInstitution === institution.institutionCode"
+                class="expanded-card"
+            >
+              <td colspan="9">
+                <div class="card-content">
+                  <div class="institution-card-header">
+                    <div class="institution-logo">{{ institution.institutionCode }}</div>
+                    <div class="institution-info">
+                      <h3 class="institution-name">{{ institution.institutionName }}</h3>
+                      <div class="institution-codes">
+                        <span class="institution-code-tag">
+                          <span class="dc-field">institutionCode:</span> {{ institution.institutionCode }}
+                        </span>
+                        <span v-if="institution.ownerInstitutionCode" class="institution-code-tag">
+                          <span class="dc-field">ownerInstitutionCode:</span> {{ institution.ownerInstitutionCode }}
+                        </span>
+                      </div>
+                      <div class="institution-location">{{ formatLocation(institution) }}</div>
+                    </div>
+                  </div>
+
+                  <div class="institution-stats-row">
+                    <div class="institution-stat">
+                      <div class="institution-stat-number">{{ formatNumber(institution.recordCount) }}</div>
+                      <div class="institution-stat-label">Records</div>
+                    </div>
+                    <div class="institution-stat">
+                      <div class="institution-stat-number">{{ formatNumber(institution.speciesCount) }}</div>
+                      <div class="institution-stat-label">Species</div>
+                    </div>
+                    <div class="institution-stat">
+                      <div class="institution-stat-number">{{ formatNumber(institution.familiesCount) }}</div>
+                      <div class="institution-stat-label">Families</div>
+                    </div>
+                    <div class="institution-stat">
+                      <div class="institution-stat-number">{{ formatNumber(institution.countriesCount) }}</div>
+                      <div class="institution-stat-label">Countries</div>
+                    </div>
+                  </div>
+
+                  <div class="institution-meta">
+                    <span>Last updated: {{ formatDate(institution.lastUpdated) }}</span>
+                    <div class="institution-quality">
+                      <span
+                          class="quality-badge"
+                          :class="getQualityClass(institution.geoReferencingQuality)"
+                      >
+                        Geo: {{ institution.geoReferencingQuality }}%
+                      </span>
+                      <span
+                          class="quality-badge"
+                          :class="getQualityClass(institution.dateQuality)"
+                      >
+                        Date: {{ institution.dateQuality }}%
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="collection-codes" v-if="institution.collectionCodes">
+                    <div class="collection-codes-label">
+                      <span class="dc-field">collectionCode</span> values:
+                    </div>
+                    <div class="collection-code-list">
+                      <span
+                          v-for="code in institution.collectionCodes.slice(0, 6)"
+                          :key="code"
+                          class="collection-code"
+                      >
+                        {{ code }}
+                      </span>
+                      <span
+                          v-if="institution.collectionCodes.length > 6"
+                          class="collection-code more"
+                      >
+                        +{{ institution.collectionCodes.length - 6 }} more
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="card-actions">
+                    <button class="card-action-btn primary" @click="navigateToInstitution(institution.institutionCode)">
+                      View Details
+                    </button>
+                    <button class="card-action-btn secondary" @click="downloadData(institution.institutionCode)">
+                      Download Data
+                    </button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </template>
+          </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <div class="pagination" v-if="totalPages > 1">
+          <button
+              class="pagination-btn"
+              :disabled="pagination.page === 1"
+              @click="changePage(pagination.page - 1)"
+          >
+            « Previous
+          </button>
+
+          <button
+              v-for="page in visiblePages"
+              :key="page"
+              class="pagination-btn"
+              :class="{ active: page === pagination.page }"
+              @click="changePage(page)"
+          >
+            {{ page }}
+          </button>
+
+          <button
+              class="pagination-btn"
+              :disabled="pagination.page === totalPages"
+              @click="changePage(pagination.page + 1)"
+          >
+            Next »
+          </button>
+
+          <div class="pagination-info">
+            Showing {{ (pagination.page - 1) * pagination.perPage + 1 }}-{{ Math.min(pagination.page * pagination.perPage, filteredInstitutions.length) }}
+            of {{ filteredInstitutions.length }} institutions
           </div>
-          <div class="institution-stats-row">
-            <div class="institution-stat">
-              <div class="institution-stat-number">{{ formatNumber(institution.recordCount) }}</div>
-              <div class="institution-stat-label">Records</div>
-            </div>
-            <div class="institution-stat">
-              <div class="institution-stat-number">{{ formatNumber(institution.speciesCount) }}</div>
-              <div class="institution-stat-label">Species</div>
-            </div>
-            <div class="institution-stat">
-              <div class="institution-stat-number">{{ formatNumber(institution.familiesCount) }}</div>
-              <div class="institution-stat-label">Families</div>
-            </div>
-            <div class="institution-stat">
-              <div class="institution-stat-number">{{ formatNumber(institution.countriesCount) }}</div>
-              <div class="institution-stat-label">Countries</div>
-            </div>
-          </div>
-          <div class="institution-meta">
-            <span>Last updated: {{ formatDate(institution.lastUpdated) }}</span>
-            <div class="institution-quality">
-              <span
-                  class="quality-badge"
-                  :class="getQualityClass(institution.geoReferencingQuality)"
-              >
-                Geo: {{ institution.geoReferencingQuality }}%
-              </span>
-              <span
-                  class="quality-badge"
-                  :class="getQualityClass(institution.dateQuality)"
-              >
-                Date: {{ institution.dateQuality }}%
-              </span>
-            </div>
-          </div>
-          <div class="collection-codes" v-if="institution.collectionCodes">
-            <div class="collection-codes-label">
-              <span class="dc-field">collectionCode</span> values:
-            </div>
-            <div class="collection-code-list">
-              <span
-                  v-for="code in institution.collectionCodes.slice(0, 3)"
-                  :key="code"
-                  class="collection-code"
-              >
-                {{ code }}
-              </span>
-              <span
-                  v-if="institution.collectionCodes.length > 3"
-                  class="collection-code more"
-              >
-                +{{ institution.collectionCodes.length - 3 }} more
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Table View -->
-      <table v-else class="institutions-table">
-        <thead>
-        <tr>
-          <th><span class="dc-field">institutionCode</span></th>
-          <th>Data Provider Name</th>
-          <th><span class="dc-field">ownerInstitutionCode</span></th>
-          <th>Country</th>
-          <th>Records</th>
-          <th>Species</th>
-          <th><span class="dc-field">collectionCode</span> Count</th>
-          <th>Georeferenced</th>
-          <th>Date Quality</th>
-          <th>Last Updated</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr
-            v-for="institution in paginatedInstitutions"
-            :key="institution.institutionCode"
-            @click="navigateToInstitution(institution.institutionCode)"
-            class="clickable-row"
-        >
-          <td><span class="table-institution-code">{{ institution.institutionCode }}</span></td>
-          <td><span class="table-institution-name">{{ institution.institutionName }}</span></td>
-          <td>{{ institution.ownerInstitutionCode || '—' }}</td>
-          <td>{{ institution.country }}</td>
-          <td>{{ formatNumber(institution.recordCount) }}</td>
-          <td>{{ formatNumber(institution.speciesCount) }}</td>
-          <td>{{ institution.collectionCodes ? institution.collectionCodes.length : 0 }}</td>
-          <td>{{ institution.geoReferencingQuality }}%</td>
-          <td>{{ institution.dateQuality }}%</td>
-          <td>{{ formatDate(institution.lastUpdated) }}</td>
-        </tr>
-        </tbody>
-      </table>
-
-      <!-- Pagination -->
-      <div class="pagination" v-if="totalPages > 1">
-        <button
-            class="pagination-btn"
-            :disabled="pagination.page === 1"
-            @click="changePage(pagination.page - 1)"
-        >
-          « Previous
-        </button>
-
-        <button
-            v-for="page in visiblePages"
-            :key="page"
-            class="pagination-btn"
-            :class="{ active: page === pagination.page }"
-            @click="changePage(page)"
-        >
-          {{ page }}
-        </button>
-
-        <button
-            class="pagination-btn"
-            :disabled="pagination.page === totalPages"
-            @click="changePage(pagination.page + 1)"
-        >
-          Next »
-        </button>
-
-        <div class="pagination-info">
-          Showing {{ (pagination.page - 1) * pagination.perPage + 1 }}-{{ Math.min(pagination.page * pagination.perPage, filteredInstitutions.length) }}
-          of {{ filteredInstitutions.length }} institutions
         </div>
       </div>
     </div>
@@ -424,6 +336,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useInstitutions } from '@/composables/useInstitutions.js'
 import { debounce } from 'lodash-es'
+import WorldMap from '@/components/charts/WorldMap.vue'
 
 const router = useRouter()
 
@@ -437,8 +350,79 @@ const {
   fetchInstitutionStats
 } = useInstitutions()
 
+// 转换API数据为地图组件需要的格式
+const transformedMapData = computed(() => {
+  return transformInstitutionsForMap(institutions.value)
+})
+
+// 简单的数据转换函数
+function transformInstitutionsForMap(apiData) {
+  if (!Array.isArray(apiData)) return []
+
+  return apiData.map(institution => ({
+    // 地图组件需要的字段
+    institutionCode: institution.institutionCode,
+    institutionName: institution.institutionName,
+    country: institution.country,
+    recordCount: institution.recordCount,
+    speciesCount: institution.speciesCount,
+    familiesCount: institution.familiesCount,
+    geoReferencingQuality: Math.round(institution.geoReferencingQuality || 0),
+    dateQuality: Math.round(institution.dateQuality || 0),
+    institutionType: institution.institutionType,
+
+    // 坐标信息 - 根据机构代码或国家获取
+    ...getCoordinatesForInstitution(institution)
+  })).filter(item => item.lat && item.lng) // 过滤掉没有坐标的
+}
+
+// 获取机构坐标的简单函数
+function getCoordinatesForInstitution(institution) {
+  // 如果API已经提供了坐标
+  if (institution.lat && institution.lng) {
+    return {
+      lat: parseFloat(institution.lat),
+      lng: parseFloat(institution.lng)
+    }
+  }
+
+  // 根据常见机构代码获取坐标
+  const knownInstitutions = {
+    'CUMV': { lat: 42.4430, lng: -76.4730 }, // Cornell
+    'USNM': { lat: 38.8889, lng: -77.0258 }, // Smithsonian
+    'FMNH': { lat: 41.8781, lng: -87.6298 }, // Field Museum
+    'CAS': { lat: 37.7699, lng: -122.4667 }, // California Academy
+    'LACM': { lat: 34.0162, lng: -118.2890 }, // LA County Museum
+    'MCZ': { lat: 42.3783, lng: -71.1150 }, // Harvard
+    'UMMZ': { lat: 42.2808, lng: -83.7430 }, // Michigan
+    'ROM': { lat: 43.6677, lng: -79.3948 }, // Royal Ontario
+    'BMNH': { lat: 51.4966, lng: -0.1764 }, // British Museum
+    'MNHN': { lat: 48.8566, lng: 2.3522 }, // Paris Natural History
+    // 可以继续添加更多...
+  }
+
+  if (knownInstitutions[institution.institutionCode]) {
+    return knownInstitutions[institution.institutionCode]
+  }
+
+  // 根据国家代码获取默认坐标
+  const countryCoords = {
+    'US': { lat: 39.8283, lng: -98.5795 },
+    'CA': { lat: 56.1304, lng: -106.3468 },
+    'GB': { lat: 55.3781, lng: -3.4360 },
+    'UK': { lat: 55.3781, lng: -3.4360 },
+    'AU': { lat: -25.2744, lng: 133.7751 },
+    'DE': { lat: 51.1657, lng: 10.4515 },
+    'FR': { lat: 46.2276, lng: 2.2137 },
+    'JP': { lat: 36.2048, lng: 138.2529 },
+    'BR': { lat: -14.2350, lng: -51.9253 },
+    'CN': { lat: 35.8617, lng: 104.1954 },
+    // 继续添加更多国家...
+  }
+
+  return countryCoords[institution.country] || { lat: null, lng: null }
+}
 // 本地状态
-const viewMode = ref('cards')
 const searchQuery = ref('')
 const filters = ref({
   region: '',
@@ -450,18 +434,10 @@ const pagination = ref({
   page: 1,
   perPage: 25
 })
-
-// 可用选项
-const availableRegions = ref([])
+const expandedInstitution = ref(null)
+const maxRecords = ref(0)
 
 // 计算属性
-const topInstitutions = computed(() => {
-  return institutions.value
-      .slice()
-      .sort((a, b) => (b.recordCount || 0) - (a.recordCount || 0))
-      .slice(0, 5)
-})
-
 const filteredInstitutions = computed(() => {
   let filtered = institutions.value
 
@@ -516,6 +492,11 @@ const filteredInstitutions = computed(() => {
     }
   })
 
+  // Update max records for visualization
+  if (filtered.length > 0) {
+    maxRecords.value = Math.max(...filtered.map(i => i.recordCount || 0))
+  }
+
   return filtered
 })
 
@@ -558,7 +539,6 @@ const visiblePages = computed(() => {
 const loadInstitutions = async () => {
   try {
     await fetchInstitutions()
-    extractRegionOptions()
   } catch (err) {
     console.error('Failed to load institutions:', err)
   }
@@ -572,30 +552,11 @@ const loadStats = async () => {
   }
 }
 
-const refreshStats = async () => {
-  try {
-    await loadStats()
-    console.log('Statistics refreshed successfully')
-  } catch (err) {
-    console.error('Failed to refresh statistics:', err)
-  }
-}
-
-const extractRegionOptions = () => {
-  const regions = [...new Set(institutions.value.map(i => i.region).filter(Boolean))]
-  availableRegions.value = regions.sort()
-}
-
 const navigateToInstitution = (institutionCode) => {
   router.push({
     name: 'InstitutionDetail',
     params: { institutionCode }
   })
-}
-
-const filterByRegion = (regionName) => {
-  filters.value.region = regionName
-  applyFilters()
 }
 
 const applyFilters = () => {
@@ -610,6 +571,19 @@ const changePage = (page) => {
   if (page >= 1 && page <= totalPages.value) {
     pagination.value.page = page
   }
+}
+
+const toggleRow = (institutionCode) => {
+  if (expandedInstitution.value === institutionCode) {
+    expandedInstitution.value = null
+  } else {
+    expandedInstitution.value = institutionCode
+  }
+}
+
+const getRecordsPercentage = (records) => {
+  if (!maxRecords.value) return 0
+  return (records / maxRecords.value) * 100
 }
 
 // 工具函数
@@ -640,18 +614,6 @@ const formatLocation = (institution) => {
   return parts.join(', ') || 'Location not specified'
 }
 
-const formatCalculationTime = (timestamp) => {
-  if (!timestamp) return 'Never'
-  const date = new Date(timestamp)
-  const now = new Date()
-  const diffMinutes = Math.floor((now - date) / (1000 * 60))
-
-  if (diffMinutes < 1) return 'Just now'
-  if (diffMinutes < 60) return `${diffMinutes}m ago`
-  if (diffMinutes < 1440) return `${Math.floor(diffMinutes / 60)}h ago`
-  return date.toLocaleDateString()
-}
-
 const getQualityClass = (percentage) => {
   if (percentage >= 90) return 'quality-excellent'
   if (percentage >= 80) return 'quality-good'
@@ -669,6 +631,10 @@ const showCollaborationNetwork = () => {
 
 const showDataQualityAssessment = () => {
   console.log('Starting data quality assessment...')
+}
+
+const downloadData = (institutionCode) => {
+  console.log('Downloading data for:', institutionCode)
 }
 
 // 生命周期
@@ -693,9 +659,9 @@ watch(() => searchQuery.value, debouncedSearch)
 /* 页面头部 */
 .page-header {
   background: white;
-  border-radius: 5px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 30px;
   margin-bottom: 20px;
 }
 
@@ -709,14 +675,14 @@ watch(() => searchQuery.value, debouncedSearch)
 .page-subtitle {
   font-size: 16px;
   color: #666;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
 }
 
 .global-stats {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 15px;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
 }
 
 .global-stat {
@@ -743,15 +709,15 @@ watch(() => searchQuery.value, debouncedSearch)
 
 .page-actions {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
 .action-button {
   display: flex;
   align-items: center;
-  padding: 10px 15px;
-  border-radius: 4px;
+  padding: 12px 16px;
+  border-radius: 6px;
   font-size: 14px;
   cursor: pointer;
   border: none;
@@ -761,140 +727,40 @@ watch(() => searchQuery.value, debouncedSearch)
 .action-button.export { background: #e8f5e9; color: #2e7d32; }
 .action-button.network { background: #fff3e0; color: #f57c00; }
 .action-button.quality { background: #e8f4fd; color: #0288d1; }
-.action-button.refresh { background: #f3e5f5; color: #7b1fa2; }
 
 .action-button:hover {
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-.action-icon { margin-right: 5px; }
+.action-icon { margin-right: 6px; }
 
-/* Top institutions highlight */
-.top-institutions {
+/* Quick stats */
+.quick-stats {
   background: white;
-  border-radius: 5px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 25px;
   margin-bottom: 20px;
 }
 
 .stats-title {
   font-size: 18px;
   font-weight: bold;
-  margin-bottom: 15px;
-  color: #2c3e50;
-}
-
-.top-institutions-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 15px;
-}
-
-.top-institution-item {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-radius: 8px;
-  padding: 15px;
-  text-align: center;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.top-institution-item:hover {
-  transform: translateY(-2px);
-}
-
-.top-institution-rank {
-  background: #3498db;
-  color: white;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  margin: 0 auto 10px;
-}
-
-.top-institution-code {
-  font-weight: bold;
-  margin-bottom: 5px;
-  color: #2c3e50;
-  font-size: 16px;
-}
-
-.top-institution-stats {
-  font-size: 12px;
-  color: #666;
-}
-
-/* Geographic distribution */
-.geo-distribution {
-  background: white;
-  border-radius: 5px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-  padding: 20px;
   margin-bottom: 20px;
-}
-
-.geo-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 15px;
-}
-
-.geo-region {
-  background: #f8f9fa;
-  border-radius: 6px;
-  padding: 15px;
-  text-align: center;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.geo-region:hover {
-  background-color: #e9ecef;
-}
-
-.geo-region-name {
-  font-weight: bold;
-  margin-bottom: 8px;
   color: #2c3e50;
-}
-
-.geo-region-count {
-  font-size: 24px;
-  font-weight: bold;
-  color: #3498db;
-  margin-bottom: 5px;
-}
-
-.geo-region-desc {
-  font-size: 12px;
-  color: #666;
-}
-
-/* Quick stats */
-.quick-stats {
-  background: white;
-  border-radius: 5px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-  padding: 20px;
-  margin-bottom: 20px;
 }
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 15px;
 }
 
 .stat-category {
   background: #f8f9fa;
   border-radius: 6px;
-  padding: 15px;
+  padding: 20px;
   text-align: center;
 }
 
@@ -906,104 +772,35 @@ watch(() => searchQuery.value, debouncedSearch)
 }
 
 .stat-category-value {
-  font-size: 24px;
+  font-size: 28px;
   font-weight: bold;
   color: #3498db;
+  margin-bottom: 5px;
 }
 
 .stat-category-desc {
   font-size: 12px;
   color: #666;
-  margin-top: 5px;
 }
 
-/* Collection Analytics */
-.collection-analytics {
-  background: white;
-  border-radius: 5px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-  padding: 20px;
-  margin-bottom: 20px;
-}
-
-.analytics-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-}
-
-.analytics-card {
-  background: #f8f9fa;
-  border-radius: 8px;
-  padding: 20px;
-  border: 1px solid #e9ecef;
-}
-
-.analytics-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
-.analytics-header h3 {
-  margin: 0;
-  font-size: 16px;
-  color: #2c3e50;
-}
-
-.analytics-icon {
-  font-size: 20px;
-}
-
-.analytics-metrics {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.metric {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.metric:last-child {
-  border-bottom: none;
-}
-
-.metric-label {
-  font-size: 13px;
-  color: #666;
-  flex: 1;
-}
-
-.metric-value {
-  font-weight: bold;
-  color: #2c3e50;
-  margin-left: 10px;
-}
-
-/* Search and filter controls */
+/* 控制面板 */
 .controls-section {
   background: white;
-  border-radius: 5px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   padding: 20px;
   margin-bottom: 20px;
 }
 
 .controls-grid {
   display: grid;
-  grid-template-columns: 2fr repeat(4, 1fr) 120px;
+  grid-template-columns: 2fr repeat(4, 1fr);
   gap: 15px;
   align-items: center;
 }
 
 .search-input, .filter-select {
-  padding: 10px 12px;
+  padding: 10px 15px;
   border: 1px solid #ddd;
   border-radius: 6px;
   font-size: 14px;
@@ -1017,43 +814,21 @@ watch(() => searchQuery.value, debouncedSearch)
   background: white;
 }
 
-.view-toggle {
-  display: flex;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.view-btn {
-  flex: 1;
-  padding: 8px 12px;
-  border: none;
-  background: #f8f9fa;
-  cursor: pointer;
-  font-size: 12px;
-  transition: all 0.2s;
-}
-
-.view-btn.active {
-  background: #3498db;
-  color: white;
-}
-
 /* Institutions container */
 .institutions-container {
   background: white;
-  border-radius: 5px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 25px;
 }
 
 .institutions-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  border-bottom: 1px solid #eee;
+  margin-bottom: 25px;
   padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
 }
 
 .institutions-title {
@@ -1067,200 +842,56 @@ watch(() => searchQuery.value, debouncedSearch)
   font-size: 14px;
 }
 
-/* Card view */
-.institutions-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-  gap: 20px;
+/* 增强表格样式 */
+.table-container {
+  overflow-x: auto;
 }
 
-.institution-card {
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  padding: 20px;
-  cursor: pointer;
-  transition: all 0.2s;
-  position: relative;
-}
-
-.institution-card:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  transform: translateY(-2px);
-}
-
-.institution-card-header {
-  display: flex;
-  align-items: flex-start;
-  margin-bottom: 15px;
-}
-
-.institution-logo {
-  width: 50px;
-  height: 50px;
-  background: #3498db;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 15px;
-  font-weight: bold;
-  color: white;
-  font-size: 14px;
-  flex-shrink: 0;
-}
-
-.institution-info {
-  flex: 1;
-}
-
-.institution-name {
-  font-size: 18px;
-  font-weight: bold;
-  color: #2c3e50;
-  margin: 0 0 5px 0;
-  line-height: 1.3;
-}
-
-.institution-codes {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 8px;
-  flex-wrap: wrap;
-}
-
-.institution-code-tag {
-  background: #e8f4fd;
-  color: #0288d1;
-  padding: 3px 8px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: bold;
-}
-
-.institution-location {
-  font-size: 13px;
-  color: #666;
-  margin-bottom: 15px;
-}
-
-.institution-stats-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin-bottom: 15px;
-}
-
-.institution-stat {
-  text-align: center;
-  background: white;
-  border-radius: 6px;
-  padding: 8px;
-}
-
-.institution-stat-number {
-  font-size: 16px;
-  font-weight: bold;
-  color: #3498db;
-  margin-bottom: 2px;
-}
-
-.institution-stat-label {
-  font-size: 10px;
-  color: #666;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.institution-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 12px;
-  color: #666;
-  margin-bottom: 12px;
-}
-
-.institution-quality {
-  display: flex;
-  gap: 6px;
-}
-
-.quality-badge {
-  padding: 2px 6px;
-  border-radius: 10px;
-  font-size: 10px;
-  font-weight: bold;
-}
-
-.quality-excellent { background: #d4edda; color: #155724; }
-.quality-good { background: #fff3cd; color: #856404; }
-.quality-fair { background: #f8d7da; color: #721c24; }
-
-.collection-codes {
-  margin-top: 12px;
-}
-
-.collection-codes-label {
-  font-size: 11px;
-  color: #666;
-  margin-bottom: 6px;
-}
-
-.collection-code-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.collection-code {
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
-  padding: 2px 6px;
-  border-radius: 10px;
-  font-size: 10px;
-  color: #666;
-}
-
-.collection-code.more {
-  background: #e8f4fd;
-  color: #0288d1;
-  font-style: italic;
-}
-
-/* Table view */
 .institutions-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
 }
 
-.institutions-table th, .institutions-table td {
-  border-bottom: 1px solid #eee;
-  padding: 12px;
-  text-align: left;
-}
-
 .institutions-table th {
   background: #f8f9fa;
-  font-weight: bold;
+  padding: 15px 12px;
+  text-align: left;
+  font-weight: 600;
   color: #555;
+  border-bottom: 2px solid #e9ecef;
   position: sticky;
   top: 0;
+  z-index: 10;
 }
 
-.clickable-row {
+.institutions-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e9ecef;
+  vertical-align: middle;
+}
+
+.table-row {
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  position: relative;
 }
 
-.clickable-row:hover {
+.table-row:hover {
   background-color: #f8f9fa;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.table-row.expanded {
+  background-color: #e3f2fd;
+  border-left: 4px solid #2196F3;
 }
 
 .table-institution-code {
   font-weight: bold;
   color: #2c3e50;
+  font-size: 16px;
 }
 
 .table-institution-name {
@@ -1268,6 +899,7 @@ watch(() => searchQuery.value, debouncedSearch)
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-weight: 500;
 }
 
 .dc-field {
@@ -1279,13 +911,241 @@ watch(() => searchQuery.value, debouncedSearch)
   color: #666;
 }
 
-/* Pagination */
+/* 记录可视化 */
+.records-bar-container {
+  position: relative;
+  width: 120px;
+  height: 20px;
+  background: #e9ecef;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.records-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #3498db, #2ecc71);
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+.records-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 10px;
+  font-weight: 600;
+  color: #333;
+  z-index: 2;
+}
+
+/* 质量指示器 */
+.quality-badge {
+  padding: 3px 6px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.quality-excellent { background: #d4edda; color: #155724; }
+.quality-good { background: #fff3cd; color: #856404; }
+.quality-fair { background: #f8d7da; color: #721c24; }
+
+/* 展开图标 */
+.expand-icon {
+  transition: transform 0.2s ease;
+  font-size: 12px;
+  color: #666;
+}
+
+.expand-icon.expanded {
+  transform: rotate(180deg);
+}
+
+/* 展开卡片 */
+.expanded-card {
+  background: #f8f9fa;
+  border-top: 3px solid #3498db;
+}
+
+.card-content {
+  padding: 30px;
+  background: white;
+  margin: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.institution-card-header {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.institution-logo {
+  width: 60px;
+  height: 60px;
+  background: #3498db;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20px;
+  font-weight: bold;
+  color: white;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.institution-info {
+  flex: 1;
+}
+
+.institution-name {
+  font-size: 24px;
+  font-weight: bold;
+  color: #2c3e50;
+  margin: 0 0 10px 0;
+  line-height: 1.3;
+}
+
+.institution-codes {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.institution-code-tag {
+  background: #e8f4fd;
+  color: #0288d1;
+  padding: 4px 10px;
+  border-radius: 15px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.institution-location {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.institution-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.institution-stat {
+  text-align: center;
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.institution-stat-number {
+  font-size: 20px;
+  font-weight: bold;
+  color: #3498db;
+  margin-bottom: 5px;
+}
+
+.institution-stat-label {
+  font-size: 11px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.institution-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.institution-quality {
+  display: flex;
+  gap: 8px;
+}
+
+.collection-codes {
+  margin-bottom: 20px;
+}
+
+.collection-codes-label {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.collection-code-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.collection-code {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  color: #666;
+}
+
+.collection-code.more {
+  background: #e8f4fd;
+  color: #0288d1;
+  font-style: italic;
+  font-weight: 500;
+}
+
+.card-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.card-action-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.card-action-btn.primary {
+  background: #3498db;
+  color: white;
+}
+
+.card-action-btn.secondary {
+  background: #f8f9fa;
+  color: #666;
+  border: 1px solid #e9ecef;
+}
+
+.card-action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+/* 分页 */
 .pagination {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 20px;
+  margin-top: 25px;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .pagination-btn {
@@ -1298,7 +1158,8 @@ watch(() => searchQuery.value, debouncedSearch)
   transition: all 0.2s;
 }
 
-.pagination-btn:hover, .pagination-btn.active {
+.pagination-btn:hover:not(:disabled),
+.pagination-btn.active {
   background: #3498db;
   color: white;
   border-color: #3498db;
@@ -1312,9 +1173,10 @@ watch(() => searchQuery.value, debouncedSearch)
 .pagination-info {
   font-size: 14px;
   color: #666;
+  margin-left: 15px;
 }
 
-/* States */
+/* 状态组件 */
 .loading-state, .error-state {
   text-align: center;
   padding: 60px 20px;
@@ -1345,7 +1207,7 @@ watch(() => searchQuery.value, debouncedSearch)
   margin-top: 10px;
 }
 
-/* Responsive */
+/* 响应式设计 */
 @media (max-width: 1024px) {
   .controls-grid {
     grid-template-columns: 1fr;
@@ -1356,34 +1218,105 @@ watch(() => searchQuery.value, debouncedSearch)
     grid-template-columns: repeat(3, 1fr);
   }
 
-  .institutions-grid {
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  .institution-stats-row {
+    grid-template-columns: repeat(2, 1fr);
   }
 
-  .analytics-grid {
-    grid-template-columns: 1fr;
+  .records-bar-container {
+    width: 100px;
   }
 }
 
 @media (max-width: 768px) {
+  .all-institutions-page {
+    padding: 15px;
+  }
+
   .global-stats {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .stats-grid, .geo-stats {
+  .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .institutions-grid {
+  .institution-stats-row {
     grid-template-columns: 1fr;
   }
 
-  .top-institutions-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .page-actions {
+    justify-content: center;
   }
 
-  .analytics-grid {
-    grid-template-columns: 1fr;
+  .institutions-table {
+    font-size: 12px;
+  }
+
+  .institutions-table th,
+  .institutions-table td {
+    padding: 8px;
+  }
+
+  .table-institution-code {
+    font-size: 14px;
+  }
+
+  .institution-name {
+    font-size: 20px;
+  }
+
+  .card-content {
+    padding: 20px;
+    margin: 10px;
+  }
+
+  .records-bar-container {
+    width: 80px;
+  }
+
+  .institution-card-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .institution-logo {
+    margin-right: 0;
+    margin-bottom: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header {
+    padding: 20px;
+  }
+
+  .page-title {
+    font-size: 24px;
+  }
+
+  .institutions-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .pagination {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .pagination-info {
+    margin-left: 0;
+    order: -1;
+  }
+
+  .card-actions {
+    flex-direction: column;
+  }
+
+  .collection-code-list {
+    justify-content: center;
   }
 }
 </style>

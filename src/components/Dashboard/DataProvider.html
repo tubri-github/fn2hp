@@ -1,0 +1,2895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fishnet - Data Provider Dashboard</title>
+    <style>
+        /* Base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            min-height: 100vh;
+        }
+
+        /* Sidebar styles */
+        .sidebar {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px 0;
+        }
+
+        .sidebar-header {
+            padding: 0 20px 20px 20px;
+            border-bottom: 1px solid #34495e;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .user-info {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+
+        .sidebar-menu li {
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        .sidebar-menu li:hover {
+            background: #34495e;
+        }
+
+        .sidebar-menu li.active {
+            background: #3498db;
+            font-weight: bold;
+        }
+
+        /* Main content styles */
+        .main-content {
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .button {
+            padding: 8px 15px;
+            background: #3498db;
+            color: white;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .secondary-button {
+            padding: 8px 15px;
+            background: #ecf0f1;
+            color: #2c3e50;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        /* Stats summary */
+        .stats-summary {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 5px;
+            padding: 15px;
+            flex: 1;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #777;
+        }
+
+        /* Panels Grid */
+        .panels-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .panel-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .panel-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Panel sizes */
+        .panel-full-width {
+            grid-column: span 3;
+        }
+
+        .panel-double-width {
+            grid-column: span 2;
+        }
+
+        /* Data source info */
+        .data-source-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .info-item {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .info-label {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        /* Flags list */
+        .flags-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .flag-item {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .flag-item:hover {
+            background-color: #f9f9f9;
+        }
+
+        .flag-icon {
+            width: 24px;
+            height: 24px;
+            background: #ff9800;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .flag-content {
+            flex: 1;
+        }
+
+        .flag-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .flag-details {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .flag-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: 10px;
+            flex-shrink: 0;
+        }
+
+        .flag-button {
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .flag-button.resolve {
+            background: #4caf50;
+            color: white;
+        }
+
+        .flag-button.dismiss {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        /* Messages list */
+        .messages-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .message-item {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            background: #e0e0e0;
+            border-radius: 50%;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #777;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .message-content {
+            flex: 1;
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .message-sender {
+            font-weight: bold;
+        }
+
+        .message-time {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .message-text {
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        /* Table styles */
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .table th, .table td {
+            border-bottom: 1px solid #eee;
+            padding: 10px;
+            text-align: left;
+        }
+
+        .table th {
+            background: #f9f9f9;
+            font-weight: bold;
+        }
+
+        /* Charts */
+        .chart-container {
+            border: 1px solid #eee;
+            height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f9f9f9;
+        }
+
+        /* Flag Issue Modal Styles */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 5px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            color: #777;
+            cursor: pointer;
+            z-index: 1;
+        }
+
+        /* Issue detail styles */
+        .issue-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            background-color: #f9f9f9;
+        }
+
+        .issue-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 0 0 10px 0;
+        }
+
+        .issue-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .meta-label {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-badge.pending {
+            background-color: #fff3e0;
+            color: #e65100;
+        }
+
+        .status-badge.in-progress {
+            background-color: #e3f2fd;
+            color: #0277bd;
+        }
+
+        .status-badge.resolved {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-badge.closed {
+            background-color: #f5f5f5;
+            color: #757575;
+        }
+
+        /* Record info */
+        .record-info {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 0 0 15px 0;
+        }
+
+        .record-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 10px;
+        }
+
+        .detail-label {
+            font-weight: bold;
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 3px;
+        }
+
+        .detail-value {
+            font-size: 14px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #eee;
+            background-color: #f5f5f5;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .tab.active {
+            background-color: white;
+            border-bottom: 2px solid #3498db;
+        }
+
+        /* Tab content */
+        .tab-content {
+            padding: 20px;
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Timeline styles */
+        .timeline-items {
+            border-left: 2px solid #e0e0e0;
+            padding: 0 0 0 20px;
+            margin-left: 10px;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        .timeline-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .timeline-item:before {
+            content: '';
+            position: absolute;
+            left: -26px;
+            top: 0;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #3498db;
+            border: 2px solid white;
+        }
+
+        .timeline-item.status-change:before {
+            background: #f39c12;
+        }
+
+        .timeline-item.resolution:before {
+            background: #2ecc71;
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .timeline-author {
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .timeline-time {
+            font-size: 12px;
+            color: #777;
+        }
+
+        .timeline-content {
+            background: white;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            padding: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .timeline-content.system {
+            background: #f5f5f5;
+            font-style: italic;
+            color: #666;
+        }
+
+        /* Reply form */
+        .reply-form {
+            padding: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .form-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 0 0 15px 0;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        textarea.form-control {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-options {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Activity list */
+        .activity-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .activity-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+        }
+
+        .activity-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .activity-time {
+            font-size: 12px;
+            color: #777;
+        }
+
+        /* Related issues */
+        .related-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .related-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+
+        .related-item:hover {
+            background: #f9f9f9;
+        }
+
+        .related-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .related-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #777;
+        }
+
+        /* Processing Modal Styles */
+        .modal-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        /* Code block styles for logs */
+        .log-container {
+            background: #1e1e1e;
+            color: #f8f8f2;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .log-container pre {
+            margin: 0;
+            padding: 15px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        /* Enhanced status badges */
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .status-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        /* Processing flow cards */
+        .process-step {
+            border-radius: 8px;
+            padding: 12px;
+            border-left: 4px solid;
+            margin-bottom: 10px;
+        }
+
+        .process-step.detection {
+            background: #e8f5e9;
+            border-left-color: #4caf50;
+        }
+
+        .process-step.mapping {
+            background: #e3f2fd;
+            border-left-color: #2196f3;
+        }
+
+        .process-step.enhancement {
+            background: #fff3e0;
+            border-left-color: #ff9800;
+        }
+
+        .process-step.validation {
+            background: #f3e5f5;
+            border-left-color: #9c27b0;
+        }
+
+        /* Scrollable tables */
+        .scrollable-table {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+        }
+
+        .scrollable-table table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .scrollable-table th {
+            background: #f8f9fa;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            padding: 8px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .scrollable-table td {
+            padding: 6px 8px;
+            border-bottom: 1px solid #f8f9fa;
+        }
+
+        /* Error cards */
+        .error-card {
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            border-left: 4px solid #f56565;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .error-card .error-title {
+            font-weight: bold;
+            color: #c53030;
+            margin-bottom: 8px;
+        }
+
+        .error-card .error-detail {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 6px;
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">Fishnet2</div>
+            <div class="user-info">Zoologische Staatssammlung München</div>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="active">Dashboard</li>
+            <li style="color:grey" disabled>Data Management</li>
+            <li style="color:grey" disabled>Data Quality</li>
+            <li>Processing Logs</li>
+            <li>Flags & Issues</li>
+            <li>Messages</li>
+            <li>Profile</li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="header">
+            <div style="display: flex; align-items: center;">
+                <h1 class="page-title">Data Provider Dashboard</h1>
+                <div style="margin-left: 15px; background: #f0f8ff; padding: 5px 12px; border-radius: 20px; display: flex; align-items: center;">
+                    <span style="font-weight: bold; color: #2c3e50; font-size: 14px;">SNSB - Zoologische Staatssammlung München</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <!--                <button class="secondary-button">Export Data Summary</button>-->
+                <button class="button">Export Data Summary</button>
+            </div>
+        </div>
+
+        <!-- Stats Summary -->
+        <div class="stats-summary">
+            <div class="stat-card">
+                <div class="stat-value">3,562,428</div>
+                <div class="stat-label">Total Records</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">428</div>
+                <div class="stat-label">Species</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">92.7%</div>
+                <div class="stat-label">Data Completeness</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">8</div>
+                <div class="stat-label">Active Flags</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">3</div>
+                <div class="stat-label">Unread Messages</div>
+            </div>
+        </div>
+
+        <!-- Panels Grid -->
+        <div class="panels-grid">
+            <!-- Data Source Panel -->
+            <div class="panel panel-full-width">
+                <div class="panel-header">
+                    <h2 class="panel-title">Data Source Information</h2>
+                    <div class="panel-actions">
+                        <button class="secondary-button">Edit</button>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <div class="data-source-info">
+                        <div class="info-item">
+                            <span class="info-label">Primary Data Source:</span>
+                            <span>IPT Server (https://ipt.vertnet.org/ipt/)</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Last Harvested:</span>
+                            <span>March 15, 2025 (9 days ago)</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Records Harvested:</span>
+                            <span>3,562,428 (+ 24,156 from previous harvest)</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Status:</span>
+                            <span style="color: green;">Active - Data synchronized successfully</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Data Processing:</span>
+                            <span>Standardization of taxonomy, geo-cleaning</span>
+                        </div>
+                        <!--                        <div class="info-item">-->
+                        <!--                            <span class="info-label">Next Scheduled Harvest:</span>-->
+                        <!--                            <span>April 15, 2025 (22 days from now)</span>-->
+                        <!--                        </div>-->
+                    </div>
+                    <div class="processing-notes">
+                        <strong>Processing Notes:</strong>
+                        <p>During the last harvest, we standardized 215 taxonomic names according to the latest Catalog of Fishes.
+                            Georeferences were validated against known species ranges and 189 potential outliers were flagged for review.
+                            <a href="#">View detailed processing report</a></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Flags Panel -->
+            <div class="panel panel-double-width">
+                <div class="panel-header">
+                    <h2 class="panel-title">Recent Data Flags</h2>
+                    <div class="panel-actions">
+                        <span>8 active flags</span>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <ul class="flags-list">
+                        <li class="flag-item" data-id="45729083">
+                            <div class="flag-icon">!</div>
+                            <div class="flag-content">
+                                <div class="flag-title">Taxonomic identification issue (Record #45729083)</div>
+                                <div class="flag-details">Specimen identified as Cyprinella lutrensis may actually be Cyprinella venusta.</div>
+                            </div>
+                            <div class="flag-actions">
+                                <button class="flag-button resolve">Resolve</button>
+                                <button class="flag-button dismiss">Dismiss</button>
+                            </div>
+                        </li>
+                        <li class="flag-item" data-id="87234561">
+                            <div class="flag-icon">!</div>
+                            <div class="flag-content">
+                                <div class="flag-title">Geographic coordinate error (Record #87234561)</div>
+                                <div class="flag-details">It should be some specimen in the middle of the Gulf of Mexico from original fields notes.</div>
+                            </div>
+                            <div class="flag-actions">
+                                <button class="flag-button resolve">Resolve</button>
+                                <button class="flag-button dismiss">Dismiss</button>
+                            </div>
+                        </li>
+                        <li class="flag-item" data-id="32456789">
+                            <div class="flag-icon">!</div>
+                            <div class="flag-content">
+                                <div class="flag-title">Missing collection data (Record #32456789)</div>
+                                <div class="flag-details">A batch of 37 records from TU are missing rights license information.</div>
+                            </div>
+                            <div class="flag-actions">
+                                <button class="flag-button resolve">Resolve</button>
+                                <button class="flag-button dismiss">Dismiss</button>
+                            </div>
+                        </li>
+                    </ul>
+                    <div style="text-align: center; margin-top: 15px;">
+                        <button class="secondary-button">View All Flags</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Messages</h2>
+                    <div class="panel-actions">
+                        <button class="secondary-button">New Message</button>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <ul class="messages-list">
+                        <li class="message-item">
+                            <div class="message-avatar">JS</div>
+                            <div class="message-content">
+                                <div class="message-header">
+                                    <span class="message-sender">Henry Bart (User)</span>
+                                    <span class="message-time">Yesterday</span>
+                                </div>
+                                <div class="message-text">
+                                    Thank you for the quick response regarding the taxonomic identification question. I've reviewed your notes and agree with the correction.
+                                </div>
+                            </div>
+                        </li>
+                        <li class="message-item">
+                            <div class="message-avatar">AS</div>
+                            <div class="message-content">
+                                <div class="message-header">
+                                    <span class="message-sender">Admin System</span>
+                                    <span class="message-time">March 20, 2025</span>
+                                </div>
+                                <div class="message-text">
+                                    Your latest data update has been processed. 24,156 new records have been added to the system.
+                                </div>
+                            </div>
+                        </li>
+                        <li class="message-item">
+                            <div class="message-avatar">MJ</div>
+                            <div class="message-content">
+                                <div class="message-header">
+                                    <span class="message-sender">Henry Bart (Tulane University)</span>
+                                    <span class="message-time">March 15, 2025</span>
+                                </div>
+                                <div class="message-text">
+                                    We're planning a collaborative project on fish specimens. Would your institution be interested in participating?
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                    <div style="text-align: center; margin-top: 15px;">
+                        <button class="secondary-button">View All Messages</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Processing Overview -->
+            <div class="panel panel-full-width">
+                <div class="panel-header">
+                    <h2 class="panel-title">Data Processing Overview</h2>
+                    <div class="panel-actions">
+                        <button class="secondary-button" onclick="showProcessingDetails()">View Processing Logs</button>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 20px;">
+                        <div class="stat-card">
+                            <div class="stat-value">35</div>
+                            <div class="stat-label">Total Files Processed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">30</div>
+                            <div class="stat-label">Successfully Processed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">5</div>
+                            <div class="stat-label">Failed Files</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">2,078,916</div>
+                            <div class="stat-label">Total Records</div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div>
+                            <h3 style="font-size: 16px; margin-bottom: 10px;">Recent Processing Activities</h3>
+                            <div style="background: #f9f9f9; border-radius: 5px; padding: 15px;">
+                                <div style="margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #eee;">
+                                    <div style="font-weight: bold; color: #2ecc71;">✓ dwca-ummz_fish-v1.81.zip</div>
+                                    <div style="font-size: 13px; color: #666;">190,783 records • 130,459 country names standardized</div>
+                                </div>
+                                <div style="margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #eee;">
+                                    <div style="font-weight: bold; color: #2ecc71;">✓ dwca-snet-1131-101-v1.9.zip</div>
+                                    <div style="font-size: 13px; color: #666;">177,557 records • 5,640 dates standardized</div>
+                                </div>
+                                <div style="margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #eee;">
+                                    <div style="font-weight: bold; color: #2ecc71;">✓ dwca-mnhn-ic-v57.401.zip</div>
+                                    <div style="font-size: 13px; color: #666;">141,586 records • 69,092 dates standardized</div>
+                                </div>
+                                <div style="margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #eee;">
+                                    <div style="font-weight: bold; color: #e74c3c;">✗ dwca-uwfc_fish-v5.2.zip</div>
+                                    <div style="font-size: 13px; color: #666;">Processing failed: Field tokenization error</div>
+                                </div>
+                                <div>
+                                    <div style="font-weight: bold; color: #e74c3c;">✗ dwca-saiab-v1.97.zip</div>
+                                    <div style="font-size: 13px; color: #666;">Processing failed: Field tokenization error</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 style="font-size: 16px; margin-bottom: 10px;">Processing Statistics</h3>
+                            <div style="background: #f9f9f9; border-radius: 5px; padding: 15px;">
+                                <div style="margin-bottom: 15px;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                        <span style="font-size: 14px;">Column Mappings Applied</span>
+                                        <span style="font-weight: bold;">89</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                        <span style="font-size: 14px;">Fallback Strategies Used</span>
+                                        <span style="font-weight: bold;">22</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                        <span style="font-size: 14px;">Date Standardizations</span>
+                                        <span style="font-weight: bold;">168,861</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span style="font-size: 14px;">Country Name Standardizations</span>
+                                        <span style="font-weight: bold;">414,137</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Usage Analytics -->
+            <div class="panel panel-full-width">
+                <div class="panel-header">
+                    <h2 class="panel-title">Data Usage Analytics</h2>
+                    <div class="panel-actions">
+                        <select id="usage-time-range">
+                            <option value="month">Last 30 Days</option>
+                            <option value="quarter">Last Quarter</option>
+                            <option value="year">Last 12 Months</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <!-- Tabs for Analytics Types -->
+                    <div style="border-bottom: 1px solid #eee; margin-bottom: 15px;">
+                        <div style="display: flex; gap: 20px;">
+                            <div id="tab-user-activity" style="padding: 8px 0; cursor: pointer; border-bottom: 2px solid #3498db; font-weight: bold; color: #3498db;">User Activity</div>
+                            <div id="tab-data-distribution" style="padding: 8px 0; cursor: pointer;">Data Distribution</div>
+                        </div>
+                    </div>
+
+                    <!-- User Activity Tab Content -->
+                    <div id="content-user-activity">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <!-- User Queries Chart -->
+                            <div>
+                                <h3 style="font-size: 16px; margin-bottom: 10px;">Top User Search Queries</h3>
+                                <div id="top-queries-chart" class="chart-container"></div>
+                            </div>
+
+                            <!-- Data Downloads Chart -->
+                            <div>
+                                <h3 style="font-size: 16px; margin-bottom: 10px;">Most Downloaded Species Data</h3>
+                                <div id="species-downloads-chart" class="chart-container"></div>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                            <!-- User Demographics -->
+                            <div>
+                                <h3 style="font-size: 16px; margin-bottom: 10px;">User Profile</h3>
+                                <div id="user-demographics-chart" class="chart-container"></div>
+                            </div>
+
+                            <!-- User Geographic Distribution -->
+                            <div>
+                                <h3 style="font-size: 16px; margin-bottom: 10px;">Download Geographic Distribution</h3>
+                                <div id="user-geographic-chart" class="chart-container"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data Distribution Tab Content (Hidden by Default) -->
+                    <div id="content-data-distribution" style="display: none;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <!-- Taxonomic Distribution -->
+                            <div>
+                                <h3 style="font-size: 16px; margin-bottom: 10px;">Taxonomic Distribution</h3>
+                                <div class="chart-container">
+                                    <div>Treemap of Records by Taxonomic Group</div>
+                                    <div style="margin-top: 10px; font-size: 13px; color: #666;">
+                                        Cyprinidae: 28% (987,432 records)<br>
+                                        Cichlidae: 15% (524,678 records)<br>
+                                        Salmonidae: 12% (432,890 records)<br>
+                                        Other Families: 45% (1,617,428 records)
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Geographic Distribution -->
+                            <div>
+                                <h3 style="font-size: 16px; margin-bottom: 10px;">Geographic Distribution</h3>
+                                <div class="chart-container">
+                                    <div>Heat Map of Specimen Locations</div>
+                                    <div style="margin-top: 10px; font-size: 13px; color: #666;">
+                                        North America: 32% (1,147,976 records)<br>
+                                        Europe: 18% (641,237 records)<br>
+                                        Asia: 21% (748,110 records)<br>
+                                        Other Continents: 29% (1,025,105 records)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                            <!-- Temporal Distribution -->
+                            <div>
+                                <h3 style="font-size: 16px; margin-bottom: 10px;">Temporal Distribution</h3>
+                                <div class="chart-container">
+                                    <div>Time Series of Records by Collection Year</div>
+                                    <div style="margin-top: 10px; font-size: 13px; color: #666;">
+                                        Pre-1950: 10% (356,243 records)<br>
+                                        1950-1999: 34% (1,211,225 records)<br>
+                                        2000-Present: 56% (1,994,960 records)
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!--                            &lt;!&ndash; Environmental Distribution &ndash;&gt;-->
+                            <!--                            <div>-->
+                            <!--                                <h3 style="font-size: 16px; margin-bottom: 10px;">Environmental Distribution</h3>-->
+                            <!--                                <div class="chart-container">-->
+                            <!--                                    <div>Bar Chart of Records by Habitat Type</div>-->
+                            <!--                                    <div style="margin-top: 10px; font-size: 13px; color: #666;">-->
+                            <!--                                        Freshwater: 42% (1,496,220 records)<br>-->
+                            <!--                                        Marine: 38% (1,353,722 records)<br>-->
+                            <!--                                        Estuarine: 11% (391,866 records)<br>-->
+                            <!--                                        Other/Unknown: 9% (320,620 records)-->
+                            <!--                                    </div>-->
+                            <!--                                </div>-->
+                            <!--                            </div>-->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activities Panel -->
+            <div class="panel panel-double-width">
+                <div class="panel-header">
+                    <h2 class="panel-title">Recent Activities</h2>
+                </div>
+                <div class="panel-content">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Activity</th>
+                            <th>Details</th>
+                            <th>Status</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>Mar 22, 2025</td>
+                            <td>Flag Resolution</td>
+                            <td>Fixed geolocation data for Record #76234509</td>
+                            <td>Completed</td>
+                        </tr>
+                        <tr>
+                            <td>Mar 20, 2025</td>
+                            <td>Message</td>
+                            <td>Replied to Henry Bart about taxonomic identification</td>
+                            <td>Completed</td>
+                        </tr>
+                        <tr>
+                            <td>Mar 15, 2025</td>
+                            <td>Data Harvest</td>
+                            <td>3,562,428 records processed</td>
+                            <td>Completed</td>
+                        </tr>
+                        <tr>
+                            <td>Mar 10, 2025</td>
+                            <td>Source Update</td>
+                            <td>Updated IPT server endpoint</td>
+                            <td>Completed</td>
+                        </tr>
+                        <tr>
+                            <td>Mar 05, 2025</td>
+                            <td>Flag Resolution</td>
+                            <td>Corrected taxonomic classification for 28 specimens</td>
+                            <td>Completed</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
+            <!-- Data Quality Overview -->
+
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Data Quality Insights</h2>
+                </div>
+                <div class="panel-content">
+                    <div id="data-quality-chart" class="chart-container"></div>
+                    <div style="margin-top: 15px;">
+                        <h4 style="font-size: 14px; font-weight: bold; margin-bottom: 5px;">Improvement Opportunities:</h4>
+                        <ul style="margin-top: 5px; font-size: 13px;">
+                            <li>Missing collection depth (8.4% of records)</li>
+                            <li>Imprecise coordinates (4.2% of records)</li>
+                            <li>Incomplete locality data (3.1% of records)</li>
+                            <li>Missing collection methods (2.6% of records)</li>
+                        </ul>
+                        <div style="margin-top: 10px;">
+                            <a href="#" class="panel-link">View detailed quality report</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Institution Information Panel -->
+            <div class="panel panel-full-width">
+                <div class="panel-header">
+                    <h2 class="panel-title">Institution Information</h2>
+                    <div class="panel-actions">
+                        <button class="secondary-button">Edit</button>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 30px;">
+                        <!-- Contact Information -->
+                        <div>
+                            <h3 style="font-size: 15px; margin: 0 0 15px 0; color: #555;">Contact Information</h3>
+                            <div style="margin-bottom: 15px;">
+                                <div style="font-weight: bold; margin-bottom: 5px;">SNSB - Zoologische Staatssammlung München</div>
+                                <div style="font-size: 14px; color: #666;">Bavarian State Collection for Zoology (ZSM)</div>
+                            </div>
+                            <div style="margin-bottom: 15px; font-size: 14px;">
+                                <div style="margin-bottom: 8px;">Münchhausenstraße 21</div>
+                                <div style="margin-bottom: 8px;">Munich, Bavaria</div>
+                                <div style="margin-bottom: 8px;">Germany 81247</div>
+                                <div style="margin-bottom: 8px;">
+                                    <span style="font-weight: bold;">Phone:</span> +49 89 8107 0
+                                </div>
+                                <div style="margin-bottom: 8px;">
+                                    <span style="font-weight: bold;">Email:</span> <a href="mailto:zsm@snsb.de">zsm@snsb.de</a>
+                                </div>
+                                <div>
+                                    <span style="font-weight: bold;">Website:</span> <a href="https://zsm.snsb.de/" target="_blank">https://zsm.snsb.de/</a>
+                                </div>
+                            </div>
+
+                            <!-- Collection Breakdown -->
+                            <h3 style="font-size: 15px; margin: 20px 0 15px 0; color: #555;">Collection Breakdown</h3>
+                            <div style="display: grid; gap: 12px;">
+                                <div style="font-size: 14px;">
+                                    <div style="font-weight: bold; color: #3498db;">175,000</div>
+                                    <div style="font-size: 13px; color: #666;">Total Specimens</div>
+                                </div>
+                                <div style="font-size: 14px;">
+                                    <div style="font-weight: bold; color: #2ecc71;">32,000</div>
+                                    <div style="font-size: 13px; color: #666;">Specimen Lots</div>
+                                </div>
+                                <div style="font-size: 14px;">
+                                    <div>
+                                        <span style="font-weight: bold; color: #9b59b6;">240</span> Primary,
+                                        <span style="font-weight: bold; color: #9b59b6;">504</span> Secondary
+                                    </div>
+                                    <div style="font-size: 13px; color: #666;">Type Specimens</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Key Contacts and Metadata -->
+                        <div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                <!-- Key Contacts -->
+                                <div>
+                                    <h3 style="font-size: 15px; margin: 0 0 15px 0; color: #555;">Key Personnel</h3>
+                                    <div style="display: flex; gap: 20px; margin-bottom: 15px;">
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: bold; font-size: 14px;">Robin Böhmer</div>
+                                            <div style="color: #666; margin-bottom: 5px; font-size: 13px;">Collection Manager</div>
+                                            <div style="font-size: 13px; margin-bottom: 3px;">+49 (0)89 8107-110</div>
+                                            <div style="font-size: 13px;"><a href="mailto:boehmer@snsb.de">boehmer@snsb.de</a></div>
+                                        </div>
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: bold; font-size: 14px;">Ulrich Schliewen</div>
+                                            <div style="color: #666; margin-bottom: 5px; font-size: 13px;">Curator</div>
+                                            <div style="font-size: 13px; margin-bottom: 3px;">+49 (0)89 8107-111</div>
+                                            <div style="font-size: 13px;"><a href="mailto:schliewen@snsb.de">schliewen@snsb.de</a></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Collection History -->
+                                <div>
+                                    <h3 style="font-size: 15px; margin: 0 0 15px 0; color: #555;">Collection History</h3>
+                                    <div style="font-size: 14px;">
+                                        <div style="margin-bottom: 8px;">
+                                            <span style="font-weight: bold;">Established:</span> 1801
+                                        </div>
+                                        <div style="margin-bottom: 8px;">
+                                            <span style="font-weight: bold;">Collection Size:</span> 175,000 specimens
+                                        </div>
+                                        <div style="margin-bottom: 8px;">
+                                            <span style="font-weight: bold;">Database Records:</span> 146,432 (83% digitized)
+                                        </div>
+                                        <div>
+                                            <span style="font-weight: bold;">Last Database Update:</span> March 15, 2025
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Data Categories -->
+                            <div style="margin-top: 20px;">
+                                <h3 style="font-size: 15px; margin: 0 0 15px 0; color: #555;">Specimen Categories</h3>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                    <div>
+                                        <div style="font-size: 14px; font-weight: bold; margin-bottom: 8px;">Preparation Types</div>
+                                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                            <span style="background: #e3f2fd; color: #1565c0; padding: 3px 8px; border-radius: 12px; font-size: 12px;">Ethanol</span>
+                                            <span style="background: #e8eaf6; color: #3949ab; padding: 3px 8px; border-radius: 12px; font-size: 12px;">Dried</span>
+                                            <span style="background: #e0f2f1; color: #00796b; padding: 3px 8px; border-radius: 12px; font-size: 12px;">Cs</span>
+                                            <span style="background: #f3e5f5; color: #7b1fa2; padding: 3px 8px; border-radius: 12px; font-size: 12px;">Skeletal</span>
+                                            <span style="background: #e8f5e9; color: #388e3c; padding: 3px 8px; border-radius: 12px; font-size: 12px;">Radiographic</span>
+                                            <span style="background: #fff3e0; color: #f57c00; padding: 3px 8px; border-radius: 12px; font-size: 12px;">Photograph</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 14px; font-weight: bold; margin-bottom: 8px;">Environments</div>
+                                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                            <span style="background: #e0f7fa; color: #0097a7; padding: 3px 8px; border-radius: 12px; font-size: 12px;">Freshwater</span>
+                                            <span style="background: #e1f5fe; color: #0288d1; padding: 3px 8px; border-radius: 12px; font-size: 12px;">Marine</span>
+                                            <span style="background: #e0f2f1; color: #00796b; padding: 3px 8px; border-radius: 12px; font-size: 12px;">Estuarine</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Processing Logs Modal -->
+<div class="modal-backdrop" id="processing-logs-modal">
+    <div class="modal" style="max-width: 1200px;">
+        <div class="modal-close" onclick="closeProcessingModal()">&times;</div>
+        <div class="modal-header" style="padding: 20px; border-bottom: 1px solid #eee;">
+            <h2 style="margin: 0; font-size: 20px;">Data Processing Logs & Details</h2>
+            <div style="font-size: 14px; color: #666; margin-top: 5px;">Processing Date: July 22, 2025 11:24:43</div>
+        </div>
+
+        <!-- Tabs for Processing Details -->
+        <div class="tabs">
+            <div class="tab active" data-tab="summary">Processing Summary</div>
+            <div class="tab" data-tab="detailed-logs">Detailed Logs</div>
+            <div class="tab" data-tab="field-mappings">Field Mappings</div>
+            <div class="tab" data-tab="errors">Processing Errors</div>
+        </div>
+
+        <!-- Processing Summary Tab -->
+        <div class="tab-content active" id="summary-tab">
+            <div style="padding: 20px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                    <!-- Processing Statistics -->
+                    <div>
+                        <h3 class="section-title">Processing Statistics</h3>
+                        <div style="background: #f9f9f9; border-radius: 5px; padding: 15px; margin-bottom: 20px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                <div style="text-align: center; padding: 10px; background: white; border-radius: 5px;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #2ecc71;">30</div>
+                                    <div style="font-size: 12px; color: #666;">Successful</div>
+                                </div>
+                                <div style="text-align: center; padding: 10px; background: white; border-radius: 5px;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #e74c3c;">5</div>
+                                    <div style="font-size: 12px; color: #666;">Failed</div>
+                                </div>
+                                <div style="text-align: center; padding: 10px; background: white; border-radius: 5px;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #3498db;">2.08M</div>
+                                    <div style="font-size: 12px; color: #666;">Total Records</div>
+                                </div>
+                                <div style="text-align: center; padding: 10px; background: white; border-radius: 5px;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #9b59b6;">89</div>
+                                    <div style="font-size: 12px; color: #666;">Column Mappings</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h4 style="font-size: 15px; margin-bottom: 10px;">Processing Improvements Applied</h4>
+                        <ul style="font-size: 14px; line-height: 1.6; margin: 0; padding-left: 20px;">
+                            <li><strong>168,861</strong> dates standardized across 10 files</li>
+                            <li><strong>414,137</strong> country names standardized across 16 files</li>
+                            <li><strong>22</strong> fallback strategies applied for missing data</li>
+                            <li><strong>89</strong> column mappings to Darwin Core standard</li>
+                        </ul>
+                    </div>
+
+                    <!-- Sample File Processing Details -->
+                    <div>
+                        <h3 class="section-title">Sample Processing: dwca-mnhn-ic-v57.401.zip</h3>
+                        <div style="background: #f9f9f9; border-radius: 5px; padding: 15px;">
+                            <div style="margin-bottom: 15px;">
+                                <div style="font-weight: bold; margin-bottom: 5px;">File Statistics:</div>
+                                <div style="font-size: 14px; line-height: 1.6;">
+                                    Records Processed: <strong>141,586</strong><br>
+                                    Encoding: <strong>UTF-8</strong><br>
+                                    Delimiter: <strong>Tab-separated</strong><br>
+                                    Processing Time: <strong>~4 minutes</strong>
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom: 15px;">
+                                <div style="font-weight: bold; margin-bottom: 5px;">Column Mappings Applied:</div>
+                                <div style="font-size: 13px; font-family: monospace; background: white; padding: 10px; border-radius: 3px; line-height: 1.4;">
+                                    'id' → 'occurrenceID'<br>
+                                    'verbatimEventDate' → 'eventDate_1'<br>
+                                    'verbatimLocality' → 'locality_1'<br>
+                                    'verbatimLatitude' → 'decimalLatitude'<br>
+                                    'verbatimLongitude' → 'decimalLongitude'
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom: 15px;">
+                                <div style="font-weight: bold; margin-bottom: 5px;">Data Improvements:</div>
+                                <div style="font-size: 14px; line-height: 1.6;">
+                                    • <strong>39,620</strong> day fields filled from eventDate<br>
+                                    • <strong>69,092</strong> dates standardized<br>
+                                    • <strong>137,112</strong> country names standardized
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Logs Tab -->
+        <div class="tab-content" id="detailed-logs-tab">
+            <div style="padding: 20px;">
+                <h3 class="section-title">Sample Processing Log: dwca-mnhn-ic-v57.401.zip</h3>
+                <div style="background: #1e1e1e; color: #f8f8f2; padding: 15px; border-radius: 5px; font-family: 'Courier New', monospace; font-size: 12px; max-height: 400px; overflow-y: auto;">
+<pre style="margin: 0; white-space: pre-wrap;">2025-07-22 11:02:29,224 - INFO - Processing dwca-mnhn-ic-v57.401.zip
+2025-07-22 11:02:29,483 - INFO - Delimiter detection: {'\t': 90}, chosen: '	'
+2025-07-22 11:02:29,484 - INFO - Detected delimiter: '	'
+2025-07-22 11:02:29,890 - INFO - Chardet detected encoding: utf-8 (confidence: 0.99)
+2025-07-22 11:02:29,891 - INFO - Encoding validation successful: utf-8
+2025-07-22 11:02:29,891 - INFO - Trying to read with encoding: utf-8
+2025-07-22 11:02:31,689 - INFO - Successfully read with encoding: utf-8
+2025-07-22 11:02:31,692 - INFO - Mapped column 'id' -> 'occurrenceID' in dwca-mnhn-ic-v57.401.zip
+2025-07-22 11:02:31,693 - INFO - Mapped column 'verbatimEventDate' -> 'eventDate_1' in dwca-mnhn-ic-v57.401.zip
+2025-07-22 11:02:31,693 - INFO - Mapped column 'verbatimLocality' -> 'locality_1' in dwca-mnhn-ic-v57.401.zip
+2025-07-22 11:02:31,693 - INFO - Mapped column 'verbatimLatitude' -> 'decimalLatitude' in dwca-mnhn-ic-v57.401.zip
+2025-07-22 11:02:31,693 - INFO - Mapped column 'verbatimLongitude' -> 'decimalLongitude' in dwca-mnhn-ic-v57.401.zip
+2025-07-22 11:02:31,932 - INFO - Applied fallback strategy in dwca-mnhn-ic-v57.401.zip: day <- eventDate (39620 records filled)
+2025-07-22 11:02:57,458 - INFO - Standardized 69092 dates in dwca-mnhn-ic-v57.401.zip
+2025-07-22 11:03:25,840 - INFO - Standardized 137112 country names in dwca-mnhn-ic-v57.401.zip
+2025-07-22 11:03:25,841 - INFO - Loaded 141586 records from dwca-mnhn-ic-v57.401.zip</pre>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <h4 style="font-size: 15px; margin-bottom: 10px;">Processing Flow Summary</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 12px;">
+                            <div style="font-weight: bold; color: #2e7d32;">1. File Detection</div>
+                            <div style="font-size: 13px; color: #666;">UTF-8 encoding detected, tab-delimited format</div>
+                        </div>
+                        <div style="background: #e3f2fd; border-left: 4px solid #2196f3; padding: 12px;">
+                            <div style="font-weight: bold; color: #1976d2;">2. Column Mapping</div>
+                            <div style="font-size: 13px; color: #666;">5 columns mapped to Darwin Core standard</div>
+                        </div>
+                        <div style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 12px;">
+                            <div style="font-weight: bold; color: #f57c00;">3. Data Enhancement</div>
+                            <div style="font-size: 13px; color: #666;">Dates & countries standardized</div>
+                        </div>
+                        <div style="background: #f3e5f5; border-left: 4px solid #9c27b0; padding: 12px;">
+                            <div style="font-weight: bold; color: #7b1fa2;">4. Validation</div>
+                            <div style="font-size: 13px; color: #666;">141,586 records successfully processed</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Field Mappings Tab -->
+        <div class="tab-content" id="field-mappings-tab">
+            <div style="padding: 20px;">
+                <h3 class="section-title">Column Mappings Applied</h3>
+                <div style="margin-bottom: 20px;">
+                    <p style="font-size: 14px; color: #666; margin-bottom: 15px;">
+                        The following column mappings were applied to standardize data to Darwin Core format:
+                    </p>
+                </div>
+
+                <div style="background: #f9f9f9; border-radius: 5px; padding: 15px; max-height: 400px; overflow-y: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                        <thead>
+                        <tr style="background: #e0e0e0;">
+                            <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ccc;">Source File</th>
+                            <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ccc;">Original Column</th>
+                            <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ccc;">Mapped To</th>
+                            <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ccc;">Type</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td style="padding: 6px; border-bottom: 1px solid #eee;">dwca-mnhn-ic-v57.401.zip</td>
+                            <td style="padding: 6px; border-bottom: 1px solid #eee; font-family: monospace;">id</td>
+                            <td style="padding: 6px; border-bottom: 1px solid #eee; font-family: monospace;">occurrenceID</td>
+                            <td style="padding: 6px; border-bottom: 1px solid #eee;"><span style="background: #e3f2fd; color: #1976d2; padding: 2px 6px; border-radius: 10px; font-size: 11px;">alias</span></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 6px; border-bottom: 1px solid #eee;">dwca-mnhn-ic-v57.401.zip</td>
+                            <td style="padding: 6px; border-bottom: 1px solid #eee; font-family: monospace;">verbatimEventDate</td>
+                            <td style="padding: 6px; border-bottom: 1px solid #eee; font-family: monospace;">eventDate</td>
+                            <td style="padding: 6px; border-bottom: 1px solid #eee;"><span style="background: #e3f2fd; color: #1976d2; padding: 2px 6px; border-radius: 10px; font-size: 11px;">alias</span></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 6px; border-bottom: 1px solid #eee;">dwca-mnhn-ic-v57.401.zip</td>
+                            <td style="padding: 6px; border-bottom: 1px solid #eee; font-family: monospace;">verbatimCoordinates</td>
+                            <td style="padding: 6px; border-bottom: 1px solid #eee; font-family: monospace;">decimalLatitude</td>
+                            <td style="padding: 6px; border-bottom: 1px solid #eee;"><span style="background: #e8f5e9; color: #2e7d32; padding: 2px 6px; border-radius: 10px; font-size: 11px;">creation</span></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 6px; border-bottom: 1px solid #eee;">dwca-mnhn-ic-v57.401.zip</td>
+                            <td style="padding: 6px; border-bottom: 1px solid #eee; font-family: monospace;">specificepithet</td>
+                            <td style="padding: 6px; border-bottom: 1px solid #eee; font-family: monospace;">scientificName</td>
+                            <td style="padding: 6px; border-bottom: 1px solid #eee;"><span style="background: #fff3e0; color: #f57c00; padding: 2px 6px; border-radius: 10px; font-size: 11px;">fallback</span></td>
+                        </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                        <div style="text-align: center; padding: 15px; background: #e3f2fd; border-radius: 5px;">
+                            <div style="font-size: 20px; font-weight: bold; color: #1976d2;">67</div>
+                            <div style="font-size: 12px; color: #666;">Column Aliases</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: #fff3e0; border-radius: 5px;">
+                            <div style="font-size: 20px; font-weight: bold; color: #f57c00;">15</div>
+                            <div style="font-size: 12px; color: #666;">Fallback Strategies</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: #e8f5e9; border-radius: 5px;">
+                            <div style="font-size: 20px; font-weight: bold; color: #2e7d32;">7</div>
+                            <div style="font-size: 12px; color: #666;">Field Creations</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Processing Errors Tab -->
+        <div class="tab-content" id="errors-tab">
+            <div style="padding: 20px;">
+                <h3 class="section-title">Processing Errors (5 files failed)</h3>
+                <div style="margin-bottom: 20px;">
+                    <p style="font-size: 14px; color: #666;">
+                        The following files encountered errors during processing and require manual review:
+                    </p>
+                </div>
+
+                <div style="background: #f9f9f9; border-radius: 5px; padding: 15px;">
+                    <div style="margin-bottom: 20px; padding: 15px; background: #ffebee; border-left: 4px solid #f44336; border-radius: 5px;">
+                        <div style="font-weight: bold; color: #c62828; margin-bottom: 8px;">dwca-ichthyology-v117.485.zip</div>
+                        <div style="font-size: 13px; color: #666; margin-bottom: 8px;">
+                            <strong>Error:</strong> Error tokenizing data. C error: Expected 40 fields in line 154839, saw 46
+                        </div>
+                        <div style="font-size: 13px; color: #666; margin-bottom: 8px;">
+                            <strong>Time:</strong> 2025-07-22T11:02:01.428666
+                        </div>
+                        <div style="font-size: 13px; color: #666;">
+                            <strong>Cause:</strong> CSV file contains inconsistent number of columns, likely due to unescaped delimiters in data fields
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 20px; padding: 15px; background: #ffebee; border-left: 4px solid #f44336; border-radius: 5px;">
+                        <div style="font-weight: bold; color: #c62828; margin-bottom: 8px;">dwca-uwfc_fish-v5.2.zip</div>
+                        <div style="font-size: 13px; color: #666; margin-bottom: 8px;">
+                            <strong>Error:</strong> Error tokenizing data. C error: Expected 169 fields in line 52474, saw 173
+                        </div>
+                        <div style="font-size: 13px; color: #666; margin-bottom: 8px;">
+                            <strong>Time:</strong> 2025-07-22T11:14:37.478047
+                        </div>
+                        <div style="font-size: 13px; color: #666;">
+                            <strong>Cause:</strong> Similar tokenization issue - field delimiter appears within data values
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 20px; padding: 15px; background: #ffebee; border-left: 4px solid #f44336; border-radius: 5px;">
+                        <div style="font-weight: bold; color: #c62828; margin-bottom: 8px;">dwca-saiab-v1.97.zip</div>
+                        <div style="font-size: 13px; color: #666; margin-bottom: 8px;">
+                            <strong>Error:</strong> Error tokenizing data. C error: Expected 81 fields in line 7581, saw 105
+                        </div>
+                        <div style="font-size: 13px; color: #666; margin-bottom: 8px;">
+                            <strong>Time:</strong> 2025-07-22T11:08:03.082486
+                        </div>
+                        <div style="font-size: 13px; color: #666;">
+                            <strong>Cause:</strong> Data structure inconsistency - extra fields detected
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <h4 style="font-size: 15px; margin-bottom: 10px;">Recommended Actions</h4>
+                    <div style="background: #e3f2fd; border-radius: 5px; padding: 15px;">
+                        <ul style="margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.6;">
+                            <li><strong>Contact Data Providers:</strong> Reach out to institutions with failed files to request corrected versions</li>
+                            <li><strong>Manual Review:</strong> Examine problematic lines in failed files to identify delimiter escape issues</li>
+                            <li><strong>Parser Configuration:</strong> Consider adjusting CSV parser settings for files with complex text fields</li>
+                            <li><strong>Data Validation:</strong> Implement pre-processing validation to catch structural issues early</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div style="text-align: center; padding: 20px; background: #ffebee; border-radius: 5px;">
+                        <div style="font-size: 24px; font-weight: bold; color: #f44336;">14.3%</div>
+                        <div style="font-size: 14px; color: #666;">Failure Rate</div>
+                        <div style="font-size: 12px; color: #999; margin-top: 5px;">5 out of 35 files</div>
+                    </div>
+                    <div style="text-align: center; padding: 20px; background: #e8f5e9; border-radius: 5px;">
+                        <div style="font-size: 24px; font-weight: bold; color: #4caf50;">85.7%</div>
+                        <div style="font-size: 14px; color: #666;">Success Rate</div>
+                        <div style="font-size: 12px; color: #999; margin-top: 5px;">30 out of 35 files</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Flag Issue Detail Modal -->
+<div class="modal-backdrop" id="flag-issue-modal">
+    <div class="modal">
+        <div class="modal-close">&times;</div>
+        <div id="flag-issue-content">
+            <!-- Default loading state -->
+            <div style="padding: 40px; text-align: center;">
+                <div style="font-size: 24px; margin-bottom: 10px;">Loading...</div>
+                <div>Retrieving flag issue details</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 打开处理日志模态框
+    function showProcessingDetails() {
+        const modal = document.getElementById('processing-logs-modal');
+        modal.style.display = 'flex';
+        initProcessingModalTabs();
+    }
+
+    // 关闭处理日志模态框
+    function closeProcessingModal() {
+        const modal = document.getElementById('processing-logs-modal');
+        modal.style.display = 'none';
+    }
+
+    // 初始化处理日志模态框中的标签页功能
+    function initProcessingModalTabs() {
+        const tabs = document.querySelectorAll('#processing-logs-modal .tab');
+        const tabContents = document.querySelectorAll('#processing-logs-modal .tab-content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // 移除所有标签页的激活状态
+                tabs.forEach(t => t.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+
+                // 激活当前标签页
+                this.classList.add('active');
+
+                // 显示相应内容
+                const tabId = this.getAttribute('data-tab');
+                document.getElementById(tabId + '-tab').classList.add('active');
+            });
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // 为所有标记项添加点击事件
+        const flagItems = document.querySelectorAll('.flag-item');
+        flagItems.forEach(item => {
+            // 防止按钮点击事件传播到整个flag-item
+            const buttons = item.querySelectorAll('.flag-button');
+            buttons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.stopPropagation(); // 阻止事件冒泡
+
+                    const flagId = item.getAttribute('data-id');
+                    const action = this.classList.contains('resolve') ? 'resolve' : 'dismiss';
+                    handleFlagAction(flagId, action);
+                });
+            });
+
+            // 点击整个flag-item打开详情模态框
+            item.addEventListener('click', function() {
+                const flagId = this.getAttribute('data-id');
+                openFlagIssueModal(flagId);
+            });
+        });
+
+        // 模态框关闭按钮
+        const modalCloseBtn = document.querySelector('.modal-close');
+        const modal = document.getElementById('flag-issue-modal');
+
+        modalCloseBtn.addEventListener('click', function() {
+            closeModal();
+        });
+
+        // 点击模态框背景关闭
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // 处理日志模态框关闭事件
+        const processingModal = document.getElementById('processing-logs-modal');
+        if (processingModal) {
+            processingModal.addEventListener('click', function(e) {
+                if (e.target === processingModal) {
+                    closeProcessingModal();
+                }
+            });
+        }
+
+        // ESC键关闭模态框
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                if (modal.style.display === 'flex') {
+                    closeModal();
+                }
+                if (processingModal && processingModal.style.display === 'flex') {
+                    closeProcessingModal();
+                }
+            }
+        });
+    });
+
+    // 关闭模态框
+    function closeModal() {
+        const modal = document.getElementById('flag-issue-modal');
+        modal.style.display = 'none';
+
+        // 重置内容
+        document.getElementById('flag-issue-content').innerHTML = `
+            <div style="padding: 40px; text-align: center;">
+                <div style="font-size: 24px; margin-bottom: 10px;">Loading...</div>
+                <div>Retrieving flag issue details</div>
+            </div>
+        `;
+    }
+
+    // 处理标记操作（解决或忽略）
+    function handleFlagAction(flagId, action) {
+        console.log(`Flag ${flagId} action: ${action}`);
+        // 在实际应用中，这里会发送API请求处理标记操作
+        alert(`Flag #${flagId} has been ${action === 'resolve' ? 'resolved' : 'dismissed'}`);
+
+        // 如果是实际应用中，可能需要重新加载标记列表或更新UI
+        // updateFlagsList();
+    }
+
+    // 打开标记问题详情模态框
+    function openFlagIssueModal(flagId) {
+        const modal = document.getElementById('flag-issue-modal');
+        const content = document.getElementById('flag-issue-content');
+
+        // 显示模态框
+        modal.style.display = 'flex';
+
+        // 显示加载状态
+        content.innerHTML = `
+            <div style="padding: 40px; text-align: center;">
+                <div style="font-size: 24px; margin-bottom: 10px;">Loading...</div>
+                <div>Retrieving details for flag issue #${flagId}</div>
+            </div>
+        `;
+
+        // 模拟AJAX请求延迟
+        setTimeout(() => {
+            loadFlagIssueDetails(flagId, content);
+        }, 500);
+    }
+
+    // 加载标记问题详情内容
+    function loadFlagIssueDetails(flagId, container) {
+        // 在实际应用中，这里会是一个AJAX请求获取详情数据
+        // 例如: fetch('/api/flags/' + flagId).then(response => response.json())...
+
+        // 模拟加载内容
+        container.innerHTML = `
+            <!-- Issue Header -->
+            <div class="issue-header">
+                <div>
+                    <h2 class="issue-title">Taxonomic identification issue (Record #${flagId})</h2>
+                    <div>User J. Smith suggests specimen identified as Cyprinella lutrensis may actually be Cyprinella venusta based on collection location and morphological features described.</div>
+                    <div class="issue-meta">
+                        <div class="meta-item">
+                            <span class="meta-label">Reported by:</span>
+                            <span>Dr. Henry Bart (Tulane University)</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Reported on:</span>
+                            <span>April 8, 2025</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Last Updated:</span>
+                            <span>April 12, 2025</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Priority:</span>
+                            <span>Medium</span>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <span class="status-badge in-progress">In Progress</span>
+                </div>
+            </div>
+
+            <!-- Record Information -->
+            <div class="record-info">
+                <h3 class="section-title">Record Information</h3>
+                <div class="record-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Record ID</span>
+                        <span class="detail-value">NMNH-${flagId}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Current Identification</span>
+                        <span class="detail-value">Cyprinella lutrensis (Baird & Girard, 1853)</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Collection Location</span>
+                        <span class="detail-value">Mississippi River, USA</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Collection Date</span>
+                        <span class="detail-value">May 15, 2022</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Collector</span>
+                        <span class="detail-value">Ulrich Schliewen</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Institution</span>
+                        <span class="detail-value">SNSB - Zoologische Staatssammlung München</span>
+                    </div>
+                </div>
+                <div style="margin-top: 15px;">
+                    <button class="secondary-button">View Full Record</button>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <div class="tab active" data-tab="timeline">Timeline</div>
+                <div class="tab" data-tab="activities">Activities</div>
+            </div>
+
+            <!-- Timeline Tab -->
+            <div class="tab-content active" id="timeline-tab">
+                <div class="timeline-items">
+                    <!-- Issue Created -->
+                    <div class="timeline-item">
+                        <div class="timeline-header">
+                            <div class="timeline-author">Dr. Henry Bart</div>
+                            <div class="timeline-time">March 8, 2025 at 09:23 AM</div>
+                        </div>
+                        <div class="timeline-content">
+                            <p>I believe this specimen has been misidentified as Cyprinella lutrensis. Based on the collection location (Mississippi River) and the described morphological features, particularly the larger scales and distinct dark spot on the dorsal fin, this is most likely Cyprinella venusta.</p>
+                            <p>This species is common in this region, while C. lutrensis is typically found further west. The photograph in the record also shows the characteristic lateral stripe pattern of C. venusta rather than C. lutrensis.</p>
+                        </div>
+                    </div>
+
+                    <!-- System Update -->
+                    <div class="timeline-item status-change">
+                        <div class="timeline-header">
+                            <div class="timeline-author">System</div>
+                            <div class="timeline-time">March 8, 2025 at 09:23 AM</div>
+                        </div>
+                        <div class="timeline-content system">
+                            Issue #${flagId} was created and assigned to the taxonomy department.
+                        </div>
+                    </div>
+
+                    <!-- Status Update -->
+                    <div class="timeline-item status-change">
+                        <div class="timeline-header">
+                            <div class="timeline-author">System</div>
+                            <div class="timeline-time">March 9, 2025 at 10:15 AM</div>
+                        </div>
+                        <div class="timeline-content system">
+                            Status changed from "Pending Review" to "In Progress" by Ulrich Schliewen.
+                        </div>
+                    </div>
+
+                    <!-- Curator Response -->
+                    <div class="timeline-item">
+                        <div class="timeline-header">
+                            <div class="timeline-author">Ulrich Schliewen (Curator, SNSB)</div>
+                            <div class="timeline-time">March 9, 2025 at 10:18 AM</div>
+                        </div>
+                        <div class="timeline-content">
+                            <p>Thank you for flagging this issue, Dr. Bart. I've reviewed the specimen photos and collection metadata, and I agree that there are discrepancies with the current identification.</p>
+                            <p>I've requested the physical specimen from storage for examination. We'll compare it with confirmed specimens of both species and update the record accordingly. I'll keep you informed of our findings.</p>
+                        </div>
+                    </div>
+
+                    <!-- Curator Update -->
+                    <div class="timeline-item">
+                        <div class="timeline-header">
+                            <div class="timeline-author">Ulrich Schliewen (Curator, SNSB)</div>
+                            <div class="timeline-time">March 12, 2025 at 03:42 PM</div>
+                        </div>
+                        <div class="timeline-content">
+                            <p>I've examined the specimen and compared it with our reference collection. You are correct in your assessment. This is indeed Cyprinella venusta, not C. lutrensis.</p>
+                            <p>We'll update our database record accordingly. Thanks again for bringing this to our attention.</p>
+                        </div>
+                    </div>
+
+                    <!-- User Response -->
+                    <div class="timeline-item">
+                        <div class="timeline-header">
+                            <div class="timeline-author">Dr. Henry Bart</div>
+                            <div class="timeline-time">March 12, 2025 at 04:17 PM</div>
+                        </div>
+                        <div class="timeline-content">
+                            <p>Thank you for the quick and thorough investigation, Ulrich. I appreciate your confirmation of the identification and the detailed explanation of the distinguishing characteristics observed.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reply Form -->
+                <div class="reply-form">
+                    <h3 class="form-title">Add Reply</h3>
+                    <div class="form-group">
+                        <label class="form-label" for="reply-content">Your Response</label>
+                        <textarea class="form-control" id="reply-content" placeholder="Enter your response to this issue..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <div class="status-options">
+                            <select class="form-control" style="width: auto;">
+                                <option value="">No status change</option>
+                                <option value="resolved">Mark as Resolved</option>
+                                <option value="pending">Mark as Pending</option>
+                                <option value="closed">Close Issue</option>
+                            </select>
+                            <button class="secondary-button">Attach Files</button>
+                        </div>
+                        <button class="button" id="submit-reply">Submit Reply</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activities Tab -->
+            <div class="tab-content" id="activities-tab">
+                <ul class="activity-list">
+                    <li class="activity-item">
+                        <div class="activity-icon">🔍</div>
+                        <div class="activity-content">
+                            <div class="activity-title">Record examined by Curator</div>
+                            <div class="activity-time">March 12, 2025 at 02:30 PM</div>
+                        </div>
+                    </li>
+                    <li class="activity-item">
+                        <div class="activity-icon">📋</div>
+                        <div class="activity-content">
+                            <div class="activity-title">Record requested from storage</div>
+                            <div class="activity-time">March 9, 2025 at 10:20 AM</div>
+                        </div>
+                    </li>
+                    <li class="activity-item">
+                        <div class="activity-icon">👁️</div>
+                        <div class="activity-content">
+                            <div class="activity-title">Record viewed by Ulrich Schliewen</div>
+                            <div class="activity-time">March 9, 2025 at 10:10 AM</div>
+                        </div>
+                    </li>
+                    <li class="activity-item">
+                        <div class="activity-icon">📢</div>
+                        <div class="activity-content">
+                            <div class="activity-title">Issue assigned to Taxonomy Department</div>
+                            <div class="activity-time">March 8, 2025 at 09:25 AM</div>
+                        </div>
+                    </li>
+                    <li class="activity-item">
+                        <div class="activity-icon">🚩</div>
+                        <div class="activity-content">
+                        <div class="activity-title"> Issue created by Dr. Henry Bart</div>
+                            <div class="activity-time">March 8, 2025 at 09:23 AM</div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        `;
+
+        // 添加标签页切换功能
+        initTabsInModal();
+
+        // 添加回复表单提交事件
+        const submitButton = document.getElementById('submit-reply');
+        if (submitButton) {
+            submitButton.addEventListener('click', function() {
+                handleReplySubmit(flagId);
+            });
+        }
+    }
+
+    // 处理回复提交
+    function handleReplySubmit(flagId) {
+        const replyContent = document.getElementById('reply-content').value;
+        const statusSelect = document.querySelector('.form-control');
+        const newStatus = statusSelect.value;
+
+        if (!replyContent.trim()) {
+            alert('Please enter a reply message');
+            return;
+        }
+
+        console.log(`Submitting reply for flag #${flagId}:`, {
+            content: replyContent,
+            statusChange: newStatus || 'none'
+        });
+
+        // 在实际应用中，这里会发送API请求提交回复
+        // 例如: fetch('/api/flags/' + flagId + '/replies', { method: 'POST', body: JSON.stringify({...}) })
+
+        // 模拟成功提交
+        alert('Reply submitted successfully');
+
+        // 更新UI：添加新回复到时间线
+        addReplyToTimeline(replyContent, newStatus);
+
+        // 清空表单
+        document.getElementById('reply-content').value = '';
+        statusSelect.value = '';
+    }
+
+    // 添加新回复到时间线
+    function addReplyToTimeline(content, statusChange) {
+        const timelineItems = document.querySelector('.timeline-items');
+        const now = new Date();
+        const timeString = now.toLocaleString('en-US', {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+
+        // 创建回复HTML
+        const replyHTML = `
+            <div class="timeline-item">
+                <div class="timeline-header">
+                    <div class="timeline-author">SNSB - Zoologische Staatssammlung München (You)</div>
+                    <div class="timeline-time">${timeString}</div>
+                </div>
+                <div class="timeline-content">
+                    <p>${content}</p>
+                </div>
+            </div>
+        `;
+
+        // 如果有状态变更，添加状态变更条目
+        let statusHTML = '';
+        if (statusChange) {
+            const statusText = {
+                'resolved': 'Resolved',
+                'pending': 'Pending Review',
+                'closed': 'Closed'
+            }[statusChange] || statusChange;
+
+            statusHTML = `
+                <div class="timeline-item status-change">
+                    <div class="timeline-header">
+                        <div class="timeline-author">System</div>
+                        <div class="timeline-time">${timeString}</div>
+                    </div>
+                    <div class="timeline-content system">
+                        Status changed to "${statusText}" by SNSB - Zoologische Staatssammlung München.
+                    </div>
+                </div>
+            `;
+
+            // 更新顶部状态标签
+            const statusBadge = document.querySelector('.status-badge');
+            statusBadge.className = 'status-badge ' + statusChange;
+            statusBadge.textContent = statusText;
+        }
+
+        // 添加到时间线
+        timelineItems.insertAdjacentHTML('beforeend', replyHTML + statusHTML);
+    }
+
+    // 初始化模态框中的标签页功能
+    function initTabsInModal() {
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // 移除所有标签页的激活状态
+                tabs.forEach(t => t.classList.remove('active'));
+
+                // 隐藏所有内容面板
+                tabContents.forEach(content => content.classList.remove('active'));
+
+                // 激活当前标签页
+                this.classList.add('active');
+
+                // 显示相应内容
+                const tabId = this.getAttribute('data-tab');
+                document.getElementById(tabId + '-tab').classList.add('active');
+            });
+        });
+    }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize charts
+        initializeUserActivityCharts();
+
+        // Tab switching for Data Analytics
+        const userActivityTab = document.getElementById('tab-user-activity');
+        const dataDistributionTab = document.getElementById('tab-data-distribution');
+        const userActivityContent = document.getElementById('content-user-activity');
+        const dataDistributionContent = document.getElementById('content-data-distribution');
+
+        userActivityTab.addEventListener('click', function() {
+            // Update tab styles
+            userActivityTab.style.borderBottom = '2px solid #3498db';
+            userActivityTab.style.fontWeight = 'bold';
+            userActivityTab.style.color = '#3498db';
+            dataDistributionTab.style.borderBottom = 'none';
+            dataDistributionTab.style.fontWeight = 'normal';
+            dataDistributionTab.style.color = 'inherit';
+
+            // Show/hide content
+            userActivityContent.style.display = 'block';
+            dataDistributionContent.style.display = 'none';
+
+            // Re-initialize charts to handle any resize issues
+            setTimeout(initializeUserActivityCharts, 100);
+        });
+
+        dataDistributionTab.addEventListener('click', function() {
+            // Update tab styles
+            dataDistributionTab.style.borderBottom = '2px solid #3498db';
+            dataDistributionTab.style.fontWeight = 'bold';
+            dataDistributionTab.style.color = '#3498db';
+            userActivityTab.style.borderBottom = 'none';
+            userActivityTab.style.fontWeight = 'normal';
+            userActivityTab.style.color = 'inherit';
+
+            // Show/hide content
+            userActivityContent.style.display = 'none';
+            dataDistributionContent.style.display = 'block';
+
+            // Initialize data distribution charts
+            setTimeout(initializeDataDistributionCharts, 100);
+        });
+
+        // Handle time range selector
+        const timeRangeSelector = document.getElementById('usage-time-range');
+        if (timeRangeSelector) {
+            timeRangeSelector.addEventListener('change', function() {
+                // Re-initialize charts based on active tab
+                if (userActivityContent.style.display !== 'none') {
+                    initializeUserActivityCharts();
+                } else {
+                    initializeDataDistributionCharts();
+                }
+            });
+        }
+    });
+
+    function initializeUserActivityCharts() {
+        // Create each chart
+        createTopSearchQueriesChart();
+        createSpeciesDownloadsChart();
+        createUserDemographicsChart();
+        createUserGeographicChart();
+    }
+
+    function initializeDataDistributionCharts() {
+        // Optional: Implement these functions later if needed
+        createTaxonomicDistributionChart();
+        createGeographicDistributionChart();
+        createTemporalDistributionChart();
+        createEnvironmentalDistributionChart();
+    }
+
+    function createTopSearchQueriesChart() {
+        const chartContainer = document.getElementById('top-queries-chart');
+        if (!chartContainer) return;
+
+        // Clear the container
+        chartContainer.innerHTML = '';
+
+        // Initialize chart
+        const chart = echarts.init(chartContainer);
+
+        // Chart options
+        const option = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                }
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'value',
+                boundaryGap: [0, 0.01],
+                axisLabel: {
+                    formatter: '{value}'
+                }
+            },
+            yAxis: {
+                type: 'category',
+                data: [
+                    'Collection date: 2000-2010',
+                    'Freshwater species',
+                    'Mississippi River specimens',
+                    'Cyprinidae taxonomy'
+                ],
+                axisLabel: {
+                    width: 120,
+                    overflow: 'truncate'
+                }
+            },
+            series: [
+                {
+                    name: 'Queries',
+                    type: 'bar',
+                    data: [512, 694, 723, 845],
+                    itemStyle: {
+                        color: '#3498db'
+                    }
+                }
+            ]
+        };
+
+        // Apply options and render chart
+        chart.setOption(option);
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            chart.resize();
+        });
+    }
+
+    function createSpeciesDownloadsChart() {
+        const chartContainer = document.getElementById('species-downloads-chart');
+        if (!chartContainer) return;
+
+        // Clear the container
+        chartContainer.innerHTML = '';
+
+        // Initialize chart
+        const chart = echarts.init(chartContainer);
+
+        // Chart options
+        const option = {
+            tooltip: {
+                trigger: 'item',
+                formatter: '{b}: {c} downloads ({d}%)'
+            },
+            legend: {
+                orient: 'vertical',
+                right: 10,
+                top: 'center',
+                data: [
+                    'Cyprinella venusta',
+                    'Micropterus salmoides',
+                    'Lepomis macrochirus',
+                    'Ictalurus punctatus',
+                    'Other species'
+                ]
+            },
+            series: [
+                {
+                    name: 'Downloads',
+                    type: 'pie',
+                    radius: '55%',
+                    center: ['40%', '50%'],
+                    data: [
+                        { value: 1254, name: 'Cyprinella venusta' },
+                        { value: 948, name: 'Micropterus salmoides' },
+                        { value: 827, name: 'Lepomis macrochirus' },
+                        { value: 756, name: 'Ictalurus punctatus' },
+                        { value: 1200, name: 'Other species' }
+                    ],
+                    emphasis: {
+                        itemStyle: {
+                            shadowBlur: 10,
+                            shadowOffsetX: 0,
+                            shadowColor: 'rgba(0, 0, 0, 0.5)'
+                        }
+                    }
+                }
+            ]
+        };
+
+        // Apply options and render chart
+        chart.setOption(option);
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            chart.resize();
+        });
+    }
+
+    function createUserDemographicsChart() {
+        const chartContainer = document.getElementById('user-demographics-chart');
+        if (!chartContainer) return;
+
+        // Clear the container
+        chartContainer.innerHTML = '';
+
+        // Initialize chart
+        const chart = echarts.init(chartContainer);
+
+        // Chart options
+        const option = {
+            tooltip: {
+                trigger: 'item',
+                formatter: '{b}: {c}%'
+            },
+            legend: {
+                orient: 'vertical',
+                right: 10,
+                top: 'center',
+                data: [
+                    'Academic Researchers',
+                    'Conservation Organizations',
+                    'Government Agencies',
+                    'Other Users'
+                ]
+            },
+            series: [
+                {
+                    name: 'User Types',
+                    type: 'pie',
+                    radius: ['40%', '70%'], // Inner and outer radius for donut
+                    center: ['40%', '50%'],
+                    avoidLabelOverlap: false,
+                    itemStyle: {
+                        borderRadius: 10,
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    },
+                    label: {
+                        show: false,
+                        position: 'center'
+                    },
+                    emphasis: {
+                        label: {
+                            show: true,
+                            fontSize: 12,
+                            fontWeight: 'bold'
+                        }
+                    },
+                    labelLine: {
+                        show: false
+                    },
+                    data: [
+                        { value: 64, name: 'Academic Researchers', itemStyle: { color: '#3498db' } },
+                        { value: 18, name: 'Conservation Organizations', itemStyle: { color: '#2ecc71' } },
+                        { value: 12, name: 'Government Agencies', itemStyle: { color: '#9b59b6' } },
+                        { value: 6, name: 'Other Users', itemStyle: { color: '#e74c3c' } }
+                    ]
+                }
+            ]
+        };
+
+        // Apply options and render chart
+        chart.setOption(option);
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            chart.resize();
+        });
+    }
+
+    function createUserGeographicChart() {
+        const chartContainer = document.getElementById('user-geographic-chart');
+        if (!chartContainer) return;
+
+        // Clear the container
+        chartContainer.innerHTML = '';
+
+        // Initialize chart
+        const chart = echarts.init(chartContainer);
+
+        // For a simplified version, we'll use a bar chart instead of a full map
+        const option = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                }
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'category',
+                data: ['United States', 'Japan', 'Canada', 'Other Regions']
+            },
+            yAxis: {
+                type: 'value',
+                axisLabel: {
+                    formatter: '{value}%'
+                }
+            },
+            series: [
+                {
+                    name: 'User Distribution',
+                    type: 'bar',
+                    data: [42, 38, 12, 8],
+                    itemStyle: {
+                        color: function(params) {
+                            const colorList = ['#3498db', '#2ecc71', '#9b59b6', '#e74c3c'];
+                            return colorList[params.dataIndex];
+                        }
+                    },
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: '{c}%'
+                    }
+                }
+            ]
+        };
+
+        // Apply options and render chart
+        chart.setOption(option);
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            chart.resize();
+        });
+    }
+
+    // Placeholder functions for Data Distribution tab
+    function createTaxonomicDistributionChart() {
+        const chartContainer = document.getElementById('taxonomic-distribution-chart');
+        if (!chartContainer) return;
+
+        // Clear the container
+        chartContainer.innerHTML = '';
+
+        // Initialize chart
+        const chart = echarts.init(chartContainer);
+
+        // Placeholder chart - implement with real data as needed
+        const option = {
+            tooltip: {
+                trigger: 'item',
+                formatter: '{b}: {c}%'
+            },
+            series: [
+                {
+                    name: 'Taxonomic Distribution',
+                    type: 'treemap',
+                    data: [
+                        {
+                            name: 'Cyprinidae',
+                            value: 28,
+                            children: [
+                                { name: 'Cyprinidae (987,432 records)', value: 28 }
+                            ]
+                        },
+                        {
+                            name: 'Cichlidae',
+                            value: 15,
+                            children: [
+                                { name: 'Cichlidae (524,678 records)', value: 15 }
+                            ]
+                        },
+                        {
+                            name: 'Salmonidae',
+                            value: 12,
+                            children: [
+                                { name: 'Salmonidae (432,890 records)', value: 12 }
+                            ]
+                        },
+                        {
+                            name: 'Other Families',
+                            value: 45,
+                            children: [
+                                { name: 'Other Families (1,617,428 records)', value: 45 }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        };
+
+        // Apply options and render chart
+        chart.setOption(option);
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            chart.resize();
+        });
+    }
+
+    function createGeographicDistributionChart() {
+        const chartContainer = document.getElementById('geographic-distribution-chart');
+        if (!chartContainer) return;
+
+        // Clear the container
+        chartContainer.innerHTML = '';
+
+        // Initialize chart
+        const chart = echarts.init(chartContainer);
+
+        // Placeholder chart - implement with real data as needed
+        const option = {
+            tooltip: {
+                trigger: 'item',
+                formatter: '{b}: {c}%'
+            },
+            visualMap: {
+                min: 0,
+                max: 35,
+                left: 'right',
+                top: 'bottom',
+                text: ['High', 'Low'],
+                calculable: true
+            },
+            series: [
+                {
+                    name: 'Geographic Distribution',
+                    type: 'map',
+                    map: 'world',
+                    roam: true,
+                    emphasis: {
+                        label: {
+                            show: true
+                        }
+                    },
+                    data: [
+                        { name: 'North America', value: 32 },
+                        { name: 'Europe', value: 18 },
+                        { name: 'Asia', value: 21 },
+                        { name: 'Other Continents', value: 29 }
+                    ]
+                }
+            ]
+        };
+
+        // Since we don't have a world map data, show a placeholder
+        chartContainer.innerHTML = '<div style="display: flex; height: 100%; flex-direction: column; justify-content: center; align-items: center; background: #f9f9f9;">' +
+            '<div style="font-weight: bold; margin-bottom: 10px;">Geographic Heat Map</div>' +
+            '<div style="text-align: center; font-size: 13px; color: #666; max-width: 80%;">' +
+            'North America: 32% (1,147,976 records)<br>' +
+            'Europe: 18% (641,237 records)<br>' +
+            'Asia: 21% (748,110 records)<br>' +
+            'Other Continents: 29% (1,025,105 records)' +
+            '</div></div>';
+    }
+
+    function createTemporalDistributionChart() {
+        const chartContainer = document.getElementById('temporal-distribution-chart');
+        if (!chartContainer) return;
+
+        // Clear the container
+        chartContainer.innerHTML = '';
+
+        // Initialize chart
+        const chart = echarts.init(chartContainer);
+
+        // Generate years from 1900 to 2025
+        const years = [];
+        for (let year = 1900; year <= 2025; year += 5) {
+            years.push(year.toString());
+        }
+
+        // Generate sample data with a general upward trend
+        const data = years.map((year, index) => {
+            // Simple model: more specimens in recent years
+            let base = index * 10;
+            if (year >= 2000) base = base * 2;
+            return [year, Math.floor(base * (1 + 0.5 * Math.random()))];
+        });
+
+        // Chart options
+        const option = {
+            tooltip: {
+                trigger: 'axis',
+                formatter: function(params) {
+                    return params[0].name + ': ' + params[0].value[1] + ' records';
+                }
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'category',
+                data: years,
+                axisLabel: {
+                    interval: 5,
+                    rotate: 45
+                }
+            },
+            yAxis: {
+                type: 'value',
+                name: 'Records'
+            },
+            series: [
+                {
+                    name: 'Records',
+                    type: 'line',
+                    data: data,
+                    smooth: true,
+                    lineStyle: {
+                        width: 3,
+                        color: '#3498db'
+                    },
+                    areaStyle: {
+                        color: {
+                            type: 'linear',
+                            x: 0,
+                            y: 0,
+                            x2: 0,
+                            y2: 1,
+                            colorStops: [
+                                { offset: 0, color: 'rgba(52, 152, 219, 0.6)' },
+                                { offset: 1, color: 'rgba(52, 152, 219, 0.1)' }
+                            ]
+                        }
+                    }
+                }
+            ]
+        };
+
+        // Apply options and render chart
+        chart.setOption(option);
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            chart.resize();
+        });
+    }
+
+    function createEnvironmentalDistributionChart() {
+        const chartContainer = document.getElementById('environmental-distribution-chart');
+        if (!chartContainer) return;
+
+        // Clear the container
+        chartContainer.innerHTML = '';
+
+        // Initialize chart
+        const chart = echarts.init(chartContainer);
+
+        // Chart options
+        const option = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                }
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'value',
+                axisLabel: {
+                    formatter: '{value}%'
+                }
+            },
+            yAxis: {
+                type: 'category',
+                data: ['Other/Unknown', 'Estuarine', 'Marine', 'Freshwater']
+            },
+            series: [
+                {
+                    name: 'Records',
+                    type: 'bar',
+                    data: [9, 11, 38, 42],
+                    label: {
+                        show: true,
+                        position: 'right',
+                        formatter: '{c}%'
+                    },
+                    itemStyle: {
+                        color: function(params) {
+                            const colorList = ['#95a5a6', '#e67e22', '#3498db', '#2ecc71'];
+                            return colorList[params.dataIndex];
+                        }
+                    }
+                }
+            ]
+        };
+
+        // Apply options and render chart
+        chart.setOption(option);
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            chart.resize();
+        });
+    }
+</script>
+
+<!--
+For your Data Quality Insights panel, you can also add this chart:
+Replace the existing Data Quality Insights panel content with this
+-->
+
+
+<!-- Add this to your existing JavaScript for the Data Quality chart -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize the data quality chart
+        createDataQualityChart();
+    });
+
+    function createDataQualityChart() {
+        const chartContainer = document.getElementById('data-quality-chart');
+        if (!chartContainer) return;
+
+        // Clear the container
+        chartContainer.innerHTML = '';
+
+        // Initialize chart
+        const chart = echarts.init(chartContainer);
+
+        // Chart options for radar chart
+        const option = {
+            tooltip: {},
+            radar: {
+                indicator: [
+                    { name: 'Taxonomic Accuracy', max: 100 },
+                    { name: 'Geospatial Precision', max: 100 },
+                    { name: 'Collection Methods', max: 100 },
+                    { name: 'Specimen Condition', max: 100 },
+                    { name: 'Temporal Data', max: 100 },
+                    { name: 'Ecological Context', max: 100 }
+                ],
+                radius: '65%'
+            },
+            series: [
+                {
+                    name: 'Data Completeness',
+                    type: 'radar',
+                    data: [
+                        {
+                            value: [97, 92, 84, 95, 98, 90],
+                            name: 'Current Status',
+                            areaStyle: {
+                                color: 'rgba(52, 152, 219, 0.3)'
+                            },
+                            lineStyle: {
+                                color: 'rgba(52, 152, 219, 0.8)',
+                                width: 2
+                            },
+                            itemStyle: {
+                                color: '#3498db'
+                            }
+                        }
+                    ]
+                }
+            ]
+        };
+
+        // Apply options and render chart
+        chart.setOption(option);
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            chart.resize();
+        });
+    }
+</script>
+
+</body>
+</html>

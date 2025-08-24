@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fishnet2 - Species Page</title>
+    <style>
+        /* Base styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .button {
+            padding: 8px 15px;
+            background: #3498db;
+            color: white;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        .secondary-button {
+            padding: 8px 15px;
+            background: #ecf0f1;
+            color: #2c3e50;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        /* Species header */
+        .species-header {
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .species-title {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 15px;
+        }
+
+        .species-name {
+            font-size: 28px;
+            font-weight: bold;
+            margin: 0;
+            margin-right: 10px;
+        }
+
+        .species-authority {
+            font-size: 16px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .species-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 15px;
+        }
+
+        .species-info-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .info-value {
+            font-size: 15px;
+            line-height: 1.4;
+        }
+
+        .species-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .action-button {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+        }
+
+        .action-button.watch {
+            background: #e8f4fd;
+            color: #0288d1;
+        }
+
+        .action-button.download {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .action-button.flag {
+            background: #fff8e1;
+            color: #ff8f00;
+        }
+
+        .action-icon {
+            margin-right: 5px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #e0e0e0;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            border-bottom: 3px solid transparent;
+            margin-right: 10px;
+        }
+
+        .tab.active {
+            border-bottom-color: #3498db;
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        /* Panel grid */
+        .panel-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .panel-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .panel-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Panel sizes */
+        .panel-full-width {
+            grid-column: span 3;
+        }
+
+        .panel-double-width {
+            grid-column: span 2;
+        }
+
+        /* Map */
+        .map-container {
+            height: 400px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f0f0f0;
+        }
+
+        /* Charts */
+        .chart-container {
+            height: 250px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f9f9f9;
+        }
+
+        /* Images gallery */
+        .images-gallery {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .gallery-image {
+            width: 100%;
+            height: 120px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #777;
+        }
+
+        /* Records table */
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .table th, .table td {
+            border-bottom: 1px solid #eee;
+            padding: 10px;
+            text-align: left;
+        }
+
+        .table th {
+            background: #f9f9f9;
+            font-weight: bold;
+        }
+
+        .flag-record {
+            color: #ff8f00;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Related species */
+        .related-species {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .species-card {
+            background: #f9f9f9;
+            border-radius: 4px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .species-image {
+            width: 100%;
+            height: 100px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .species-card-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .species-card-count {
+            font-size: 12px;
+            color: #777;
+        }
+
+        /* Institutions */
+        .institutions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .institution-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+        }
+
+        .institution-logo {
+            width: 50px;
+            height: 50px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+            color: #777;
+        }
+
+        .institution-details {
+            flex: 1;
+        }
+
+        .institution-name {
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .institution-stats {
+            font-size: 13px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">Fishnet</div>
+        <div class="header-actions">
+            <a href="#" class="secondary-button">Dashboard</a>
+            <a href="#" class="secondary-button">Search</a>
+            <a href="#" class="secondary-button">My Account</a>
+        </div>
+    </div>
+
+    <!-- Species Header -->
+    <div class="species-header">
+        <div class="species-title">
+            <h1 class="species-name">Cyprinus carpio</h1>
+            <span class="species-authority">Linnaeus, 1758</span>
+        </div>
+        <div class="species-details">
+            <div class="species-info-group">
+                <div class="info-label">Common Name</div>
+                <div class="info-value">Common Carp</div>
+            </div>
+            <div class="species-info-group">
+                <div class="info-label">Classification</div>
+                <div class="info-value">Actinopterygii &gt; Cypriniformes &gt; Cyprinidae</div>
+            </div>
+            <div class="species-info-group">
+                <div class="info-label">Records in Database</div>
+                <div class="info-value">24,578</div>
+            </div>
+<!--            <div class="species-info-group">-->
+<!--                <div class="info-label">Conservation Status</div>-->
+<!--                <div class="info-value">Least Concern (IUCN Red List)</div>-->
+<!--            </div>-->
+        </div>
+        <div class="species-actions">
+            <button class="action-button watch">
+                <span class="action-icon">👁️</span> Watch Species
+            </button>
+            <button class="action-button download">
+                <span class="action-icon">⬇️</span> Download Records
+            </button>
+            <button class="action-button flag">
+                <span class="action-icon">🚩</span> Flag Issue
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <div class="tab active">Overview</div>
+        <div class="tab">Records</div>
+        <div class="tab">Images</div>
+        <div class="tab">Publications</div>
+<!--        <div class="tab">Related Taxa</div>-->
+    </div>
+
+    <!-- Panel Grid -->
+    <div class="panel-grid">
+        <!-- Distribution Map -->
+        <div class="panel panel-double-width">
+            <div class="panel-header">
+                <h2 class="panel-title">Geographic Distribution</h2>
+                <div class="panel-actions">
+                    <select>
+                        <option>All Records</option>
+                        <option>Last 10 Years</option>
+                    </select>
+                </div>
+            </div>
+            <div class="panel-content">
+                <div class="map-container">
+                    <div>Interactive Species Distribution Map</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Images Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">Images</h2>
+                <div class="panel-actions">
+                    <button class="secondary-button">View All</button>
+                </div>
+            </div>
+            <div class="panel-content">
+                <div class="images-gallery">
+                    <div class="gallery-image">Image 1</div>
+                    <div class="gallery-image">Image 2</div>
+                    <div class="gallery-image">Image 3</div>
+                    <div class="gallery-image">Image 4</div>
+                    <div class="gallery-image">Image 5</div>
+                    <div class="gallery-image">Image 6</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Records Panel -->
+        <div class="panel panel-full-width">
+            <div class="panel-header">
+                <h2 class="panel-title">Recent Records</h2>
+                <div class="panel-actions">
+                    <input type="text" placeholder="Filter records..." style="padding: 5px; border-radius: 3px; border: 1px solid #ddd;">
+                    <button class="secondary-button">View All</button>
+                </div>
+            </div>
+            <div class="panel-content">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Record ID</th>
+                        <th>Institution</th>
+                        <th>Location</th>
+                        <th>Collection Date</th>
+                        <th>Collector</th>
+                        <th>Flag</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>NMNH-45729083</td>
+                        <td>National Museum of Natural History</td>
+                        <td>Mississippi River, USA</td>
+                        <td>2022-05-15</td>
+                        <td>Curator1</td>
+                        <td><div class="flag-record">🚩</div></td>
+                    </tr>
+                    <tr>
+                        <td>AMNH-78234561</td>
+                        <td>American Museum of Natural History</td>
+                        <td>Lake Michigan, USA</td>
+                        <td>2021-08-22</td>
+                        <td>Curator2</td>
+                        <td><div class="flag-record">🚩</div></td>
+                    </tr>
+                    <tr>
+                        <td>CAS-89123456</td>
+                        <td>California Academy of Sciences</td>
+                        <td>Sacramento River, USA</td>
+                        <td>2021-06-10</td>
+                        <td>Curator3</td>
+                        <td><div class="flag-record">🚩</div></td>
+                    </tr>
+                    <tr>
+                        <td>FLMNH-32456789</td>
+                        <td>Florida Museum of Natural History</td>
+                        <td>St. Johns River, FL, USA</td>
+                        <td>2020-11-05</td>
+                        <td>Curator4</td>
+                        <td><div class="flag-record">🚩</div></td>
+                    </tr>
+                    <tr>
+                        <td>ROM-76543210</td>
+                        <td>Royal Ontario Museum</td>
+                        <td>Lake Ontario, Canada</td>
+                        <td>2020-07-29</td>
+                        <td>Curator5nativ</td>
+                        <td><div class="flag-record">🚩</div></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Temporal Distribution -->
+        <div class="panel panel-double-width">
+            <div class="panel-header">
+                <h2 class="panel-title">Temporal Distribution</h2>
+                <div class="panel-actions">
+                    <select>
+                        <option>By Collection Year</option>
+                        <option>By Decade</option>
+                        <option>By Season</option>
+                    </select>
+                </div>
+            </div>
+            <div class="panel-content">
+                <div class="chart-container">
+                    <div>Collection Records Over Time Chart</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contributing Institutions -->
+        <div class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">Top Contributing Institutions</h2>
+            </div>
+            <div class="panel-content">
+                <div class="institutions-list">
+                    <div class="institution-item">
+                        <div class="institution-logo">NMNH</div>
+                        <div class="institution-details">
+                            <div class="institution-name">National Museum of Natural History</div>
+                            <div class="institution-stats">5,842 records (23.8%)</div>
+                        </div>
+                    </div>
+                    <div class="institution-item">
+                        <div class="institution-logo">AMNH</div>
+                        <div class="institution-details">
+                            <div class="institution-name">American Museum of Natural History</div>
+                            <div class="institution-stats">4,128 records (16.8%)</div>
+                        </div>
+                    </div>
+                    <div class="institution-item">
+                        <div class="institution-logo">CAS</div>
+                        <div class="institution-details">
+                            <div class="institution-name">California Academy of Sciences</div>
+                            <div class="institution-stats">3,456 records (14.1%)</div>
+                        </div>
+                    </div>
+                    <div class="institution-item">
+                        <div class="institution-logo">ROM</div>
+                        <div class="institution-details">
+                            <div class="institution-name">Royal Ontario Museum</div>
+                            <div class="institution-stats">2,783 records (11.3%)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Related Species Panel -->
+        <div class="panel panel-full-width">
+            <div class="panel-header">
+                <h2 class="panel-title">Related Species?</h2>
+                <div class="panel-actions">
+                    <select>
+                        <option>Same Genus</option>
+                        <option>Same Family</option>
+                    </select>
+                </div>
+            </div>
+            <div class="panel-content">
+                <div class="related-species">
+                    <div class="species-card">
+                        <div class="species-image">Fish Image</div>
+                        <div class="species-card-name">Cyprinus rubrofuscus</div>
+                        <div class="species-card-count">3,245 records</div>
+                    </div>
+                    <div class="species-card">
+                        <div class="species-image">Fish Image</div>
+                        <div class="species-card-name">Carassius auratus</div>
+                        <div class="species-card-count">8,754 records</div>
+                    </div>
+                    <div class="species-card">
+                        <div class="species-image">Fish Image</div>
+                        <div class="species-card-name">Carassius carassius</div>
+                        <div class="species-card-count">5,127 records</div>
+                    </div>
+                    <div class="species-card">
+                        <div class="species-image">Fish Image</div>
+                        <div class="species-card-name">Cyprinus acutidorsalis</div>
+                        <div class="species-card-count">1,843 records</div>
+                    </div>
+                    <div class="species-card">
+                        <div class="species-image">Fish Image</div>
+                        <div class="species-card-name">Barbus barbus</div>
+                        <div class="species-card-count">4,256 records</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Tab switching logic
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabs = document.querySelectorAll('.tab');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Remove active class from all tabs
+                tabs.forEach(t => t.classList.remove('active'));
+                // Add active class to clicked tab
+                this.classList.add('active');
+
+                // In a real application, this would show/hide corresponding content
+                console.log('Switched to tab:', this.textContent);
+            });
+        });
+
+        // Flag record functionality
+        const flagButtons = document.querySelectorAll('.flag-record');
+        flagButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const recordId = this.closest('tr').querySelector('td:first-child').textContent;
+                alert(`Flag issue for record: ${recordId}`);
+            });
+        });
+
+        // Species card click
+        const speciesCards = document.querySelectorAll('.species-card');
+        speciesCards.forEach(card => {
+            card.addEventListener('click', function() {
+                const speciesName = this.querySelector('.species-card-name').textContent;
+                alert(`Navigate to species page: ${speciesName}`);
+            });
+        });
+    });
+</script>
+</body>
+</html>

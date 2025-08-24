@@ -4,6 +4,7 @@ import { taxonomyApi } from '@/api/taxonomy.js'
 import { recordsApi } from '@/api/records.js'
 
 export function useTaxonomy() {
+    // ========== 基础状态 ==========
     const loading = ref(false)
     const error = ref(null)
 
@@ -15,12 +16,19 @@ export function useTaxonomy() {
     const taxonomyStats = ref({})
     const hierarchy = ref({})
 
-    // 新增：详细统计数据
+    // 详细统计数据
     const diversityData = ref([])
     const geographicData = ref({})
     const temporalData = ref({})
     const institutionData = ref([])
     const topSpecies = ref([])
+    const institutionCoverage = ref({})
+
+    // 可视化专用数据
+    const mapData = ref([])
+    const timelineData = ref([])
+    const loadingMapData = ref(false)
+    const loadingTimelineData = ref(false)
 
     // 分页和筛选状态
     const pagination = reactive({
@@ -40,7 +48,7 @@ export function useTaxonomy() {
         sortBy: 'records_desc'
     })
 
-    // 计算属性
+    // ========== 计算属性 ==========
     const hasData = computed(() => {
         return families.value.length > 0 || genera.value.length > 0 || species.value.length > 0
     })
@@ -70,7 +78,30 @@ export function useTaxonomy() {
         )
     })
 
-    // 数据转换函数
+    // 可视化数据计算属性
+    const getTimelineChartData = computed(() => {
+        if (!temporalData.value.yearlyTrend) return []
+
+        return temporalData.value.yearlyTrend.map(item => ({
+            year: item.year,
+            records: item.records
+        })).sort((a, b) => a.year - b.year)
+    })
+
+    const getMapVisualizationData = computed(() => {
+        if (mapData.value.length > 0) {
+            return mapData.value
+        }
+
+        // 如果没有专门的地图数据，从机构数据转换
+        if (institutionData.value.length > 0) {
+            return transformInstitutionsToMapData(institutionData.value)
+        }
+
+        return []
+    })
+
+    // ========== 数据转换函数 ==========
     const transformFamilyData = (rawData) => {
         return rawData.map(item => ({
             family: item.family,
@@ -82,7 +113,6 @@ export function useTaxonomy() {
             institutionsCount: item.institutionsCount || 0,
             geoReferencingQuality: item.geoReferencingQuality || 0,
             dateQuality: item.dateQuality || 0,
-            collectionCompleteness: Math.min(90 + Math.random() * 10, 100), // 临时计算
             lastUpdated: item.lastUpdated
         }))
     }
@@ -98,7 +128,6 @@ export function useTaxonomy() {
             institutionsCount: item.institutionsCount || 0,
             geoReferencingQuality: item.geoReferencingQuality || 0,
             dateQuality: item.dateQuality || 0,
-            collectionCompleteness: Math.min(90 + Math.random() * 10, 100), // 临时计算
             lastUpdated: item.lastUpdated
         }))
     }
@@ -120,7 +149,37 @@ export function useTaxonomy() {
         }))
     }
 
-    // 获取所有科
+    const transformInstitutionsToMapData = (institutions) => {
+        const countryCoords = {
+            'United States': { lat: 39.8283, lng: -98.5795 },
+            'USA': { lat: 39.8283, lng: -98.5795 },
+            'US': { lat: 39.8283, lng: -98.5795 },
+            'United Kingdom': { lat: 55.3781, lng: -3.4360 },
+            'UK': { lat: 55.3781, lng: -3.4360 },
+            'Canada': { lat: 56.1304, lng: -106.3468 },
+            'Australia': { lat: -25.2744, lng: 133.7751 },
+            'Germany': { lat: 51.1657, lng: 10.4515 },
+            'France': { lat: 46.2276, lng: 2.2137 },
+            'Japan': { lat: 36.2048, lng: 138.2529 },
+            'Brazil': { lat: -14.2350, lng: -51.9253 },
+            'China': { lat: 35.8617, lng: 104.1954 },
+            'India': { lat: 20.5937, lng: 78.9629 }
+        }
+
+        return institutions.map(inst => {
+            const coords = countryCoords[inst.country || 'United States'] || countryCoords['United States']
+            return {
+                institutionCode: inst.code,
+                institutionName: inst.name,
+                lat: coords.lat + (Math.random() - 0.5) * 2, // 添加小的随机偏移
+                lng: coords.lng + (Math.random() - 0.5) * 2,
+                recordCount: inst.recordCount || 0,
+                country: inst.country || 'Unknown'
+            }
+        }).filter(item => item.lat && item.lng)
+    }
+
+    // ========== 基础数据获取方法 ==========
     const fetchFamilies = async (params = {}) => {
         loading.value = true
         error.value = null
@@ -133,7 +192,6 @@ export function useTaxonomy() {
                 ...params
             })
 
-            // 转换API响应数据格式
             families.value = transformFamilyData(response.data || [])
             pagination.total = response.total || families.value.length
 
@@ -142,8 +200,6 @@ export function useTaxonomy() {
         } catch (err) {
             error.value = err.message || 'Failed to fetch families'
             console.error('Error fetching families:', err)
-
-            // 只有在开发环境且API完全不可用时才使用空数组
             families.value = []
             pagination.total = 0
             throw err
@@ -152,7 +208,6 @@ export function useTaxonomy() {
         }
     }
 
-    // 获取所有属
     const fetchGenera = async (params = {}) => {
         loading.value = true
         error.value = null
@@ -173,7 +228,6 @@ export function useTaxonomy() {
         } catch (err) {
             error.value = err.message || 'Failed to fetch genera'
             console.error('Error fetching genera:', err)
-
             genera.value = []
             pagination.total = 0
             throw err
@@ -182,7 +236,6 @@ export function useTaxonomy() {
         }
     }
 
-    // 获取所有物种
     const fetchSpecies = async (params = {}) => {
         loading.value = true
         error.value = null
@@ -203,7 +256,6 @@ export function useTaxonomy() {
         } catch (err) {
             error.value = err.message || 'Failed to fetch species'
             console.error('Error fetching species:', err)
-
             species.value = []
             pagination.total = 0
             throw err
@@ -212,14 +264,13 @@ export function useTaxonomy() {
         }
     }
 
-    // 获取分类单元详情
+    // ========== 分类单元详情方法 ==========
     const fetchTaxonDetail = async (taxonType, taxonName) => {
         loading.value = true
         error.value = null
 
         try {
             let response
-
             switch (taxonType) {
                 case 'family':
                     response = await taxonomyApi.getFamilyDetail(taxonName)
@@ -247,7 +298,6 @@ export function useTaxonomy() {
         }
     }
 
-    // 获取分类层级信息
     const fetchTaxonomyHierarchy = async (taxonType, taxonName) => {
         try {
             const response = await taxonomyApi.getTaxonomyHierarchy(taxonType, taxonName)
@@ -261,7 +311,6 @@ export function useTaxonomy() {
         }
     }
 
-    // 新增：获取分类单元的子级（属或物种）
     const fetchTaxonChildren = async (taxonType, taxonName, params = {}) => {
         try {
             let response
@@ -281,7 +330,7 @@ export function useTaxonomy() {
         }
     }
 
-    // 新增：获取多样性数据
+    // ========== 详细数据方法 ==========
     const fetchTaxonDiversity = async (taxonType, taxonName) => {
         try {
             const response = await taxonomyApi.getTaxonDiversity(taxonType, taxonName)
@@ -295,7 +344,6 @@ export function useTaxonomy() {
         }
     }
 
-    // 新增：获取地理分布数据
     const fetchTaxonGeographic = async (taxonType, taxonName) => {
         try {
             const response = await taxonomyApi.getTaxonGeographic(taxonType, taxonName)
@@ -309,7 +357,6 @@ export function useTaxonomy() {
         }
     }
 
-    // 新增：获取时间模式数据
     const fetchTaxonTemporal = async (taxonType, taxonName) => {
         try {
             const response = await taxonomyApi.getTaxonTemporal(taxonType, taxonName)
@@ -323,7 +370,6 @@ export function useTaxonomy() {
         }
     }
 
-    // 新增：获取机构数据
     const fetchTaxonInstitutions = async (taxonType, taxonName, params = {}) => {
         try {
             const response = await taxonomyApi.getTaxonInstitutions(taxonType, taxonName, params)
@@ -337,7 +383,6 @@ export function useTaxonomy() {
         }
     }
 
-    // 新增：获取热门物种
     const fetchTopSpecies = async (taxonType, taxonName, limit = 8) => {
         try {
             const response = await taxonomyApi.getTopSpecies(taxonType, taxonName, limit)
@@ -351,7 +396,130 @@ export function useTaxonomy() {
         }
     }
 
-    // 获取分类统计
+    const fetchInstitutionCoverage = async (taxonType, taxonName) => {
+        try {
+            const response = await taxonomyApi.getTaxonInstitutionCoverage(taxonType, taxonName)
+            institutionCoverage.value = response
+            console.log('Fetched institution coverage:', institutionCoverage.value)
+            return response
+        } catch (err) {
+            console.error('Error fetching institution coverage:', err)
+            institutionCoverage.value = {
+                geographicCoverage: { globalCoverage: 0, regionalSpecialists: 0, localCollections: 0 },
+                taxonomicSpecialization: { familySpecialists: 0, genusSpecialists: 0, regionalFaunaFocus: 0 },
+                dataQualityLeaders: { highQuality: 0, goodQuality: 0, improvingQuality: 0 }
+            }
+            throw err
+        }
+    }
+
+    const fetchTaxonRecords = async (taxonType, taxonName, params = {}) => {
+        try {
+            const response = await recordsApi.getRecordsByTaxon(taxonType, taxonName, {
+                page: 1,
+                per_page: 100,
+                ...params
+            })
+
+            console.log(`Fetched ${taxonType} records:`, response.data)
+            return response.data
+        } catch (err) {
+            console.error('Error fetching taxon records:', err)
+            throw err
+        }
+    }
+
+    // ========== 可视化数据方法 ==========
+    const fetchMapData = async (taxonType, taxonName) => {
+        loadingMapData.value = true
+        try {
+            // 优先使用专门的地图API
+            if (taxonomyApi.getTaxonMapData) {
+                const response = await taxonomyApi.getTaxonMapData(taxonType, taxonName)
+                mapData.value = response.mapData || []
+            } else {
+                // 备用方案：从机构数据转换
+                const institutionsResponse = await fetchTaxonInstitutions(taxonType, taxonName, { per_page: 100 })
+                mapData.value = transformInstitutionsToMapData(institutionsResponse.data || [])
+            }
+
+            console.log('Fetched map data:', mapData.value.length, 'points')
+            return mapData.value
+        } catch (err) {
+            console.error('Error fetching map data:', err)
+            mapData.value = []
+            throw err
+        } finally {
+            loadingMapData.value = false
+        }
+    }
+
+    const fetchTimelineData = async (taxonType, taxonName) => {
+        loadingTimelineData.value = true
+        try {
+            // 从temporal数据中提取时间线数据
+            const temporalResponse = await fetchTaxonTemporal(taxonType, taxonName)
+            timelineData.value = temporalResponse.yearlyTrend || []
+
+            console.log('Fetched timeline data:', timelineData.value.length, 'data points')
+            return timelineData.value
+        } catch (err) {
+            console.error('Error fetching timeline data:', err)
+            timelineData.value = []
+            throw err
+        } finally {
+            loadingTimelineData.value = false
+        }
+    }
+
+    // ========== 综合加载方法 ==========
+    const loadTaxonFullData = async (taxonType, taxonName) => {
+        loading.value = true
+        error.value = null
+
+        try {
+            // 1. 并行加载基础数据
+            await Promise.all([
+                fetchTaxonDetail(taxonType, taxonName),
+                fetchTaxonomyHierarchy(taxonType, taxonName)
+            ])
+
+            // 2. 加载详细数据
+            const dataPromises = [
+                fetchTaxonGeographic(taxonType, taxonName),
+                fetchTaxonTemporal(taxonType, taxonName),
+                fetchTaxonInstitutions(taxonType, taxonName, { page: 1, per_page: 20 }),
+                fetchInstitutionCoverage(taxonType, taxonName)
+            ]
+
+            // 3. 根据分类类型加载额外数据
+            if (taxonType === 'family' || taxonType === 'genus') {
+                dataPromises.push(
+                    fetchTaxonDiversity(taxonType, taxonName),
+                    fetchTaxonChildren(taxonType, taxonName, { page: 1, per_page: 20 }),
+                    fetchTopSpecies(taxonType, taxonName)
+                )
+            }
+
+            await Promise.allSettled(dataPromises)
+
+            // 4. 在基础数据加载完成后，加载可视化数据
+            await Promise.allSettled([
+                fetchMapData(taxonType, taxonName),
+                fetchTimelineData(taxonType, taxonName)
+            ])
+
+            console.log('All taxon data loaded successfully')
+        } catch (err) {
+            error.value = err.message || 'Failed to load taxon data'
+            console.error('Error loading taxon full data:', err)
+            throw err
+        } finally {
+            loading.value = false
+        }
+    }
+
+    // ========== 其他方法 ==========
     const fetchTaxonomyStats = async () => {
         try {
             const response = await taxonomyApi.getTaxonomyStats()
@@ -360,7 +528,6 @@ export function useTaxonomy() {
             return response
         } catch (err) {
             console.error('Error fetching taxonomy stats:', err)
-            // 设置默认值而不是mock数据
             taxonomyStats.value = {
                 totalFamilies: 0,
                 totalGenera: 0,
@@ -374,7 +541,6 @@ export function useTaxonomy() {
         }
     }
 
-    // 搜索分类单元
     const searchTaxa = async (query, searchFilters = {}) => {
         loading.value = true
         error.value = null
@@ -396,102 +562,16 @@ export function useTaxonomy() {
         }
     }
 
-    // 新增：机构覆盖度分析数据
-    const institutionCoverage = ref({})
-
-    // 新增：获取机构覆盖度分析
-    const fetchInstitutionCoverage = async (taxonType, taxonName) => {
-        try {
-            const response = await taxonomyApi.getTaxonInstitutionCoverage(taxonType, taxonName)
-            institutionCoverage.value = response.data || response
-            console.log('Fetched institution coverage:', institutionCoverage.value)
-            return response
-        } catch (err) {
-            console.error('Error fetching institution coverage:', err)
-            // 如果API不可用，使用默认值
-            institutionCoverage.value = {
-                geographicCoverage: { globalCoverage: 0, regionalSpecialists: 0, localCollections: 0 },
-                taxonomicSpecialization: { familySpecialists: 0, genusSpecialists: 0, regionalFaunaFocus: 0 },
-                dataQualityLeaders: { highQuality: 0, goodQuality: 0, improvingQuality: 0 }
-            }
-            throw err
-        }
-    }
-
-    // 获取分类单元的记录
-    const fetchTaxonRecords = async (taxonType, taxonName, params = {}) => {
-        try {
-            const response = await recordsApi.getRecordsByTaxon(taxonType, taxonName, {
-                page: 1,
-                per_page: 100,
-                ...params
-            })
-
-            console.log(`Fetched ${taxonType} records:`, response.data)
-            return response.data
-        } catch (err) {
-            console.error('Error fetching taxon records:', err)
-            throw err
-        }
-    }
-
-    // 综合加载分类单元的所有数据
-    const loadTaxonFullData = async (taxonType, taxonName) => {
-        loading.value = true
-        error.value = null
-
-        try {
-            // 并行加载基础数据
-            await Promise.all([
-                fetchTaxonDetail(taxonType, taxonName),
-                fetchTaxonomyHierarchy(taxonType, taxonName)
-            ])
-
-            // 根据分类类型加载不同的数据
-            const dataPromises = [
-                fetchTaxonGeographic(taxonType, taxonName),
-                fetchTaxonTemporal(taxonType, taxonName),
-                fetchTaxonInstitutions(taxonType, taxonName, { page: 1, per_page: 20 }),
-                fetchInstitutionCoverage(taxonType, taxonName)
-            ]
-
-            // 如果是科或属，加载多样性数据和子级数据
-            if (taxonType === 'family' || taxonType === 'genus') {
-                dataPromises.push(
-                    fetchTaxonDiversity(taxonType, taxonName),
-                    fetchTaxonChildren(taxonType, taxonName, { page: 1, per_page: 20 })
-                )
-            }
-
-            // 如果是科或属，获取热门物种
-            if (taxonType === 'family' || taxonType === 'genus') {
-                dataPromises.push(fetchTopSpecies(taxonType, taxonName))
-            }
-
-            await Promise.allSettled(dataPromises)
-
-            console.log('All taxon data loaded successfully')
-        } catch (err) {
-            error.value = err.message || 'Failed to load taxon data'
-            console.error('Error loading taxon full data:', err)
-            throw err
-        } finally {
-            loading.value = false
-        }
-    }
-
-    // 更新筛选条件
+    // ========== 工具方法 ==========
     const updateFilters = (newFilters) => {
         Object.assign(filters, newFilters)
-        pagination.page = 1 // 重置到第一页
+        pagination.page = 1
     }
 
-    // 更新分页
     const updatePagination = (newPagination) => {
         Object.assign(pagination, newPagination)
     }
 
-    // 重置状态
     const reset = () => {
         families.value = []
         genera.value = []
@@ -500,20 +580,20 @@ export function useTaxonomy() {
         taxonomyStats.value = {}
         hierarchy.value = {}
 
-        // 重置新增的数据
         diversityData.value = []
         geographicData.value = {}
         temporalData.value = {}
         institutionData.value = []
         topSpecies.value = []
+        institutionCoverage.value = {}
+
+        mapData.value = []
+        timelineData.value = []
 
         error.value = null
-
-        // 重置分页
         pagination.page = 1
         pagination.total = 0
 
-        // 重置筛选
         Object.keys(filters).forEach(key => {
             if (key === 'sortBy') {
                 filters[key] = 'records_desc'
@@ -534,12 +614,19 @@ export function useTaxonomy() {
         taxonomyStats,
         hierarchy,
 
-        // 新增的详细数据
+        // 详细数据
         diversityData,
         geographicData,
         temporalData,
         institutionData,
         topSpecies,
+        institutionCoverage,
+
+        // 可视化数据
+        mapData,
+        timelineData,
+        loadingMapData,
+        loadingTimelineData,
 
         pagination,
         filters,
@@ -549,6 +636,8 @@ export function useTaxonomy() {
         filteredFamilies,
         filteredGenera,
         filteredSpecies,
+        getTimelineChartData,
+        getMapVisualizationData,
 
         // 基础方法
         fetchFamilies,
@@ -560,21 +649,25 @@ export function useTaxonomy() {
         searchTaxa,
         fetchTaxonRecords,
 
-        // 新增的详细数据方法
+        // 详细数据方法
         fetchTaxonChildren,
         fetchTaxonDiversity,
         fetchTaxonGeographic,
         fetchTaxonTemporal,
         fetchTaxonInstitutions,
         fetchTopSpecies,
+        fetchInstitutionCoverage,
+
+        // 可视化数据方法
+        fetchMapData,
+        fetchTimelineData,
+
+        // 综合方法
         loadTaxonFullData,
 
         // 工具方法
         updateFilters,
         updatePagination,
-        reset,
-
-        institutionCoverage,
-        fetchInstitutionCoverage
+        reset
     }
 }

@@ -135,7 +135,7 @@
                 class="action-button view"
                 title="View record details"
             >
-              👁️
+              +
             </button>
             <button
                 @click.stop="viewOnMap(record)"
@@ -143,7 +143,7 @@
                 title="View on map"
                 :disabled="!record.decimalLatitude || !record.decimalLongitude"
             >
-              🗺️
+              🗺
             </button>
           </td>
         </tr>

@@ -109,10 +109,10 @@ export function useInstitutions() {
 
         try {
             const response = await institutionsApi.getInstitutionDetail(institutionCode)
-            currentInstitution.value = response.data
+            currentInstitution.value = response
 
             console.log('Fetched institution detail:', currentInstitution.value)
-            return response.data
+            return response
         } catch (err) {
             error.value = err.message || 'Failed to fetch institution detail'
             console.error('Error fetching institution detail:', err)

@@ -22,14 +22,37 @@ export const institutionsApi = {
         return api.get(`/institutions/${encodeURIComponent(institutionCode)}/species`, { params })
     },
 
-    // 获取机构的记录列表
+    // 获取机构的记录列表 - 更新为使用新的详细端点
     getInstitutionRecords(institutionCode, params = {}) {
         return api.get(`/institutions/${encodeURIComponent(institutionCode)}/records`, { params })
+    },
+
+    // 获取机构记录的汇总信息
+    getInstitutionRecordsSummary(institutionCode) {
+        return api.get(`/institutions/${encodeURIComponent(institutionCode)}/records/summary`)
+    },
+
+    // 获取机构记录的过滤器选项
+    getInstitutionRecordsFilters(institutionCode) {
+        return api.get(`/institutions/${encodeURIComponent(institutionCode)}/records/filters`)
+    },
+
+    // 导出机构记录数据
+    exportInstitutionRecords(institutionCode, params = {}) {
+        const queryParams = new URLSearchParams(params)
+        return api.get(`/institutions/${encodeURIComponent(institutionCode)}/records/export?${queryParams}`, {
+            responseType: 'blob' // 用于文件下载
+        })
     },
 
     // 获取机构的地理分布数据
     getInstitutionGeography(institutionCode) {
         return api.get(`/institutions/${encodeURIComponent(institutionCode)}/geography`)
+    },
+
+    // 获取机构在各国的分布情况
+    getInstitutionCountries(institutionCode) {
+        return api.get(`/institutions/${encodeURIComponent(institutionCode)}/countries`)
     },
 
     // 获取机构统计概览

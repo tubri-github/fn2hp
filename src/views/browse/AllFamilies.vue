@@ -45,48 +45,28 @@
       </div>
     </div>
 
-    <!-- Top Families Highlight -->
-    <div class="top-families" v-if="topFamilies.length">
-      <div class="stats-title">Most Recorded Families</div>
-      <div class="top-families-grid">
-        <div
-            v-for="(family, index) in topFamilies"
-            :key="family.family"
-            class="top-family-item"
-            @click="navigateToFamily(family.family)"
-        >
-          <div class="top-family-rank">{{ index + 1 }}</div>
-          <div class="top-family-name">{{ family.family }}</div>
-          <div class="top-family-stats">
-            {{ formatNumber(family.recordCount) }} records<br>
-            {{ formatNumber(family.generaCount) }} genera
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Quick Stats -->
     <div class="quick-stats">
       <div class="stats-title">Database Overview</div>
       <div class="stats-grid">
         <div class="stat-category">
           <div class="stat-category-title">High Diversity</div>
-          <div class="stat-category-value">{{ taxonomyStats.highDiversityFamilies || 0 }}</div>
+          <div class="stat-category-value">{{ taxonomyStats?.highDiversityFamilies || 0 }}</div>
           <div class="stat-category-desc">>50 genera per family</div>
         </div>
         <div class="stat-category">
           <div class="stat-category-title">Well Sampled</div>
-          <div class="stat-category-value">{{ taxonomyStats.wellSampledFamilies || 0 }}</div>
+          <div class="stat-category-value">{{ taxonomyStats?.wellSampledFamilies || 0 }}</div>
           <div class="stat-category-desc">>1,000 records per family</div>
         </div>
         <div class="stat-category">
           <div class="stat-category-title">Global Coverage</div>
-          <div class="stat-category-value">{{ taxonomyStats.globalCoverageFamilies || 0 }}</div>
+          <div class="stat-category-value">{{ taxonomyStats?.globalCoverageFamilies || 0 }}</div>
           <div class="stat-category-desc">Families in >20 countries</div>
         </div>
         <div class="stat-category">
           <div class="stat-category-title">Data Quality</div>
-          <div class="stat-category-value">{{ taxonomyStats.avgGeoreferencing || 0 }}%</div>
+          <div class="stat-category-value">{{ taxonomyStats?.avgGeoreferencing || 0 }}%</div>
           <div class="stat-category-desc">Average georeferencing</div>
         </div>
       </div>
@@ -126,22 +106,6 @@
           <option value="species_desc">Sort by Species</option>
           <option value="name_asc">Sort by Name</option>
         </select>
-        <div class="view-toggle">
-          <button
-              class="view-btn"
-              :class="{ active: viewMode === 'cards' }"
-              @click="viewMode = 'cards'"
-          >
-            Cards
-          </button>
-          <button
-              class="view-btn"
-              :class="{ active: viewMode === 'table' }"
-              @click="viewMode = 'table'"
-          >
-            Table
-          </button>
-        </div>
       </div>
     </div>
 
@@ -166,133 +130,175 @@
         <button @click="loadFamilies" class="retry-button">Retry</button>
       </div>
 
-      <!-- Card View -->
-      <div v-else-if="viewMode === 'cards'" class="families-grid">
-        <div
-            v-for="family in families"
-            :key="family.family"
-            class="family-card"
-            @click="navigateToFamily(family.family)"
-        >
-          <div class="family-card-header">
-            <h3 class="family-name">{{ family.family }}</h3>
-            <span class="family-order">{{ family.order }}</span>
+      <!-- Enhanced Table View -->
+      <div v-else class="table-container">
+        <table class="families-table">
+          <thead>
+          <tr>
+            <th></th>
+            <th><span class="dc-field">family</span></th>
+            <th><span class="dc-field">order</span></th>
+            <th>Genera</th>
+            <th>Species</th>
+<!--            <th>Records</th>-->
+            <th>Records</th>
+            <th>Countries</th>
+            <th>Georeferenced</th>
+            <th>Date Quality</th>
+          </tr>
+          </thead>
+          <tbody>
+          <template v-for="family in sortedFamilies" :key="family.family">
+            <!-- Main Row -->
+            <tr
+                class="table-row"
+                :class="{ expanded: expandedFamily === family.family }"
+                @click="toggleRow(family.family)"
+            >
+              <td>
+                  <span
+                      class="expand-icon"
+                      :class="{ expanded: expandedFamily === family.family }"
+                  >
+                    ▼
+                  </span>
+              </td>
+              <td>
+                <span class="table-family-name">{{ family.family }}</span>
+              </td>
+              <td>
+                <span class="order-badge">{{ family.order }}</span>
+              </td>
+              <td>{{ formatNumber(family.generaCount) }}</td>
+              <td>{{ formatNumber(family.speciesCount) }}</td>
+<!--              <td>{{ formatNumber(family.recordCount) }}</td>-->
+              <td>
+                <div class="records-bar-container">
+                  <div
+                      class="records-bar"
+                      :style="{ width: getRecordsPercentage(family.recordCount) + '%' }"
+                  ></div>
+                  <div class="records-text">
+                    {{ formatNumber(family.recordCount, 'short') }}
+                  </div>
+                </div>
+              </td>
+              <td>{{ formatNumber(family.countriesCount) }}</td>
+              <td>
+                  <span
+                      class="quality-badge"
+                      :class="getQualityClass(family.geoReferencingQuality)"
+                  >
+                    {{ family.geoReferencingQuality }}%
+                  </span>
+              </td>
+              <td>
+                  <span
+                      class="quality-badge"
+                      :class="getQualityClass(family.dateQuality)"
+                  >
+                    {{ family.dateQuality }}%
+                  </span>
+              </td>
+            </tr>
+
+            <!-- Expanded Card Row -->
+            <tr
+                v-if="expandedFamily === family.family"
+                class="expanded-card"
+            >
+              <td colspan="10">
+                <div class="card-content">
+                  <div class="card-header">
+                    <h3 class="card-title">{{ family.family }}</h3>
+                    <span class="order-badge">{{ family.order }}</span>
+                  </div>
+
+                  <div class="card-stats-row">
+                    <div class="card-stat">
+                      <div class="card-stat-number">{{ formatNumber(family.generaCount) }}</div>
+                      <div class="card-stat-label">Genera</div>
+                    </div>
+                    <div class="card-stat">
+                      <div class="card-stat-number">{{ formatNumber(family.speciesCount) }}</div>
+                      <div class="card-stat-label">Species</div>
+                    </div>
+                    <div class="card-stat">
+                      <div class="card-stat-number">{{ formatNumber(family.recordCount, 'short') }}</div>
+                      <div class="card-stat-label">Records</div>
+                    </div>
+                    <div class="card-stat">
+                      <div class="card-stat-number">{{ formatNumber(family.countriesCount) }}</div>
+                      <div class="card-stat-label">Countries</div>
+                    </div>
+                  </div>
+
+                  <div class="card-meta">
+                    <span>{{ formatNumber(family.institutionsCount) }} institutions</span>
+                    <div class="card-quality">
+                        <span
+                            class="quality-badge"
+                            :class="getQualityClass(family.geoReferencingQuality)"
+                        >
+                          Geo: {{ family.geoReferencingQuality }}%
+                        </span>
+                      <span
+                          class="quality-badge"
+                          :class="getQualityClass(family.dateQuality)"
+                      >
+                          Date: {{ family.dateQuality }}%
+                        </span>
+                    </div>
+                  </div>
+
+                  <div class="card-progress">
+                    <div class="progress-label">Collection Completeness</div>
+                    <div class="progress-bar">
+                      <div
+                          class="progress-fill"
+                          :style="{ width: (family.collectionCompleteness || 85) + '%' }"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </template>
+          </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <div class="pagination" v-if="pagination.total > pagination.perPage">
+          <button
+              class="pagination-btn"
+              :disabled="pagination.page === 1"
+              @click="changePage(pagination.page - 1)"
+          >
+            « Previous
+          </button>
+
+          <button
+              v-for="page in visiblePages"
+              :key="page"
+              class="pagination-btn"
+              :class="{ active: page === pagination.page }"
+              @click="changePage(page)"
+          >
+            {{ page }}
+          </button>
+
+          <button
+              class="pagination-btn"
+              :disabled="pagination.page === totalPages"
+              @click="changePage(pagination.page + 1)"
+          >
+            Next »
+          </button>
+
+          <div class="pagination-info">
+            Showing {{ (pagination.page - 1) * pagination.perPage + 1 }}-{{ Math.min(pagination.page * pagination.perPage, pagination.total) }}
+            of {{ pagination.total }} families
           </div>
-          <div class="family-stats-row">
-            <div class="family-stat">
-              <div class="family-stat-number">{{ formatNumber(family.generaCount) }}</div>
-              <div class="family-stat-label">Genera</div>
-            </div>
-            <div class="family-stat">
-              <div class="family-stat-number">{{ formatNumber(family.speciesCount) }}</div>
-              <div class="family-stat-label">Species</div>
-            </div>
-            <div class="family-stat">
-              <div class="family-stat-number">{{ formatNumber(family.recordCount, 'short') }}</div>
-              <div class="family-stat-label">Records</div>
-            </div>
-            <div class="family-stat">
-              <div class="family-stat-number">{{ formatNumber(family.countriesCount) }}</div>
-              <div class="family-stat-label">Countries</div>
-            </div>
-          </div>
-          <div class="family-meta">
-            <span>{{ formatNumber(family.institutionsCount) }} institutions</span>
-            <div class="family-quality">
-              <span
-                  class="quality-badge"
-                  :class="getQualityClass(family.geoReferencingQuality)"
-              >
-                Geo: {{ family.geoReferencingQuality }}%
-              </span>
-              <span
-                  class="quality-badge"
-                  :class="getQualityClass(family.dateQuality)"
-              >
-                Date: {{ family.dateQuality }}%
-              </span>
-            </div>
-          </div>
-          <div class="family-progress">
-            <div class="progress-label">Collection Completeness</div>
-            <div class="progress-bar">
-              <div
-                  class="progress-fill"
-                  :style="{ width: `${family.collectionCompleteness}%` }"
-              ></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Table View -->
-      <table v-else class="families-table">
-        <thead>
-        <tr>
-          <th><span class="dc-field">family</span></th>
-          <th><span class="dc-field">order</span></th>
-          <th>Genera</th>
-          <th>Species</th>
-          <th>Records</th>
-          <th>Countries</th>
-          <th>Institutions</th>
-          <th>Georeferenced</th>
-          <th>Date Quality</th>
-          <th>Last Updated</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr
-            v-for="family in families"
-            :key="family.family"
-            @click="navigateToFamily(family.family)"
-            class="clickable-row"
-        >
-          <td><span class="table-family-name">{{ family.family }}</span></td>
-          <td>{{ family.order }}</td>
-          <td>{{ formatNumber(family.generaCount) }}</td>
-          <td>{{ formatNumber(family.speciesCount) }}</td>
-          <td>{{ formatNumber(family.recordCount) }}</td>
-          <td>{{ formatNumber(family.countriesCount) }}</td>
-          <td>{{ formatNumber(family.institutionsCount) }}</td>
-          <td>{{ family.geoReferencingQuality }}%</td>
-          <td>{{ family.dateQuality }}%</td>
-          <td>{{ formatDate(family.lastUpdated) }}</td>
-        </tr>
-        </tbody>
-      </table>
-
-      <!-- Pagination -->
-      <div class="pagination" v-if="pagination.total > pagination.perPage">
-        <button
-            class="pagination-btn"
-            :disabled="pagination.page === 1"
-            @click="changePage(pagination.page - 1)"
-        >
-          « Previous
-        </button>
-
-        <button
-            v-for="page in visiblePages"
-            :key="page"
-            class="pagination-btn"
-            :class="{ active: page === pagination.page }"
-            @click="changePage(page)"
-        >
-          {{ page }}
-        </button>
-
-        <button
-            class="pagination-btn"
-            :disabled="pagination.page === totalPages"
-            @click="changePage(pagination.page + 1)"
-        >
-          Next »
-        </button>
-
-        <div class="pagination-info">
-          Showing {{ (pagination.page - 1) * pagination.perPage + 1 }}-{{ Math.min(pagination.page * pagination.perPage, pagination.total) }}
-          of {{ pagination.total }} families
         </div>
       </div>
     </div>
@@ -322,15 +328,22 @@ const {
 } = useTaxonomy()
 
 // 本地状态
-const viewMode = ref('cards')
 const availableOrders = ref([])
+const expandedFamily = ref(null)
+const maxRecords = ref(0)
 
 // 计算属性
-const topFamilies = computed(() => {
-  return families.value
+const sortedFamilies = computed(() => {
+  const sorted = families.value
       .slice()
       .sort((a, b) => (b.recordCount || 0) - (a.recordCount || 0))
-      .slice(0, 5)
+
+  // Update max records for visualization
+  if (sorted.length > 0) {
+    maxRecords.value = Math.max(...sorted.map(f => f.recordCount || 0))
+  }
+
+  return sorted
 })
 
 const totalPages = computed(() => {
@@ -404,6 +417,19 @@ const changePage = (page) => {
     updatePagination({ page })
     loadFamilies()
   }
+}
+
+const toggleRow = (familyName) => {
+  if (expandedFamily.value === familyName) {
+    expandedFamily.value = null
+  } else {
+    expandedFamily.value = familyName
+  }
+}
+
+const getRecordsPercentage = (records) => {
+  if (!maxRecords.value) return 0
+  return (records / maxRecords.value) * 100
 }
 
 // 工具函数
@@ -559,8 +585,8 @@ watch(() => filters.search, debouncedSearch)
   margin-right: 6px;
 }
 
-/* 顶级家族展示 */
-.top-families, .quick-stats {
+/* 快速统计 */
+.quick-stats {
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -575,50 +601,6 @@ watch(() => filters.search, debouncedSearch)
   color: #2c3e50;
 }
 
-.top-families-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 15px;
-}
-
-.top-family-item {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-radius: 8px;
-  padding: 20px;
-  text-align: center;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.top-family-item:hover {
-  transform: translateY(-2px);
-}
-
-.top-family-rank {
-  background: #3498db;
-  color: white;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  margin: 0 auto 10px;
-}
-
-.top-family-name {
-  font-weight: bold;
-  margin-bottom: 5px;
-  color: #2c3e50;
-}
-
-.top-family-stats {
-  font-size: 12px;
-  color: #666;
-}
-
-/* 快速统计 */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -662,7 +644,7 @@ watch(() => filters.search, debouncedSearch)
 
 .controls-grid {
   display: grid;
-  grid-template-columns: 2fr repeat(4, 1fr) 120px;
+  grid-template-columns: 2fr repeat(4, 1fr);
   gap: 15px;
   align-items: center;
 }
@@ -680,28 +662,6 @@ watch(() => filters.search, debouncedSearch)
 
 .filter-select {
   background: white;
-}
-
-.view-toggle {
-  display: flex;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.view-btn {
-  flex: 1;
-  padding: 8px 12px;
-  border: none;
-  background: #f8f9fa;
-  cursor: pointer;
-  font-size: 12px;
-  transition: all 0.2s;
-}
-
-.view-btn.active {
-  background: #3498db;
-  color: white;
 }
 
 /* 家族容器 */
@@ -732,97 +692,110 @@ watch(() => filters.search, debouncedSearch)
   font-size: 14px;
 }
 
-/* 卡片视图 */
-.families-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 20px;
+/* 增强表格样式 */
+.table-container {
+  overflow-x: auto;
 }
 
-.family-card {
+.families-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.families-table th {
   background: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  padding: 20px;
+  padding: 15px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #555;
+  border-bottom: 2px solid #e9ecef;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.families-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e9ecef;
+  vertical-align: middle;
+}
+
+.table-row {
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
+  position: relative;
 }
 
-.family-card:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  transform: translateY(-2px);
+.table-row:hover {
+  background-color: #f8f9fa;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-.family-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 15px;
+.table-row.expanded {
+  background-color: #e3f2fd;
+  border-left: 4px solid #2196F3;
 }
 
-.family-name {
-  font-size: 22px;
+.table-family-name {
   font-weight: bold;
   color: #2c3e50;
-  margin: 0;
+  font-size: 16px;
 }
 
-.family-order {
+.order-badge {
   background: #e8f4fd;
   color: #0288d1;
   padding: 4px 8px;
   border-radius: 12px;
-  font-size: 12px;
-  font-weight: bold;
+  font-size: 11px;
+  font-weight: 600;
 }
 
-.family-stats-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin-bottom: 15px;
+.dc-field {
+  font-family: 'Courier New', monospace;
+  background: #f8f9fa;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 11px;
+  color: #666;
 }
 
-.family-stat {
-  text-align: center;
-  background: white;
-  border-radius: 6px;
-  padding: 12px 8px;
+/* 记录可视化 */
+.records-bar-container {
+  position: relative;
+  width: 100px;
+  height: 20px;
+  background: #e9ecef;
+  border-radius: 10px;
+  overflow: hidden;
 }
 
-.family-stat-number {
-  font-size: 18px;
-  font-weight: bold;
-  color: #3498db;
-  margin-bottom: 3px;
+.records-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #3498db, #2ecc71);
+  border-radius: 10px;
+  transition: width 0.3s ease;
 }
 
-.family-stat-label {
+.records-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   font-size: 10px;
-  color: #666;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-weight: 600;
+  color: #333;
+  z-index: 2;
 }
 
-.family-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 13px;
-  color: #666;
-  margin-bottom: 15px;
-}
-
-.family-quality {
-  display: flex;
-  gap: 8px;
-}
-
+/* 质量指示器 */
 .quality-badge {
   padding: 3px 6px;
-  border-radius: 10px;
+  border-radius: 8px;
   font-size: 10px;
-  font-weight: bold;
+  font-weight: 600;
 }
 
 .quality-excellent {
@@ -840,72 +813,108 @@ watch(() => filters.search, debouncedSearch)
   color: #721c24;
 }
 
-.family-progress {
-  margin-top: 12px;
+/* 展开图标 */
+.expand-icon {
+  transition: transform 0.2s ease;
+  font-size: 12px;
+  color: #666;
+}
+
+.expand-icon.expanded {
+  transform: rotate(180deg);
+}
+
+/* 展开卡片 */
+.expanded-card {
+  background: #f8f9fa;
+  border-top: 3px solid #3498db;
+}
+
+.card-content {
+  padding: 30px;
+  background: white;
+  margin: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.card-title {
+  font-size: 28px;
+  font-weight: bold;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.card-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.card-stat {
+  text-align: center;
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.card-stat-number {
+  font-size: 24px;
+  font-weight: bold;
+  color: #3498db;
+  margin-bottom: 5px;
+}
+
+.card-stat-label {
+  font-size: 12px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: #666;
+}
+
+.card-quality {
+  display: flex;
+  gap: 10px;
+}
+
+.card-progress {
+  margin-top: 15px;
 }
 
 .progress-label {
-  font-size: 11px;
+  font-size: 12px;
   color: #666;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .progress-bar {
-  height: 6px;
+  height: 8px;
   background: #e9ecef;
-  border-radius: 3px;
+  border-radius: 4px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
   background: linear-gradient(90deg, #3498db, #2ecc71);
-  transition: width 0.3s;
-}
-
-/* 表格视图 */
-.families-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-}
-
-.families-table th,
-.families-table td {
-  border-bottom: 1px solid #eee;
-  padding: 12px;
-  text-align: left;
-}
-
-.families-table th {
-  background: #f8f9fa;
-  font-weight: bold;
-  color: #555;
-  position: sticky;
-  top: 0;
-}
-
-.clickable-row {
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.clickable-row:hover {
-  background-color: #f8f9fa;
-}
-
-.table-family-name {
-  font-weight: bold;
-  color: #2c3e50;
-}
-
-.dc-field {
-  font-family: 'Courier New', monospace;
-  background: #f8f9fa;
-  padding: 2px 4px;
-  border-radius: 3px;
-  font-size: 11px;
-  color: #666;
+  transition: width 0.3s ease;
 }
 
 /* 分页 */
@@ -988,8 +997,8 @@ watch(() => filters.search, debouncedSearch)
     grid-template-columns: repeat(3, 1fr);
   }
 
-  .families-grid {
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  .card-stats-row {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -1006,16 +1015,64 @@ watch(() => filters.search, debouncedSearch)
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .families-grid {
+  .card-stats-row {
     grid-template-columns: 1fr;
-  }
-
-  .top-families-grid {
-    grid-template-columns: repeat(2, 1fr);
   }
 
   .page-actions {
     justify-content: center;
+  }
+
+  .families-table {
+    font-size: 12px;
+  }
+
+  .families-table th,
+  .families-table td {
+    padding: 8px;
+  }
+
+  .table-family-name {
+    font-size: 14px;
+  }
+
+  .card-title {
+    font-size: 24px;
+  }
+
+  .card-content {
+    padding: 20px;
+    margin: 10px;
+  }
+
+  .records-bar-container {
+    width: 80px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header {
+    padding: 20px;
+  }
+
+  .page-title {
+    font-size: 24px;
+  }
+
+  .families-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .pagination {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .pagination-info {
+    margin-left: 0;
+    order: -1;
   }
 }
 </style>

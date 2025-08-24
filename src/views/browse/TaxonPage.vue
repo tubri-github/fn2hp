@@ -100,80 +100,92 @@
       <!-- Navigation Tabs -->
       <nav class="nav-tabs">
         <ul>
-          <li><a href="#overview" :class="{ active: activeTab === 'overview' }" @click.prevent="activeTab = 'overview'">Overview</a></li>
+<!--          <li><a href="#overview" :class="{ active: activeTab === 'overview' }" @click.prevent="activeTab = 'overview'">Overview</a></li>-->
           <li v-if="taxonType === 'family'"><a href="#genera" :class="{ active: activeTab === 'genera' }" @click.prevent="activeTab = 'genera'">Genera & Species</a></li>
           <li v-else-if="taxonType === 'genus'"><a href="#species" :class="{ active: activeTab === 'species' }" @click.prevent="activeTab = 'species'">Species</a></li>
           <li><a href="#distribution" :class="{ active: activeTab === 'distribution' }" @click.prevent="activeTab = 'distribution'">Geographic Distribution</a></li>
           <li><a href="#temporal" :class="{ active: activeTab === 'temporal' }" @click.prevent="activeTab = 'temporal'">Temporal Patterns</a></li>
           <li><a href="#institutions" :class="{ active: activeTab === 'institutions' }" @click.prevent="activeTab = 'institutions'">Contributing Institutions</a></li>
           <li><a href="#records" :class="{ active: activeTab === 'records' }" @click.prevent="activeTab = 'records'">Recent Records</a></li>
+          <li><a href="#FishAir Images" :class="{ active: activeTab === 'fishair' }" @click.prevent="activeTab = 'fishair'">Fish-AIR Images</a></li>
+
         </ul>
       </nav>
 
       <!-- Overview Section -->
-      <section v-if="activeTab === 'overview'" id="overview" class="section">
-        <h2 class="section-title">{{ formatTaxonRank(taxonType) }} Overview</h2>
+<!--      <section v-if="activeTab === 'overview'" id="overview" class="section">-->
+<!--        <h2 class="section-title">{{ formatTaxonRank(taxonType) }} Overview</h2>-->
 
-        <div class="summary-cards">
-          <div class="summary-card">
-            <div class="summary-number">{{ formatNumber(currentTaxon.recordCount) }}</div>
-            <div class="summary-label">Total Records</div>
-          </div>
-          <div v-if="taxonType === 'family'" class="summary-card">
-            <div class="summary-number">{{ formatNumber(currentTaxon.generaCount) }}</div>
-            <div class="summary-label">Genera</div>
-          </div>
-          <div v-if="taxonType !== 'species'" class="summary-card">
-            <div class="summary-number">{{ formatNumber(currentTaxon.speciesCount) }}</div>
-            <div class="summary-label">Species</div>
-          </div>
-          <div class="summary-card">
-            <div class="summary-number">{{ formatNumber(currentTaxon.institutionsCount) }}</div>
-            <div class="summary-label">Institutions</div>
-          </div>
-          <div class="summary-card">
-            <div class="summary-number">{{ formatNumber(currentTaxon.countriesCount) }}</div>
-            <div class="summary-label">Countries</div>
-          </div>
-        </div>
+<!--        <div class="summary-cards">-->
+<!--          <div class="summary-card">-->
+<!--            <div class="summary-number">{{ formatNumber(currentTaxon.recordCount) }}</div>-->
+<!--            <div class="summary-label">Total Records</div>-->
+<!--          </div>-->
+<!--          <div v-if="taxonType === 'family'" class="summary-card">-->
+<!--            <div class="summary-number">{{ formatNumber(currentTaxon.generaCount) }}</div>-->
+<!--            <div class="summary-label">Genera</div>-->
+<!--          </div>-->
+<!--          <div v-if="taxonType !== 'species'" class="summary-card">-->
+<!--            <div class="summary-number">{{ formatNumber(currentTaxon.speciesCount) }}</div>-->
+<!--            <div class="summary-label">Species</div>-->
+<!--          </div>-->
+<!--          <div class="summary-card">-->
+<!--            <div class="summary-number">{{ formatNumber(currentTaxon.institutionsCount) }}</div>-->
+<!--            <div class="summary-label">Institutions</div>-->
+<!--          </div>-->
+<!--          <div class="summary-card">-->
+<!--            <div class="summary-number">{{ formatNumber(currentTaxon.countriesCount) }}</div>-->
+<!--            <div class="summary-label">Countries</div>-->
+<!--          </div>-->
+<!--        </div>-->
 
-        <div class="two-column">
-          <div>
-            <h3>Global Distribution</h3>
-            <div class="map-container">
-              {{ formatTaxonRank(taxonType) }} {{ taxonName }} Global Distribution<br>
-              <small>Based on <span class="dc-field">decimalLatitude/decimalLongitude</span> fields</small>
-            </div>
-            <p><strong>Basis of Record Distribution:</strong></p>
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
-              <span class="basis-of-record basis-preserved">PreservedSpecimen (100%)</span>
-            </div>
-          </div>
-          <div>
-            <h3>Diversity Metrics</h3>
-            <div class="chart-container chart-small">
-              {{ taxonType === 'family' ? 'Genera by Species Count' : 'Species Distribution' }}
-            </div>
-            <div style="margin-top: 15px;" v-if="diversityData.length">
-              <h4>{{ taxonType === 'family' ? 'Most Diverse Genera' : 'Top Species' }}</h4>
-              <div style="font-size: 14px; line-height: 1.6;">
-                <div v-for="item in diversityData.slice(0, 4)" :key="item.name" style="display: flex; justify-content: space-between; margin: 5px 0;">
-                  <span><em>{{ item.name }}</em></span>
-                  <strong>{{ item.count }} {{ taxonType === 'family' ? 'species' : 'records' }}</strong>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+<!--        <div class="two-column">-->
+<!--          <div>-->
+<!--            <h3>Global Distribution</h3>-->
+<!--            <div class="map-container">-->
+<!--              <WorldMap-->
+<!--                  v-if="institutionMapData.length > 0"-->
+<!--                  :institutions="[]"-->
+<!--                  :map-data="institutionMapData"-->
+<!--                  :loading="loadingMapData"-->
+<!--                  @provider-clicked="onInstitutionClicked"-->
+<!--              />-->
+<!--              <div v-else class="placeholder-content">-->
+<!--                Loading global distribution data...-->
+<!--                <br>-->
+<!--                <small>Based on <span class="dc-field">decimalLatitude/decimalLongitude</span> fields</small>-->
+<!--              </div>-->
+<!--            </div>-->
+<!--            <p><strong>Basis of Record Distribution:</strong></p>-->
+<!--            <div style="display: flex; gap: 10px; margin-top: 10px;">-->
+<!--              <span class="basis-of-record basis-preserved">PreservedSpecimen (100%)</span>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--          <div>-->
+<!--            <h3>Diversity Metrics</h3>-->
+<!--            <div class="chart-container chart-small">-->
+<!--              {{ taxonType === 'family' ? 'Genera by Species Count' : 'Species Distribution' }}-->
+<!--            </div>-->
+<!--            <div style="margin-top: 15px;" v-if="diversityData.length">-->
+<!--              <h4>{{ taxonType === 'family' ? 'Most Diverse Genera' : 'Top Species' }}</h4>-->
+<!--              <div style="font-size: 14px; line-height: 1.6;">-->
+<!--                <div v-for="item in diversityData.slice(0, 4)" :key="item.name" style="display: flex; justify-content: space-between; margin: 5px 0;">-->
+<!--                  <span><em>{{ item.name }}</em></span>-->
+<!--                  <strong>{{ item.count }} {{ taxonType === 'family' ? 'species' : 'records' }}</strong>-->
+<!--                </div>-->
+<!--              </div>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--        </div>-->
 
-        <h3>Geographic Distribution by Region</h3>
-        <div class="geo-stats">
-          <div v-for="region in geographicRegions" :key="region.name" class="geo-region">
-            <div class="geo-region-name">{{ region.name }} ({{ region.percentage }}% of records)</div>
-            <div class="geo-countries">{{ region.description }}</div>
-          </div>
-        </div>
-      </section>
+<!--        <h3>Geographic Distribution by Region</h3>-->
+<!--        <div class="geo-stats">-->
+<!--          <div v-for="region in geographicRegions" :key="region.name" class="geo-region">-->
+<!--            <div class="geo-region-name">{{ region.name }} ({{ region.percentage }}% of records)</div>-->
+<!--            <div class="geo-countries">{{ region.description }}</div>-->
+<!--          </div>-->
+<!--        </div>-->
+<!--      </section>-->
 
       <!-- Genera & Species Section (for Family) -->
       <section v-if="activeTab === 'genera' && taxonType === 'family'" id="genera" class="section">
@@ -274,8 +286,18 @@
         <div class="two-column">
           <div>
             <div class="map-container">
-              {{ formatTaxonRank(taxonType) }} {{ taxonName }} Global Distribution<br>
-              <small>{{ formatNumber(currentTaxon.recordCount) }} records from {{ currentTaxon.countriesCount }} countries</small>
+              <WorldMap
+                  v-if="institutionMapData.length > 0"
+                  :institutions="[]"
+                  :map-data="institutionMapData"
+                  :loading="loadingMapData"
+                  @provider-clicked="onInstitutionClicked"
+              />
+              <div v-else class="placeholder-content">
+                Loading global distribution data...
+                <br>
+                <small>{{ formatNumber(currentTaxon.recordCount) }} records from {{ currentTaxon.countriesCount }} countries</small>
+              </div>
             </div>
           </div>
           <div>
@@ -334,8 +356,19 @@
         </div>
 
         <div class="chart-container">
-          {{ formatTaxonRank(taxonType) }} {{ taxonName }} Collection Timeline<br>
-          <small>Based on <span class="dc-field">eventDate</span> field (87% coverage)</small>
+          <TimelineChart
+              v-if="timelineData.length > 0"
+              :data="timelineData"
+              :title="`${formatTaxonRank(taxonType)} ${taxonName} Collection Timeline`"
+              :subtitle="`Based on eventDate field (${temporalCoverage}% coverage)`"
+              @year-selected="onYearSelected"
+              @period-selected="onPeriodSelected"
+          />
+          <div v-else class="placeholder-content">
+            Loading temporal patterns...
+            <br>
+            <small>Based on <span class="dc-field">eventDate</span> field (87% coverage)</small>
+          </div>
         </div>
 
         <div class="three-column" style="margin-top: 20px;">
@@ -373,12 +406,6 @@
             </div>
           </div>
         </div>
-
-        <h3>Collection Effort {{ taxonType === 'family' ? 'by Genus' : '' }} Over Time</h3>
-        <div class="chart-container">
-          {{ taxonType === 'family' ? 'Multi-genus' : 'Species' }} Collection Timeline<br>
-          <small>{{ taxonType === 'family' ? 'Top 10 genera by record count, showing collection trends' : 'Collection trends over time' }}</small>
-        </div>
       </section>
 
       <!-- Contributing Institutions Section -->
@@ -414,7 +441,6 @@
           </div>
         </div>
 
-        <!-- 在 Institution Coverage Analysis 部分替换为： -->
         <h3 style="margin-top: 30px;">Institution Coverage Analysis</h3>
         <div class="three-column">
           <div>
@@ -452,43 +478,43 @@
           </div>
         </div>
 
-        <!-- 可选：添加更多详细分析 -->
-        <h3 style="margin-top: 30px;">Additional Institution Insights</h3>
-        <div class="four-column">
-          <div>
-            <h4>Collection Scale</h4>
-            <div style="font-size: 14px; line-height: 1.6;">
-              <div><strong>Major (>10K):</strong> {{ collectionScaleData.majorCollections }}</div>
-              <div><strong>Substantial (1-10K):</strong> {{ collectionScaleData.substantialCollections }}</div>
-              <div><strong>Moderate (100-999):</strong> {{ collectionScaleData.moderateCollections }}</div>
-              <div><strong>Small (<100):</strong> {{ collectionScaleData.smallCollections }}</div>
-            </div>
-          </div>
-          <div>
-            <h4>Institution Types</h4>
-            <div style="font-size: 14px; line-height: 1.6;">
-              <div v-for="(data, type) in institutionTypesData" :key="type">
-                <strong>{{ type.charAt(0).toUpperCase() + type.slice(1) }}:</strong> {{ data.count }}
-              </div>
-            </div>
-          </div>
-          <div>
-            <h4>Temporal Activity</h4>
-            <div style="font-size: 14px; line-height: 1.6;">
-              <div><strong>Recently active:</strong> {{ temporalActivityData.recentlyActive }}</div>
-              <div><strong>Historically active:</strong> {{ temporalActivityData.historicallyActive }}</div>
-              <div><strong>Inactive:</strong> {{ temporalActivityData.inactive }}</div>
-            </div>
-          </div>
-          <div>
-            <h4>Quality Metrics</h4>
-            <div style="font-size: 14px; line-height: 1.6;">
-              <div><strong>Avg Quality:</strong> {{ dataQualityLeadersData.averageQuality || 0 }}%</div>
-              <div><strong>Total Records:</strong> {{ formatNumber(collectionScaleData.totalRecords) }}</div>
-              <div><strong>Contributing:</strong> {{ geographicCoverageData.totalInstitutions || institutionData.length }}</div>
-            </div>
-          </div>
-        </div>
+<!--        &lt;!&ndash; 可选：添加更多详细分析 &ndash;&gt;-->
+<!--        <h3 style="margin-top: 30px;">Additional Institution Insights</h3>-->
+<!--        <div class="four-column">-->
+<!--          <div>-->
+<!--            <h4>Collection Scale</h4>-->
+<!--            <div style="font-size: 14px; line-height: 1.6;">-->
+<!--              <div><strong>Major (>10K):</strong> {{ collectionScaleData.majorCollections }}</div>-->
+<!--              <div><strong>Substantial (1-10K):</strong> {{ collectionScaleData.substantialCollections }}</div>-->
+<!--              <div><strong>Moderate (100-999):</strong> {{ collectionScaleData.moderateCollections }}</div>-->
+<!--              <div><strong>Small (<100):</strong> {{ collectionScaleData.smallCollections }}</div>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--          <div>-->
+<!--            <h4>Institution Types</h4>-->
+<!--            <div style="font-size: 14px; line-height: 1.6;">-->
+<!--              <div v-for="(data, type) in institutionTypesData" :key="type">-->
+<!--                <strong>{{ type.charAt(0).toUpperCase() + type.slice(1) }}:</strong> {{ data.count }}-->
+<!--              </div>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--          <div>-->
+<!--            <h4>Temporal Activity</h4>-->
+<!--            <div style="font-size: 14px; line-height: 1.6;">-->
+<!--              <div><strong>Recently active:</strong> {{ temporalActivityData.recentlyActive }}</div>-->
+<!--              <div><strong>Historically active:</strong> {{ temporalActivityData.historicallyActive }}</div>-->
+<!--              <div><strong>Inactive:</strong> {{ temporalActivityData.inactive }}</div>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--          <div>-->
+<!--            <h4>Quality Metrics</h4>-->
+<!--            <div style="font-size: 14px; line-height: 1.6;">-->
+<!--              <div><strong>Avg Quality:</strong> {{ dataQualityLeadersData.averageQuality || 0 }}%</div>-->
+<!--              <div><strong>Total Records:</strong> {{ formatNumber(collectionScaleData.totalRecords) }}</div>-->
+<!--              <div><strong>Contributing:</strong> {{ geographicCoverageData.totalInstitutions || institutionData.length }}</div>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--        </div>-->
       </section>
 
       <!-- Recent Records Section -->
@@ -538,10 +564,13 @@
     </div>
   </div>
 </template>
+
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTaxonomy } from '@/composables/useTaxonomy.js'
+import WorldMap from '@/components/charts/WorldMap.vue'
+import TimelineChart from '@/components/charts/TimelineChart.vue'
 
 // Props
 const props = defineProps({
@@ -577,7 +606,8 @@ const {
 } = useTaxonomy()
 
 // Local state
-const activeTab = ref('overview')
+// const activeTab = ref('overview')
+const activeTab = ref('distribution')
 const loadingChildren = ref(false)
 const children = ref([])
 const childrenSearch = ref('')
@@ -593,6 +623,13 @@ const recordTimeFilter = ref('30')
 // Recent records state
 const recentRecords = ref([])
 
+// Map and timeline specific state
+const loadingMapData = ref(false)
+const institutionMapData = ref([])
+const timelineData = ref([])
+const detailedTimelineData = ref([])
+
+// Institution coverage computed properties
 const geographicCoverageData = computed(() => {
   return institutionCoverage.value.geographicCoverage || {
     globalCoverage: 0,
@@ -638,7 +675,7 @@ const temporalActivityData = computed(() => {
   }
 })
 
-// Computed properties using API data
+// Geographic data computed properties
 const geographicRegions = computed(() => {
   if (!geographicData.value.continentalDistribution) return []
 
@@ -665,6 +702,7 @@ const biodiversityHotspots = computed(() => {
   return geographicData.value.biodiversityHotspots || []
 })
 
+// Temporal data computed properties
 const historicalPeriods = computed(() => {
   return temporalData.value.historicalPeriods || []
 })
@@ -675,6 +713,10 @@ const seasonalPatterns = computed(() => {
 
 const recentActivity = computed(() => {
   return temporalData.value.recentActivity || []
+})
+
+const temporalCoverage = computed(() => {
+  return temporalData.value.dataCoverage?.dateCoverage || 87
 })
 
 const institutions = computed(() => {
@@ -758,6 +800,57 @@ const availableGenera = computed(() => {
   return Array.from(genera).sort()
 })
 
+// Map data transformation
+const transformInstitutionsToMapData = (institutions) => {
+  return institutions.map(inst => ({
+    institutionCode: inst.code,
+    institutionName: inst.name,
+    lat: generateCoordinatesForCountry(inst.country).lat,
+    lng: generateCoordinatesForCountry(inst.country).lng,
+    recordCount: inst.recordCount || 0,
+    country: inst.country || 'Unknown'
+  })).filter(item => item.lat !== null && item.lng !== null)
+}
+
+// Simple coordinate generation for countries (you can replace with real geocoding data)
+const generateCoordinatesForCountry = (country) => {
+  const countryCoords = {
+    'United States': { lat: 39.8283, lng: -98.5795 },
+    'USA': { lat: 39.8283, lng: -98.5795 },
+    'US': { lat: 39.8283, lng: -98.5795 },
+    'United Kingdom': { lat: 55.3781, lng: -3.4360 },
+    'UK': { lat: 55.3781, lng: -3.4360 },
+    'Canada': { lat: 56.1304, lng: -106.3468 },
+    'Australia': { lat: -25.2744, lng: 133.7751 },
+    'Germany': { lat: 51.1657, lng: 10.4515 },
+    'France': { lat: 46.2276, lng: 2.2137 },
+    'Japan': { lat: 36.2048, lng: 138.2529 },
+    'Brazil': { lat: -14.2350, lng: -51.9253 },
+    'China': { lat: 35.8617, lng: 104.1954 },
+    'Russia': { lat: 61.5240, lng: 105.3188 },
+    'India': { lat: 20.5937, lng: 78.9629 },
+    'Mexico': { lat: 23.6345, lng: -102.5528 },
+    'Argentina': { lat: -38.4161, lng: -63.6167 },
+    'Spain': { lat: 40.4637, lng: -3.7492 },
+    'Italy': { lat: 41.8719, lng: 12.5674 },
+    'Sweden': { lat: 60.1282, lng: 18.6435 },
+    'Norway': { lat: 60.4720, lng: 8.4689 },
+    'South Africa': { lat: -30.5595, lng: 22.9375 }
+  }
+
+  return countryCoords[country] || { lat: null, lng: null }
+}
+
+// Timeline data transformation
+const transformTemporalToTimelineData = (temporalData) => {
+  if (!temporalData.yearlyTrend) return []
+
+  return temporalData.yearlyTrend.map(item => ({
+    year: item.year,
+    records: item.records
+  })).sort((a, b) => a.year - b.year)
+}
+
 // Methods
 const loadTaxonData = async () => {
   try {
@@ -771,6 +864,13 @@ const loadTaxonData = async () => {
 
     // 加载最新记录
     await loadRecentRecords()
+
+    // 加载并转换地图数据
+    await loadMapData()
+
+    // 加载并转换时间线数据
+    await loadTimelineData()
+
   } catch (err) {
     console.error('Failed to load taxon data:', err)
   }
@@ -808,6 +908,35 @@ const loadRecentRecords = async () => {
   }
 }
 
+const loadMapData = async () => {
+  loadingMapData.value = true
+  try {
+    if (institutions.value.length > 0) {
+      institutionMapData.value = transformInstitutionsToMapData(institutions.value)
+    }
+  } catch (err) {
+    console.error('Failed to load map data:', err)
+    institutionMapData.value = []
+  } finally {
+    loadingMapData.value = false
+  }
+}
+
+const loadTimelineData = async () => {
+  try {
+    if (temporalData.value.yearlyTrend) {
+      timelineData.value = transformTemporalToTimelineData(temporalData.value)
+
+      // For detailed timeline, we could use the same data or create a subset
+      detailedTimelineData.value = timelineData.value.filter(item => item.year >= 2000)
+    }
+  } catch (err) {
+    console.error('Failed to load timeline data:', err)
+    timelineData.value = []
+    detailedTimelineData.value = []
+  }
+}
+
 const loadMoreInstitutions = async () => {
   try {
     const response = await fetchTaxonInstitutions(props.taxonType, props.taxonName, {
@@ -817,11 +946,15 @@ const loadMoreInstitutions = async () => {
       sort_by: institutionSort.value
     })
     // 更新 institutionData 在 composable 中已经处理
+
+    // 重新加载地图数据
+    await loadMapData()
   } catch (err) {
     console.error('Failed to load institutions:', err)
   }
 }
 
+// Navigation methods
 const navigateToChild = (child) => {
   if (props.taxonType === 'family') {
     router.push({
@@ -855,6 +988,22 @@ const viewRecordDetail = (record) => {
     name: 'RecordDetail',
     params: { catalogNumber: record.catalogNumber }
   })
+}
+
+// Map and timeline event handlers
+const onInstitutionClicked = (institution) => {
+  console.log('Institution clicked:', institution)
+  navigateToInstitution({ code: institution.institutionCode })
+}
+
+const onYearSelected = (year) => {
+  console.log('Year selected:', year)
+  // You can implement year-specific filtering here
+}
+
+const onPeriodSelected = (period) => {
+  console.log('Period selected:', period)
+  // You can implement period-specific filtering here
 }
 
 // Utility functions
@@ -924,6 +1073,16 @@ watch(() => institutionSort.value, () => {
   loadMoreInstitutions()
 })
 
+// Watch for institution data changes to update map
+watch(() => institutionData.value, () => {
+  loadMapData()
+}, { deep: true })
+
+// Watch for temporal data changes to update timeline
+watch(() => temporalData.value, () => {
+  loadTimelineData()
+}, { deep: true })
+
 // Lifecycle
 onMounted(() => {
   loadTaxonData()
@@ -934,6 +1093,7 @@ watch(() => [props.taxonType, props.taxonName], () => {
   loadTaxonData()
 }, { immediate: false })
 </script>
+
 <style scoped>
 /* Base styles - matching the HTML design */
 .taxon-page {
@@ -1198,14 +1358,29 @@ watch(() => [props.taxonType, props.taxonName], () => {
   margin-bottom: 15px;
   flex-direction: column;
   text-align: center;
+  position: relative;
+  overflow: hidden;
 }
 
 .chart-container {
-  height: 300px;
+  height: 500px;
 }
 
 .chart-small {
   height: 200px;
+}
+
+/* Placeholder content for loading states */
+.placeholder-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #666;
+  font-size: 14px;
+  text-align: center;
+  padding: 20px;
 }
 
 /* Summary cards */

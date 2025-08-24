@@ -1,5 +1,5 @@
 <template>
-  <div class="world-map-section">
+  <div class="institution-records-map">
 
     <div class="map-controls">
       <div class="controls-row">
@@ -12,7 +12,7 @@
           </select>
         </div>
 
-        <div class="provider-filters">
+        <div class="data-filters">
           <button
               v-for="filter in filterOptions"
               :key="filter.key"
@@ -22,32 +22,29 @@
             {{ filter.label }}
           </button>
         </div>
+
+        <div class="clustering-toggle">
+          <label>
+            <input type="checkbox" v-model="enableClustering" @change="updateMarkers">
+            Enable Clustering
+          </label>
+        </div>
       </div>
     </div>
-
-<!--    &lt;!&ndash; 调试信息 &ndash;&gt;-->
-<!--    <div class="debug-info" v-if="showDebug">-->
-<!--      <p>Total institutions: {{ props.institutions.length }}</p>-->
-<!--      <p>Total mapData: {{ props.mapData.length }}</p>-->
-<!--      <p>Filtered providers: {{ filteredProviders.length }}</p>-->
-<!--      <p>Map initialized: {{ !!map }}</p>-->
-<!--      <p>Markers layer: {{ !!markersLayer }}</p>-->
-<!--    </div>-->
 
     <div class="map-container">
       <div
           ref="mapElement"
-          id="providers-map"
+          id="records-map"
           class="leaflet-map"
           :class="{ 'pure-black': selectedMapStyle === 'pure-black' }"
       ></div>
 
       <div v-if="loading" class="map-loading">
         <div class="loading-spinner"></div>
-        <p>Loading providers...</p>
+        <p>Loading records...</p>
       </div>
 
-      <!-- 错误提示 -->
       <div v-if="mapError" class="map-error">
         <p>⚠️ Map loading error: {{ mapError }}</p>
         <button @click="retryMapInit" class="retry-btn">Retry</button>
@@ -56,16 +53,20 @@
 
     <div class="map-legend">
       <div class="legend-item">
-        <div class="legend-dot large"></div>
-        <span>Major Contributors (>10,000 records)</span>
+        <div class="legend-dot recent"></div>
+        <span>Recent Records (2020+)</span>
       </div>
       <div class="legend-item">
-        <div class="legend-dot medium"></div>
-        <span>Medium Contributors (1,000-10,000)</span>
+        <div class="legend-dot decade"></div>
+        <span>Decade Records (2010-2019)</span>
       </div>
       <div class="legend-item">
-        <div class="legend-dot small"></div>
-        <span>Small Contributors (<1,000)</span>
+        <div class="legend-dot historical"></div>
+        <span>Historical Records (before 2010)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot unknown"></div>
+        <span>Unknown Date</span>
       </div>
     </div>
   </div>
@@ -85,12 +86,11 @@ L.Icon.Default.mergeOptions({
 
 // Props
 const props = defineProps({
-  institutions: {
-    type: Array,
-    default: () => []
+  institutionCode: {
+    type: String,
+    required: true
   },
-  // 新增：已转换的地图数据
-  mapData: {
+  records: {
     type: Array,
     default: () => []
   },
@@ -101,7 +101,7 @@ const props = defineProps({
 })
 
 // Emits
-const emit = defineEmits(['provider-clicked'])
+const emit = defineEmits(['record-clicked'])
 
 // Refs
 const mapElement = ref(null)
@@ -109,20 +109,12 @@ const mapElement = ref(null)
 // Reactive state
 const map = ref(null)
 const markersLayer = ref(null)
+const clusterGroup = ref(null)
 const currentFilter = ref('all')
 const selectedMapStyle = ref('cartodb-dark')
 const currentTileLayer = ref(null)
 const mapError = ref('')
-const showDebug = ref(true) // 开启调试模式
-
-// 测试数据 - 如果没有真实数据就用这个
-const testData = [
-  { institutionCode: 'TEST1', institutionName: 'Test Institution 1', lat: 40.7128, lng: -74.0060, recordCount: 15000, country: 'USA' },
-  { institutionCode: 'TEST2', institutionName: 'Test Institution 2', lat: 51.5074, lng: -0.1278, recordCount: 8000, country: 'UK' },
-  { institutionCode: 'TEST3', institutionName: 'Test Institution 3', lat: 35.6762, lng: 139.6503, recordCount: 2500, country: 'Japan' },
-  { institutionCode: 'TEST4', institutionName: 'Test Institution 4', lat: -33.8688, lng: 151.2093, recordCount: 12000, country: 'Australia' },
-  { institutionCode: 'TEST5', institutionName: 'Test Institution 5', lat: 48.8566, lng: 2.3522, recordCount: 6500, country: 'France' }
-]
+const enableClustering = ref(true)
 
 // 稳定的地图瓦片配置
 const mapStyles = {
@@ -140,45 +132,59 @@ const mapStyles = {
   },
   'pure-black': {
     url: null,
-    attribution: 'Data providers visualization',
+    attribution: 'Records visualization',
     isPureBlack: true
   }
 }
 
 // Filter options
 const filterOptions = [
-  { key: 'all', label: 'All' },
-  { key: 'major', label: 'Major' },
-  { key: 'medium', label: 'Medium' },
-  { key: 'small', label: 'Small' }
+  { key: 'all', label: 'All Records' },
+  { key: 'recent', label: 'Recent (2020+)' },
+  { key: 'decade', label: 'Last Decade' },
+  { key: 'historical', label: 'Historical' },
+  { key: 'georeferenced', label: 'Georeferenced Only' }
 ]
 
 // Computed properties
-const filteredProviders = computed(() => {
-  // 优先使用mapData，如果没有则使用institutions或测试数据
-  const dataSource = props.mapData.length > 0
-      ? props.mapData
-      : (props.institutions.length > 0 ? props.institutions : testData)
+const filteredRecords = computed(() => {
+  const validRecords = props.records.filter(record =>
+      record.decimalLatitude &&
+      record.decimalLongitude &&
+      !isNaN(parseFloat(record.decimalLatitude)) &&
+      !isNaN(parseFloat(record.decimalLongitude))
+  )
 
-  if (currentFilter.value === 'all') return dataSource
+  if (currentFilter.value === 'all') return validRecords
+  if (currentFilter.value === 'georeferenced') return validRecords
 
-  return dataSource.filter(provider => {
-    const records = provider.recordCount || 0
+  return validRecords.filter(record => {
+    const year = record.year || (record.eventDate ? new Date(record.eventDate).getFullYear() : null)
+
     switch (currentFilter.value) {
-      case 'major': return records > 10000
-      case 'medium': return records >= 1000 && records <= 10000
-      case 'small': return records < 1000
+      case 'recent': return year && year >= 2020
+      case 'decade': return year && year >= 2010 && year < 2020
+      case 'historical': return year && year < 2010
       default: return true
     }
   })
 })
 
-const uniqueCountries = computed(() => {
-  return new Set(filteredProviders.value.map(p => p.country).filter(Boolean)).size
+const totalRecords = computed(() => props.records.length)
+
+const georeferencedRecords = computed(() => {
+  return props.records.filter(record =>
+      record.decimalLatitude && record.decimalLongitude
+  ).length
 })
 
-const totalRecords = computed(() => {
-  return filteredProviders.value.reduce((sum, p) => sum + (p.recordCount || 0), 0)
+const georeferencingPercentage = computed(() => {
+  if (totalRecords.value === 0) return 0
+  return Math.round((georeferencedRecords.value / totalRecords.value) * 100)
+})
+
+const uniqueCountries = computed(() => {
+  return new Set(props.records.map(r => r.country).filter(Boolean)).size
 })
 
 // Methods
@@ -188,7 +194,7 @@ const initMap = async () => {
       throw new Error('Map element not found')
     }
 
-    console.log('Initializing map...') // 调试日志
+    console.log('Initializing records map...')
 
     // Create map
     map.value = L.map(mapElement.value, {
@@ -199,29 +205,32 @@ const initMap = async () => {
       preferCanvas: true
     })
 
-    console.log('Map created:', map.value) // 调试日志
-
     // Add tile layer
     await addTileLayer()
 
     // Create markers layer
-    markersLayer.value = L.layerGroup().addTo(map.value)
-    console.log('Markers layer created:', markersLayer.value) // 调试日志
+    if (enableClustering.value) {
+      // 如果需要聚类，需要导入MarkerCluster插件
+      // 这里使用简化版本
+      markersLayer.value = L.layerGroup().addTo(map.value)
+    } else {
+      markersLayer.value = L.layerGroup().addTo(map.value)
+    }
 
     // Add markers
     await nextTick()
     updateMarkers()
 
     // Fit bounds
-    if (filteredProviders.value.length > 0) {
+    if (filteredRecords.value.length > 0) {
       fitMapToBounds()
     }
 
     mapError.value = ''
-    console.log('Map initialization completed') // 调试日志
+    console.log('Records map initialization completed')
 
   } catch (error) {
-    console.error('Map initialization error:', error)
+    console.error('Records map initialization error:', error)
     mapError.value = error.message
   }
 }
@@ -239,27 +248,15 @@ const addTileLayer = async () => {
     const style = mapStyles[selectedMapStyle.value]
 
     if (style.isPureBlack) {
-      // 纯黑背景模式
       return
     }
-
-    console.log('Adding tile layer:', style.url) // 调试日志
 
     // Create tile layer
     currentTileLayer.value = L.tileLayer(style.url, {
       attribution: style.attribution,
       subdomains: style.subdomains,
       maxZoom: style.maxZoom,
-      errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==' // 错误瓦片显示透明
-    })
-
-    // 监听瓦片加载事件
-    currentTileLayer.value.on('tileerror', (e) => {
-      console.warn('Tile loading error:', e)
-    })
-
-    currentTileLayer.value.on('tileload', (e) => {
-      console.log('Tile loaded successfully') // 调试日志
+      errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
     })
 
     currentTileLayer.value.addTo(map.value)
@@ -277,29 +274,25 @@ const updateMarkers = () => {
       return
     }
 
-    console.log('Updating markers, count:', filteredProviders.value.length) // 调试日志
+    console.log('Updating record markers, count:', filteredRecords.value.length)
 
     // Clear existing markers
     markersLayer.value.clearLayers()
 
-    filteredProviders.value.forEach((provider, index) => {
-      // 验证坐标
-      const lat = parseFloat(provider.lat)
-      const lng = parseFloat(provider.lng)
+    filteredRecords.value.forEach((record, index) => {
+      const lat = parseFloat(record.decimalLatitude)
+      const lng = parseFloat(record.decimalLongitude)
 
       if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-        console.warn(`Invalid coordinates for provider ${provider.institutionCode}:`, lat, lng)
         return
       }
 
-      console.log(`Adding marker ${index + 1}:`, provider.institutionCode, lat, lng) // 调试日志
-
-      // Create custom light dot icon
-      const dotSize = getDotSize(provider.recordCount || 0)
+      // Create custom icon based on record age
+      const recordAge = getRecordAge(record)
       const icon = L.divIcon({
-        className: `light-dot ${dotSize}`,
-        iconSize: [getDotPixelSize(dotSize), getDotPixelSize(dotSize)],
-        iconAnchor: [getDotPixelSize(dotSize) / 2, getDotPixelSize(dotSize) / 2],
+        className: `record-dot ${recordAge}`,
+        iconSize: [6, 6],
+        iconAnchor: [3, 3],
         html: `<div class="dot-inner"></div>`
       })
 
@@ -307,79 +300,65 @@ const updateMarkers = () => {
       const marker = L.marker([lat, lng], { icon })
 
       // Create popup content
-      const popupContent = createPopupContent(provider)
+      const popupContent = createRecordPopupContent(record)
       marker.bindPopup(popupContent, {
-        maxWidth: 250,
+        maxWidth: 300,
         className: 'custom-popup'
       })
 
       // Add click event
       marker.on('click', () => {
-        console.log('Marker clicked:', provider.institutionCode) // 调试日志
-        //emit('provider-clicked', provider)
+        emit('record-clicked', record)
       })
 
       markersLayer.value.addLayer(marker)
     })
 
-    console.log('Markers update completed') // 调试日志
+    console.log('Record markers update completed')
 
   } catch (error) {
-    console.error('Markers update error:', error)
+    console.error('Record markers update error:', error)
     mapError.value = 'Failed to update markers: ' + error.message
   }
 }
 
-const createPopupContent = (provider) => {
+const createRecordPopupContent = (record) => {
+  const year = record.year || (record.eventDate ? new Date(record.eventDate).getFullYear() : 'Unknown')
+
   return `
     <div class="popup-content">
-      <div class="popup-title">${provider.institutionName || provider.name || provider.institutionCode}</div>
+      <div class="popup-title">${record.scientificName || 'Unknown Species'}</div>
       <div class="popup-info">
-        <strong>Code:</strong> ${provider.institutionCode || 'N/A'}<br>
-        <strong>Country:</strong> ${provider.country || 'N/A'}<br>
-        <strong>Records:</strong> ${formatNumber(provider.recordCount || 0)}<br>
-        <strong>Category:</strong> ${getProviderCategory(provider.recordCount || 0)}
+        <strong>Catalog #:</strong> ${record.catalogNumber || 'N/A'}<br>
+        <strong>Family:</strong> ${record.family || 'N/A'}<br>
+        <strong>Collected by:</strong> ${record.recordedBy || 'N/A'}<br>
+        <strong>Date:</strong> ${record.eventDate || 'N/A'} (${year})<br>
+        <strong>Location:</strong> ${record.locality || 'N/A'}<br>
+        <strong>Country:</strong> ${record.country || 'N/A'}<br>
+        <strong>Coordinates:</strong> ${record.decimalLatitude}, ${record.decimalLongitude}
       </div>
     </div>
   `
 }
 
-const getDotSize = (records) => {
-  if (records > 10000) return 'large'
-  if (records >= 1000) return 'medium'
-  return 'small'
+const getRecordAge = (record) => {
+  const year = record.year || (record.eventDate ? new Date(record.eventDate).getFullYear() : null)
+
+  if (!year) return 'unknown'
+  if (year >= 2020) return 'recent'
+  if (year >= 2010) return 'decade'
+  return 'historical'
 }
 
-const getDotPixelSize = (dotSize) => {
-  switch (dotSize) {
-    case 'large': return 12
-    case 'medium': return 10
-    case 'small': return 8
-    default: return 8
-  }
-}
-
-const getProviderCategory = (records) => {
-  if (records > 10000) return 'Major Contributor'
-  if (records >= 1000) return 'Medium Contributor'
-  return 'Small Contributor'
-}
-
-const formatNumber = (num, format = 'full') => {
+const formatNumber = (num) => {
   if (!num) return '0'
-
-  if (format === 'short') {
-    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
-    if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
-  }
-
   return num.toLocaleString()
 }
 
 const setFilter = (filterKey) => {
   currentFilter.value = filterKey
   updateMarkers()
-  if (filteredProviders.value.length > 0) {
+  if (filteredRecords.value.length > 0) {
     fitMapToBounds()
   }
 }
@@ -412,8 +391,8 @@ const retryMapInit = () => {
 
 // Lifecycle
 onMounted(() => {
-  console.log('Component mounted, institutions:', props.institutions.length) // 调试日志
-  setTimeout(initMap, 100) // 稍微延迟以确保DOM渲染完成
+  console.log('Records map component mounted')
+  setTimeout(initMap, 100)
 })
 
 onUnmounted(() => {
@@ -424,11 +403,11 @@ onUnmounted(() => {
 })
 
 // Watchers
-watch(() => [props.institutions, props.mapData], () => {
-  console.log('Data changed - institutions:', props.institutions.length, 'mapData:', props.mapData.length)
+watch(() => props.records, () => {
+  console.log('Records data changed, count:', props.records.length)
   if (map.value) {
     updateMarkers()
-    if (filteredProviders.value.length > 0) {
+    if (filteredRecords.value.length > 0) {
       fitMapToBounds()
     }
   }
@@ -443,7 +422,7 @@ watch(currentFilter, () => {
 /* 导入Leaflet CSS */
 @import 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css';
 
-.world-map-section {
+.institution-records-map {
   background: white;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.1);
@@ -525,9 +504,10 @@ watch(currentFilter, () => {
   background: white;
 }
 
-.provider-filters {
+.data-filters {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .filter-btn {
@@ -547,18 +527,20 @@ watch(currentFilter, () => {
   border-color: #3498db;
 }
 
-.debug-info {
-  background: #f8f9fa;
-  padding: 10px;
-  border-radius: 6px;
-  margin-bottom: 15px;
-  font-size: 12px;
-  color: #666;
+.clustering-toggle {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: #555;
+}
+
+.clustering-toggle input {
+  margin-right: 6px;
 }
 
 .map-container {
   position: relative;
-  height: 400px;
+  height: 500px;
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -644,63 +626,67 @@ watch(currentFilter, () => {
 }
 
 .legend-dot {
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.4);
+  border: 1px solid white;
 }
 
-.legend-dot.large {
-  width: 12px;
-  height: 12px;
+.legend-dot.recent {
   background: #e74c3c;
+  box-shadow: 0 0 4px rgba(231, 76, 60, 0.6);
 }
 
-.legend-dot.medium {
-  width: 10px;
-  height: 10px;
+.legend-dot.decade {
   background: #f39c12;
+  box-shadow: 0 0 4px rgba(243, 156, 18, 0.6);
 }
 
-.legend-dot.small {
-  width: 8px;
-  height: 8px;
+.legend-dot.historical {
   background: #2ecc71;
+  box-shadow: 0 0 4px rgba(46, 204, 113, 0.6);
 }
 
-/* 自定义marker样式 */
-:deep(.light-dot) {
+.legend-dot.unknown {
+  background: #95a5a6;
+  box-shadow: 0 0 4px rgba(149, 165, 166, 0.6);
+}
+
+/* 自定义record marker样式 */
+:deep(.record-dot) {
   border-radius: 50%;
-  border: 2px solid white;
+  border: 1px solid white;
   transition: all 0.3s ease;
+  width: 6px;
+  height: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-:deep(.light-dot.large) {
-  width: 12px;
-  height: 12px;
+:deep(.record-dot.recent) {
   background: #e74c3c;
-  box-shadow: 0 0 10px rgba(231, 76, 60, 0.6);
+  box-shadow: 0 0 6px rgba(231, 76, 60, 0.6);
 }
 
-:deep(.light-dot.medium) {
-  width: 10px;
-  height: 10px;
+:deep(.record-dot.decade) {
   background: #f39c12;
-  box-shadow: 0 0 8px rgba(243, 156, 18, 0.6);
+  box-shadow: 0 0 6px rgba(243, 156, 18, 0.6);
 }
 
-:deep(.light-dot.small) {
-  width: 8px;
-  height: 8px;
+:deep(.record-dot.historical) {
   background: #2ecc71;
   box-shadow: 0 0 6px rgba(46, 204, 113, 0.6);
 }
 
-:deep(.light-dot:hover) {
-  transform: scale(1.3);
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.9);
+:deep(.record-dot.unknown) {
+  background: #95a5a6;
+  box-shadow: 0 0 6px rgba(149, 165, 166, 0.6);
+}
+
+:deep(.record-dot:hover) {
+  transform: scale(1.5);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.9);
 }
 
 .dot-inner {
@@ -710,11 +696,10 @@ watch(currentFilter, () => {
   background: inherit;
 }
 
-/* 纯黑模式下的白色光点 */
-.pure-black :deep(.light-dot) {
-  background: rgba(255, 255, 255, 0.95) !important;
+/* 纯黑模式下的点样式 */
+.pure-black :deep(.record-dot) {
   border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8) !important;
 }
 
 /* 自定义弹窗样式 */
@@ -736,6 +721,7 @@ watch(currentFilter, () => {
   color: white;
   font-size: 14px;
   margin-bottom: 6px;
+  font-style: italic;
 }
 
 :deep(.popup-info) {
@@ -749,7 +735,7 @@ watch(currentFilter, () => {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .world-map-section {
+  .institution-records-map {
     padding: 20px;
   }
 
@@ -758,8 +744,16 @@ watch(currentFilter, () => {
     align-items: stretch;
   }
 
+  .data-filters {
+    justify-content: center;
+  }
+
   .map-container {
-    height: 300px;
+    height: 400px;
+  }
+
+  .map-stats {
+    gap: 15px;
   }
 }
 </style>

@@ -317,10 +317,12 @@
   <div class="geography-section">
     <h3>Geographic Coverage</h3>
 
-    <!-- Geographic Map Placeholder -->
-    <div class="map-placeholder">
-      <p>Interactive geographic coverage map coming soon...</p>
-    </div>
+    <InstitutionRecordsMap
+        :institution-code="institutionCode"
+        :records="institutionRecords"
+        :loading="loadingRecords"
+        @record-clicked="handleRecordClick"
+    />
 
     <!-- Countries Summary -->
     <div v-if="geographyData.countries" class="countries-summary">
@@ -348,36 +350,36 @@
   </div>
 </div>
 
-<!-- Collaboration Tab -->
-<div v-if="activeTab === 'collaboration'" class="tab-content">
-  <div class="collaboration-section">
-    <h3>Institutional Collaborations</h3>
+<!--&lt;!&ndash; Collaboration Tab &ndash;&gt;-->
+<!--<div v-if="activeTab === 'collaboration'" class="tab-content">-->
+<!--  <div class="collaboration-section">-->
+<!--    <h3>Institutional Collaborations</h3>-->
 
-    <div class="collaboration-placeholder">
-      <p>Collaboration network visualization coming soon...</p>
-    </div>
+<!--    <div class="collaboration-placeholder">-->
+<!--      <p>Collaboration network visualization coming soon...</p>-->
+<!--    </div>-->
 
-    <div v-if="collaborationData.partners" class="partners-list">
-      <h4>Collaboration Partners</h4>
-      <div class="partners-grid">
-        <div
-            v-for="partner in collaborationData.partners"
-            :key="partner.institutionCode"
-            class="partner-item"
-            @click="navigateToInstitution(partner.institutionCode)"
-        >
-          <div class="partner-logo">{{ partner.institutionCode }}</div>
-          <div class="partner-info">
-            <div class="partner-name">{{ partner.institutionName }}</div>
-            <div class="partner-stats">
-              {{ formatNumber(partner.sharedSpecies) }} shared species
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+<!--    <div v-if="collaborationData.partners" class="partners-list">-->
+<!--      <h4>Collaboration Partners</h4>-->
+<!--      <div class="partners-grid">-->
+<!--        <div-->
+<!--            v-for="partner in collaborationData.partners"-->
+<!--            :key="partner.institutionCode"-->
+<!--            class="partner-item"-->
+<!--            @click="navigateToInstitution(partner.institutionCode)"-->
+<!--        >-->
+<!--          <div class="partner-logo">{{ partner.institutionCode }}</div>-->
+<!--          <div class="partner-info">-->
+<!--            <div class="partner-name">{{ partner.institutionName }}</div>-->
+<!--            <div class="partner-stats">-->
+<!--              {{ formatNumber(partner.sharedSpecies) }} shared species-->
+<!--            </div>-->
+<!--          </div>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </div>-->
+<!--</div>-->
 </div>
 </div>
 </div>
@@ -387,7 +389,13 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useInstitutions } from '@/composables/useInstitutions.js'
-import RecordsTable from '@/components/browse/RecordsTable.vue'
+import RecordsTable from '@/components/Browse/RecordsTable.vue'
+
+import InstitutionRecordsMap from '@/components/Browse/InstitutionRecordsMap.vue'
+
+// 添加记录相关的响应式数据
+const institutionRecords = ref([])
+const loadingRecords = ref(false)
 
 // Props
 const props = defineProps({
@@ -404,7 +412,8 @@ const {
   loading,
   error,
   currentInstitution,
-  fetchInstitutionDetail
+  fetchInstitutionDetail,
+  fetchInstitutionRecords
 } = useInstitutions()
 
 // Local state
@@ -427,7 +436,7 @@ const availableTabs = computed(() => [
   { key: 'species', label: 'Species' },
   { key: 'records', label: 'Records' },
   { key: 'geography', label: 'Geography' },
-  { key: 'collaboration', label: 'Collaboration' }
+  // { key: 'collaboration', label: 'Collaboration' }
 ])
 
 const filteredSpecies = computed(() => {
@@ -463,12 +472,44 @@ const filteredSpecies = computed(() => {
 })
 
 // Methods
+const loadInstitutionRecords = async () => {
+  loadingRecords.value = true
+  try {
+    const response = await fetchInstitutionRecords(props.institutionCode, {
+      per_page: 1000, // 获取更多记录用于地图显示
+      // 只获取有地理坐标的记录
+      georeferenced_only: true
+    })
+
+    // 过滤出有有效坐标的记录
+    institutionRecords.value = response.filter(record =>
+        record.decimalLatitude &&
+        record.decimalLongitude &&
+        !isNaN(parseFloat(record.decimalLatitude)) &&
+        !isNaN(parseFloat(record.decimalLongitude))
+    )
+
+    console.log('Loaded georeferenced records:', institutionRecords.value.length)
+  } catch (err) {
+    console.error('Failed to load institution records:', err)
+    institutionRecords.value = []
+  } finally {
+    loadingRecords.value = false
+  }
+}
+
 const loadInstitutionData = async () => {
   try {
     await fetchInstitutionDetail(props.institutionCode)
-    await loadSpeciesData()
-    await loadGeographyData()
-    await loadCollaborationData()
+
+    if (currentInstitution.value) {
+      await Promise.all([
+        loadSpeciesData(),
+        loadGeographyData(),
+        loadCollaborationData(),
+        loadInstitutionRecords() // 添加记录加载
+      ])
+    }
   } catch (err) {
     console.error('Failed to load institution data:', err)
   }
@@ -624,6 +665,11 @@ const contactInstitution = () => {
 
 // Lifecycle
 onMounted(() => {
+  console.log('Component mounted, initial state:', {
+    loading: loading.value,
+    error: error.value,
+    institution: currentInstitution.value
+  })
   loadInstitutionData()
 })
 
@@ -631,6 +677,15 @@ onMounted(() => {
 watch(() => props.institutionCode, () => {
   loadInstitutionData()
 }, { immediate: false })
+
+watch([loading, error, currentInstitution], ([newLoading, newError, newInstitution]) => {
+  console.log('State changed:', {
+    loading: newLoading,
+    error: newError,
+    institution: newInstitution,
+    hasInstitution: !!newInstitution
+  })
+}, { immediate: true })
 </script>
 
 <style scoped>

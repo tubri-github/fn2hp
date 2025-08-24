@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fishnet - Main Dashboard</title>
+    <style>
+        /* Base styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: auto auto auto;
+            gap: 15px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .panel-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .panel-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Specific panel layouts */
+        .header-panel {
+            grid-column: span 4;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .user-controls {
+            display: flex;
+            gap: 15px;
+        }
+
+        .button {
+            padding: 8px 15px;
+            background: #0066cc;
+            color: white;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .secondary-button {
+            padding: 8px 15px;
+            background: #f0f0f0;
+            color: #333;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .overview-panel {
+            grid-column: span 4;
+        }
+
+        .taxonomy-panel {
+            grid-column: span 2;
+            grid-row: span 2;
+        }
+
+        .map-panel {
+            grid-column: span 2;
+            grid-row: span 1;
+        }
+
+        .time-panel {
+            grid-column: span 2;
+            grid-row: span 1;
+        }
+
+        .institutions-panel {
+            grid-column: span 4;
+        }
+
+        /* Panel internal layouts */
+        .overview-metrics {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .metric-card {
+            background: #f9f9f9;
+            border-radius: 4px;
+            padding: 15px;
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Taxonomy tree */
+        .taxonomy-tree {
+            border: 1px solid #eee;
+            padding: 10px;
+            overflow: auto;
+            height: 400px;
+        }
+
+        .tree-node {
+            padding: 3px 0;
+        }
+
+        .tree-node span {
+            cursor: pointer;
+        }
+
+        .tree-node span:hover {
+            text-decoration: underline;
+        }
+
+        .children {
+            margin-left: 20px;
+        }
+
+        /* Map container */
+        .map-container {
+            height: 300px;
+            border: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f0f0f0;
+        }
+
+        /* Time series */
+        .time-series {
+            height: 250px;
+            border: 1px solid #eee;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f9f9f9;
+        }
+
+        /* Institution table */
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .table th, .table td {
+            border: 1px solid #eee;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .table th {
+            background: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+<div class="panel header-panel">
+    <div class="logo">Fishnet</div>
+    <div class="user-controls">
+        <a href="#" class="secondary-button">About</a>
+        <a href="#" class="secondary-button">Documentation</a>
+        <a href="#" class="button">Sign in as Data Provider</a>
+        <a href="#" class="button">Sign in as User</a>
+    </div>
+</div>
+
+<div class="dashboard">
+    <!-- Overview Panel -->
+    <div class="panel overview-panel">
+        <div class="panel-header">
+            <h2 class="panel-title">Fish Data Overview</h2>
+            <div class="panel-actions">
+                <div class="filter">All Records</div>
+            </div>
+        </div>
+        <div class="panel-content">
+            <div class="overview-metrics">
+                <div class="metric-card">
+                    <div class="metric-value">12.4M</div>
+                    <div class="metric-label">Total Records</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">743</div>
+                    <div class="metric-label">Fish Species</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">132</div>
+                    <div class="metric-label">Contributing Institutions</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">92.7%</div>
+                    <div class="metric-label">Data Completeness</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Taxonomy Panel -->
+    <div class="panel taxonomy-panel">
+        <div class="panel-header">
+            <h2 class="panel-title">Taxonomic Structure</h2>
+            <div class="panel-actions">
+                <div class="filter">All Groups</div>
+            </div>
+        </div>
+        <div class="panel-content">
+            <div class="taxonomy-tree">
+                <div class="tree-node">
+                    <span>▼ Actinopterygii (Ray-finned fishes) - 12,856 records</span>
+                    <div class="children">
+                        <div class="tree-node">
+                            <span>▼ Cypriniformes (Carps) - 4,621 records</span>
+                            <div class="children">
+                                <div class="tree-node">
+                                    <span>▶ Cyprinidae - 3,254 records</span>
+                                </div>
+                                <div class="tree-node">
+                                    <span>▶ Cobitidae - 782 records</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tree-node">
+                            <span>▶ Perciformes (Perch-like) - 3,980 records</span>
+                        </div>
+                        <div class="tree-node">
+                            <span>▶ Salmoniformes (Salmon) - 2,145 records</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="tree-node">
+                    <span>▶ Chondrichthyes (Cartilaginous fish) - 3,284 records</span>
+                </div>
+                <div class="tree-node">
+                    <span>▶ Myxini (Hagfish) - 642 records</span>
+                </div>
+                <div class="tree-node">
+                    <span>▶ Petromyzontida (Lampreys) - 478 records</span>
+                </div>
+                <div class="tree-node">
+                    <span>▶ Sarcopterygii (Lobe-finned fish) - 129 records</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Map Panel -->
+    <div class="panel map-panel">
+        <div class="panel-header">
+            <h2 class="panel-title">Geographic Distribution</h2>
+            <div class="panel-actions">
+                <div class="filter">Global View</div>
+            </div>
+        </div>
+        <div class="panel-content">
+            <div class="map-container">
+                <div>Interactive Distribution Map</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Time Series Panel -->
+    <div class="panel time-panel">
+        <div class="panel-header">
+            <h2 class="panel-title">Records Over Time</h2>
+            <div class="panel-actions">
+                <div class="filter">All Time</div>
+            </div>
+        </div>
+        <div class="panel-content">
+            <div class="time-series">
+                <div>Time Series Chart</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Institutions Panel -->
+    <div class="panel institutions-panel">
+        <div class="panel-header">
+            <h2 class="panel-title">Top Contributing Institutions</h2>
+            <div class="panel-actions">
+                <div class="filter">By Record Count</div>
+            </div>
+        </div>
+        <div class="panel-content">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Institution Code</th>
+                    <th>Name</th>
+                    <th>Records</th>
+                    <th>Species Count</th>
+                    <th>Most Recent Contribution</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>NMNH</td>
+                    <td>National Museum of Natural History</td>
+                    <td>3,562,428</td>
+                    <td>428</td>
+                    <td>2023-02-15</td>
+                </tr>
+                <tr>
+                    <td>AMNH</td>
+                    <td>American Museum of Natural History</td>
+                    <td>2,814,392</td>
+                    <td>356</td>
+                    <td>2023-03-22</td>
+                </tr>
+                <tr>
+                    <td>FLMNH</td>
+                    <td>Florida Museum of Natural History</td>
+                    <td>1,987,542</td>
+                    <td>287</td>
+                    <td>2023-01-08</td>
+                </tr>
+                <tr>
+                    <td>CAS</td>
+                    <td>California Academy of Sciences</td>
+                    <td>1,845,219</td>
+                    <td>245</td>
+                    <td>2023-04-05</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Simple tree node interaction
+    document.addEventListener('DOMContentLoaded', function() {
+        const treeNodes = document.querySelectorAll('.tree-node > span');
+        treeNodes.forEach(node => {
+            node.addEventListener('click', function() {
+                const parentNode = this.parentElement;
+                const childrenContainer = parentNode.querySelector('.children');
+
+                if (childrenContainer) {
+                    childrenContainer.style.display =
+                        childrenContainer.style.display === 'none' ? 'block' : 'none';
+
+                    // Update arrow
+                    if (this.textContent.startsWith('▶')) {
+                        this.textContent = this.textContent.replace('▶', '▼');
+                    } else if (this.textContent.startsWith('▼')) {
+                        this.textContent = this.textContent.replace('▼', '▶');
+                    }
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>
