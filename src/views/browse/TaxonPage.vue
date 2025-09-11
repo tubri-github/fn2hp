@@ -100,7 +100,7 @@
       <!-- Navigation Tabs -->
       <nav class="nav-tabs">
         <ul>
-<!--          <li><a href="#overview" :class="{ active: activeTab === 'overview' }" @click.prevent="activeTab = 'overview'">Overview</a></li>-->
+          <li><a href="#overview" :class="{ active: activeTab === 'overview' }" @click.prevent="activeTab = 'overview'">Overview</a></li>
           <li v-if="taxonType === 'family'"><a href="#genera" :class="{ active: activeTab === 'genera' }" @click.prevent="activeTab = 'genera'">Genera & Species</a></li>
           <li v-else-if="taxonType === 'genus'"><a href="#species" :class="{ active: activeTab === 'species' }" @click.prevent="activeTab = 'species'">Species</a></li>
           <li><a href="#distribution" :class="{ active: activeTab === 'distribution' }" @click.prevent="activeTab = 'distribution'">Geographic Distribution</a></li>
@@ -112,9 +112,9 @@
         </ul>
       </nav>
 
-      <!-- Overview Section -->
-<!--      <section v-if="activeTab === 'overview'" id="overview" class="section">-->
-<!--        <h2 class="section-title">{{ formatTaxonRank(taxonType) }} Overview</h2>-->
+       Overview Section
+      <section v-if="activeTab === 'overview'" id="overview" class="section">
+        <h2 class="section-title">{{ formatTaxonRank(taxonType) }} Overview</h2>
 
 <!--        <div class="summary-cards">-->
 <!--          <div class="summary-card">-->
@@ -136,56 +136,56 @@
 <!--          <div class="summary-card">-->
 <!--            <div class="summary-number">{{ formatNumber(currentTaxon.countriesCount) }}</div>-->
 <!--            <div class="summary-label">Countries</div>-->
-<!--          </div>-->
+<!--&lt;!&ndash;          </div>&ndash;&gt;-->
 <!--        </div>-->
 
-<!--        <div class="two-column">-->
-<!--          <div>-->
-<!--            <h3>Global Distribution</h3>-->
-<!--            <div class="map-container">-->
-<!--              <WorldMap-->
-<!--                  v-if="institutionMapData.length > 0"-->
-<!--                  :institutions="[]"-->
-<!--                  :map-data="institutionMapData"-->
-<!--                  :loading="loadingMapData"-->
-<!--                  @provider-clicked="onInstitutionClicked"-->
-<!--              />-->
-<!--              <div v-else class="placeholder-content">-->
-<!--                Loading global distribution data...-->
-<!--                <br>-->
-<!--                <small>Based on <span class="dc-field">decimalLatitude/decimalLongitude</span> fields</small>-->
-<!--              </div>-->
-<!--            </div>-->
-<!--            <p><strong>Basis of Record Distribution:</strong></p>-->
-<!--            <div style="display: flex; gap: 10px; margin-top: 10px;">-->
-<!--              <span class="basis-of-record basis-preserved">PreservedSpecimen (100%)</span>-->
-<!--            </div>-->
-<!--          </div>-->
-<!--          <div>-->
-<!--            <h3>Diversity Metrics</h3>-->
-<!--            <div class="chart-container chart-small">-->
-<!--              {{ taxonType === 'family' ? 'Genera by Species Count' : 'Species Distribution' }}-->
-<!--            </div>-->
-<!--            <div style="margin-top: 15px;" v-if="diversityData.length">-->
-<!--              <h4>{{ taxonType === 'family' ? 'Most Diverse Genera' : 'Top Species' }}</h4>-->
-<!--              <div style="font-size: 14px; line-height: 1.6;">-->
-<!--                <div v-for="item in diversityData.slice(0, 4)" :key="item.name" style="display: flex; justify-content: space-between; margin: 5px 0;">-->
-<!--                  <span><em>{{ item.name }}</em></span>-->
-<!--                  <strong>{{ item.count }} {{ taxonType === 'family' ? 'species' : 'records' }}</strong>-->
-<!--                </div>-->
-<!--              </div>-->
-<!--            </div>-->
-<!--          </div>-->
-<!--        </div>-->
+        <div class="two-column">
+          <div>
+            <h3>Global Distribution</h3>
+            <div class="map-container">
+              <WorldMap
+                  v-if="institutionMapData.length > 0"
+                  :institutions="[]"
+                  :map-data="institutionMapData"
+                  :loading="loadingMapData"
+                  @provider-clicked="onInstitutionClicked"
+              />
+              <div v-else class="placeholder-content">
+                Loading global distribution data...
+                <br>
+                <small>Based on <span class="dc-field">decimalLatitude/decimalLongitude</span> fields</small>
+              </div>
+            </div>
+            <p><strong>Basis of Record Distribution:</strong></p>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+              <span class="basis-of-record basis-preserved">PreservedSpecimen (100%)</span>
+            </div>
+          </div>
+          <div>
+            <h3>Diversity Metrics</h3>
+            <div class="chart-container chart-small">
+              {{ taxonType === 'family' ? 'Genera by Species Count' : 'Species Distribution' }}
+            </div>
+            <div style="margin-top: 15px;" v-if="diversityData.length">
+              <h4>{{ taxonType === 'family' ? 'Most Diverse Genera' : 'Top Species' }}</h4>
+              <div style="font-size: 14px; line-height: 1.6;">
+                <div v-for="item in diversityData.slice(0, 4)" :key="item.name" style="display: flex; justify-content: space-between; margin: 5px 0;">
+                  <span><em>{{ item.name }}</em></span>
+                  <strong>{{ item.count }} {{ taxonType === 'family' ? 'species' : 'records' }}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-<!--        <h3>Geographic Distribution by Region</h3>-->
-<!--        <div class="geo-stats">-->
-<!--          <div v-for="region in geographicRegions" :key="region.name" class="geo-region">-->
-<!--            <div class="geo-region-name">{{ region.name }} ({{ region.percentage }}% of records)</div>-->
-<!--            <div class="geo-countries">{{ region.description }}</div>-->
-<!--          </div>-->
-<!--        </div>-->
-<!--      </section>-->
+        <h3>Geographic Distribution by Region</h3>
+        <div class="geo-stats">
+          <div v-for="region in geographicRegions" :key="region.name" class="geo-region">
+            <div class="geo-region-name">{{ region.name }} ({{ region.percentage }}% of records)</div>
+            <div class="geo-countries">{{ region.description }}</div>
+          </div>
+        </div>
+      </section>
 
       <!-- Genera & Species Section (for Family) -->
       <section v-if="activeTab === 'genera' && taxonType === 'family'" id="genera" class="section">
@@ -606,8 +606,8 @@ const {
 } = useTaxonomy()
 
 // Local state
-// const activeTab = ref('overview')
-const activeTab = ref('distribution')
+const activeTab = ref('overview')
+// const activeTab = ref('distribution')
 const loadingChildren = ref(false)
 const children = ref([])
 const childrenSearch = ref('')

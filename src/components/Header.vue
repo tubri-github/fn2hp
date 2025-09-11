@@ -20,15 +20,56 @@
           </div>
         </transition>
       </div>
+
+      <!-- 个人数据中心下拉菜单 - 只有登录用户才显示 -->
+      <div v-if="isAuthenticated" 
+           class="dropdown-container nav-link"
+           @mouseenter="showDashboardDropdown = true"
+           @mouseleave="showDashboardDropdown = false">
+        <span class="nav-link-text">DATA CENTER</span>
+        <transition name="fade">
+          <div v-show="showDashboardDropdown" class="dropdown-menu">
+            <router-link v-if="canAccessUserDashboard" to="/dashboard/user" class="dropdown-item">
+              User Dashboard
+            </router-link>
+            <router-link v-if="canAccessProviderDashboard" to="/dashboard/provider" class="dropdown-item">
+              Provider Dashboard
+            </router-link>
+          </div>
+        </transition>
+      </div>
     </nav>
+    
+    <!-- 用户菜单 -->
+    <UserMenu />
   </header>
 </template>
 
 <script>
+import UserMenu from './UserMenu.vue'
+import { useAuth } from '@/utils/auth.js'
+
 export default {
+  components: {
+    UserMenu
+  },
+  setup() {
+    const {
+      isAuthenticated,
+      canAccessProviderDashboard,
+      canAccessUserDashboard
+    } = useAuth()
+
+    return {
+      isAuthenticated,
+      canAccessProviderDashboard,
+      canAccessUserDashboard
+    }
+  },
   data() {
     return {
-      showDropdown: false, // 控制下拉菜单显示
+      showDropdown: false, // 控制Browse下拉菜单显示
+      showDashboardDropdown: false, // 控制个人数据中心下拉菜单显示
     };
   },
   methods: {

@@ -6,6 +6,7 @@ import App from './App.vue'
 import router from "@/router/index.js";
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
+import { createAuthGuard } from '@/utils/auth.js'
 import ECharts from 'vue-echarts'
 import { use } from 'echarts/core'
 import {
@@ -31,5 +32,8 @@ use([
     LegendComponent,
     TitleComponent
 ])
+
+// 设置认证守卫
+createAuthGuard(router)
 
 createApp(App).use(router).use(ElementPlus).component('v-chart', ECharts).mount('#app')

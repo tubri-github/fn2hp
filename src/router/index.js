@@ -101,6 +101,98 @@ const routes = [
             title: 'Institution Details',
             description: 'Detailed information about contributing institution'
         }
+    },
+    // Dashboard Routes - 需要登录认证
+    {
+        path: '/dashboard',
+        name: 'Dashboard',
+        redirect: '/dashboard/user',
+        meta: {
+            requiresAuth: true
+        }
+    },
+    {
+        path: '/dashboard/user',
+        name: 'UserDashboard',
+        component: () => import('@/views/dashboard/UserDashboard.vue'),
+        meta: {
+            title: 'User Dashboard',
+            description: 'User Data Center',
+            requiresAuth: true
+        }
+    },
+    {
+        path: '/dashboard/provider',
+        name: 'ProviderDashboard', 
+        component: () => import('@/views/dashboard/ProviderDashboard.vue'),
+        meta: {
+            title: 'Data Provider Dashboard',
+            description: 'Data Provider Data Center',
+            requiresAuth: true,
+            permissions: ['project.admin', 'data.manage', 'data.upload'] // 需要管理员或数据管理权限
+        }
+    },
+    
+    // 用户相关页面
+    {
+        path: '/profile',
+        name: 'Profile',
+        component: () => import('@/views/user/Profile.vue'),
+        meta: {
+            title: 'User Profile',
+            description: 'User Profile Settings',
+            requiresAuth: true
+        }
+    },
+    {
+        path: '/settings',
+        name: 'Settings',
+        component: () => import('@/views/user/Settings.vue'),
+        meta: {
+            title: 'Settings',
+            description: 'Application Settings',
+            requiresAuth: true
+        }
+    },
+    
+    // 认证回调
+    {
+        path: '/auth/callback',
+        name: 'AuthCallback',
+        component: () => import('@/views/auth/AuthCallback.vue'),
+        meta: {
+            title: 'Authentication Callback',
+            description: 'Processing authentication...'
+        }
+    },
+    
+    // 错误页面
+    {
+        path: '/403',
+        name: 'Forbidden',
+        component: () => import('@/views/error/403.vue'),
+        meta: {
+            title: 'Access Denied',
+            description: 'Insufficient permissions'
+        }
+    },
+    {
+        path: '/401',
+        name: 'Unauthorized',
+        component: () => import('@/views/error/401.vue'),
+        meta: {
+            title: 'Authentication Required',
+            description: 'Please sign in to continue'
+        }
+    },
+    {
+        path: '/:pathMatch(.*)*',
+        name: 'NotFound',
+        component: () => import('@/views/error/404.vue'),
+        meta: {
+            title: 'Page Not Found',
+            description: 'The page you are looking for does not exist'
+        }
     }
     // {
     //     path: '/browse/:type',
@@ -110,7 +202,7 @@ const routes = [
 ];
 
 const router = createRouter({
-    history: createWebHistory('/dist/'),
+    history: createWebHistory(import.meta.env.PROD ? '/dist/' : '/'),
     routes,
     scrollBehavior(to, from, savedPosition) {
         if (savedPosition) {

@@ -38,15 +38,15 @@
 <!--              :r="bubble.radius"-->
 <!--              class="bubble-main"-->
 <!--          />-->
-<!--          <text-->
+<!--          <text.json-->
 <!--              :x="bubble.x"-->
 <!--              :y="bubble.y"-->
-<!--              class="bubble-text"-->
+<!--              class="bubble-text.json"-->
 <!--              dominant-baseline="middle"-->
-<!--              text-anchor="middle"-->
+<!--              text.json-anchor="middle"-->
 <!--          >-->
 <!--            {{ bubble.value }}-->
-<!--          </text>-->
+<!--          </text.json>-->
 <!--        </g>-->
 <!--      </svg>-->
 <!--    </div>-->
