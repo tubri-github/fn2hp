@@ -133,6 +133,26 @@ const routes = [
         }
     },
     
+    // Tools Routes
+    {
+        path: '/tools',
+        name: 'Tools',
+        redirect: '/tools/outlier-detector',
+        meta: {
+            title: 'Analysis Tools',
+            description: 'GIS Analysis and Data Processing Tools'
+        }
+    },
+    {
+        path: '/tools/outlier-detector',
+        name: 'OutlierDetector',
+        component: () => import('@/views/tools/OutlierDetector.vue'),
+        meta: {
+            title: 'Outlier Detector',
+            description: 'Species River Distribution Outlier Analysis Tool'
+        }
+    },
+    
     // 用户相关页面
     {
         path: '/profile',

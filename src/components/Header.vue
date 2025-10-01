@@ -21,6 +21,18 @@
         </transition>
       </div>
 
+      <!-- Tools 下拉菜单 -->
+      <div class="dropdown-container nav-link"
+           @mouseenter="showToolsDropdown = true"
+           @mouseleave="showToolsDropdown = false">
+        <span class="nav-link-text">TOOLS</span>
+        <transition name="fade">
+          <div v-show="showToolsDropdown" class="dropdown-menu">
+            <router-link to="/tools/outlier-detector" class="dropdown-item">Outlier Detector</router-link>
+          </div>
+        </transition>
+      </div>
+
       <!-- 个人数据中心下拉菜单 - 只有登录用户才显示 -->
       <div v-if="isAuthenticated" 
            class="dropdown-container nav-link"
@@ -69,6 +81,7 @@ export default {
   data() {
     return {
       showDropdown: false, // 控制Browse下拉菜单显示
+      showToolsDropdown: false, // 控制Tools下拉菜单显示
       showDashboardDropdown: false, // 控制个人数据中心下拉菜单显示
     };
   },

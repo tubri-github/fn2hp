@@ -201,7 +201,7 @@ const emit = defineEmits(['yearSelected', 'periodSelected'])
 
 // 本地状态
 const timeRange = ref('all')
-const chartStyle = ref('line')
+const chartStyle = ref('bar')
 const chartWidth = 800
 const chartHeight = 300
 const tooltip = ref({

@@ -6,22 +6,12 @@
         <div class="map-style-selector">
           <label>Map Style:</label>
           <select v-model="selectedMapStyle" @change="changeMapStyle" class="style-select">
-            <option value="cartodb-dark">CartoDB Dark</option>
             <option value="cartodb-positron">CartoDB Light</option>
+            <option value="cartodb-dark">CartoDB Dark</option>
             <option value="pure-black">Pure Black</option>
           </select>
         </div>
 
-        <div class="provider-filters">
-          <button
-              v-for="filter in filterOptions"
-              :key="filter.key"
-              :class="['filter-btn', { active: currentFilter === filter.key }]"
-              @click="setFilter(filter.key)"
-          >
-            {{ filter.label }}
-          </button>
-        </div>
       </div>
     </div>
 
@@ -47,6 +37,12 @@
         <p>Loading providers...</p>
       </div>
 
+      <!-- 调试信息 -->
+      <div v-if="showDebug && !loading && !mapError" class="map-debug">
+        <p>Institutions: {{ props.institutions.length }} | MapData: {{ props.mapData.length }}</p>
+        <p>Filtered: {{ filteredProviders.length }} | Map: {{ !!map }}</p>
+      </div>
+
       <!-- 错误提示 -->
       <div v-if="mapError" class="map-error">
         <p>⚠️ Map loading error: {{ mapError }}</p>
@@ -55,17 +51,28 @@
     </div>
 
     <div class="map-legend">
-      <div class="legend-item">
-        <div class="legend-dot large"></div>
-        <span>Major Contributors (>10,000 records)</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-dot medium"></div>
-        <span>Medium Contributors (1,000-10,000)</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-dot small"></div>
-        <span>Small Contributors (<1,000)</span>
+      <div class="legend-title">Record Density</div>
+      <div class="legend-density">
+        <div class="legend-item">
+          <div class="legend-dot density-very-high"></div>
+          <span>Very High</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot density-high"></div>
+          <span>High</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot density-medium"></div>
+          <span>Medium</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot density-low"></div>
+          <span>Low</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot density-very-low"></div>
+          <span>Very Low</span>
+        </div>
       </div>
     </div>
   </div>
@@ -110,7 +117,7 @@ const mapElement = ref(null)
 const map = ref(null)
 const markersLayer = ref(null)
 const currentFilter = ref('all')
-const selectedMapStyle = ref('cartodb-dark')
+const selectedMapStyle = ref('cartodb-positron')
 const currentTileLayer = ref(null)
 const mapError = ref('')
 const showDebug = ref(true) // 开启调试模式
@@ -145,13 +152,6 @@ const mapStyles = {
   }
 }
 
-// Filter options
-const filterOptions = [
-  { key: 'all', label: 'All' },
-  { key: 'major', label: 'Major' },
-  { key: 'medium', label: 'Medium' },
-  { key: 'small', label: 'Small' }
-]
 
 // Computed properties
 const filteredProviders = computed(() => {
@@ -160,17 +160,7 @@ const filteredProviders = computed(() => {
       ? props.mapData
       : (props.institutions.length > 0 ? props.institutions : testData)
 
-  if (currentFilter.value === 'all') return dataSource
-
-  return dataSource.filter(provider => {
-    const records = provider.recordCount || 0
-    switch (currentFilter.value) {
-      case 'major': return records > 10000
-      case 'medium': return records >= 1000 && records <= 10000
-      case 'small': return records < 1000
-      default: return true
-    }
-  })
+  return dataSource // 直接返回所有数据，不进行过滤
 })
 
 const uniqueCountries = computed(() => {
@@ -178,7 +168,7 @@ const uniqueCountries = computed(() => {
 })
 
 const totalRecords = computed(() => {
-  return filteredProviders.value.reduce((sum, p) => sum + (p.recordCount || 0), 0)
+  return filteredProviders.value.reduce((sum, p) => sum + (p.recordCount || p.records || 0), 0)
 })
 
 // Methods
@@ -277,56 +267,54 @@ const updateMarkers = () => {
       return
     }
 
-    console.log('Updating markers, count:', filteredProviders.value.length) // 调试日志
+    console.log('Updating dense point markers, count:', filteredProviders.value.length)
 
     // Clear existing markers
     markersLayer.value.clearLayers()
 
-    filteredProviders.value.forEach((provider, index) => {
-      // 验证坐标
-      const lat = parseFloat(provider.lat)
-      const lng = parseFloat(provider.lng)
+    // Generate dense points from provider data
+    const densePoints = generateDensePoints(filteredProviders.value)
+    console.log('Generated dense points:', densePoints.length)
 
+    densePoints.forEach((point, index) => {
+      const { lat, lng, density, recordCount, source } = point
+
+      console.log(`Creating marker ${index}:`, { lat, lng, density, recordCount, source }) // 调试日志
+
+      // 验证坐标
       if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-        console.warn(`Invalid coordinates for provider ${provider.institutionCode}:`, lat, lng)
+        console.warn(`Invalid coordinates for marker ${index}:`, { lat, lng })
         return
       }
 
-      console.log(`Adding marker ${index + 1}:`, provider.institutionCode, lat, lng) // 调试日志
-
-      // Create custom light dot icon
-      const dotSize = getDotSize(provider.recordCount || 0)
+      // Create tiny density-based dot
+      const densityColor = getDensityColor(density)
       const icon = L.divIcon({
-        className: `light-dot ${dotSize}`,
-        iconSize: [getDotPixelSize(dotSize), getDotPixelSize(dotSize)],
-        iconAnchor: [getDotPixelSize(dotSize) / 2, getDotPixelSize(dotSize) / 2],
-        html: `<div class="dot-inner"></div>`
+        className: `density-dot`,
+        iconSize: [6, 6], // 增大到6x6px，更容易看见
+        iconAnchor: [3, 3],
+        html: `<div class="dense-dot-inner" style="background-color: ${densityColor}; opacity: ${getDensityOpacity(density)}; width: 6px; height: 6px; border-radius: 50%;"></div>`
       })
 
       // Create marker
       const marker = L.marker([lat, lng], { icon })
 
-      // Create popup content
-      const popupContent = createPopupContent(provider)
-      marker.bindPopup(popupContent, {
-        maxWidth: 250,
-        className: 'custom-popup'
-      })
-
-      // Add click event
-      marker.on('click', () => {
-        console.log('Marker clicked:', provider.institutionCode) // 调试日志
-        //emit('provider-clicked', provider)
+      // Add tooltip for all markers (temporarily for debugging)
+      marker.bindTooltip(`${source}<br>${recordCount} records<br>Density: ${getDensityLevel(density)}`, {
+        permanent: false,
+        direction: 'top',
+        className: 'dense-tooltip'
       })
 
       markersLayer.value.addLayer(marker)
+      console.log(`Marker ${index} added successfully`) // 调试日志
     })
 
-    console.log('Markers update completed') // 调试日志
+    console.log('Dense markers update completed')
 
   } catch (error) {
-    console.error('Markers update error:', error)
-    mapError.value = 'Failed to update markers: ' + error.message
+    console.error('Dense markers update error:', error)
+    mapError.value = 'Failed to update dense markers: ' + error.message
   }
 }
 
@@ -337,32 +325,81 @@ const createPopupContent = (provider) => {
       <div class="popup-info">
         <strong>Code:</strong> ${provider.institutionCode || 'N/A'}<br>
         <strong>Country:</strong> ${provider.country || 'N/A'}<br>
-        <strong>Records:</strong> ${formatNumber(provider.recordCount || 0)}<br>
-        <strong>Category:</strong> ${getProviderCategory(provider.recordCount || 0)}
+        <strong>Records:</strong> ${formatNumber(provider.recordCount || provider.records || 0)}<br>
+        <strong>Category:</strong> ${getProviderCategory(provider.recordCount || provider.records || 0)}
       </div>
     </div>
   `
 }
 
-const getDotSize = (records) => {
-  if (records > 10000) return 'large'
-  if (records >= 1000) return 'medium'
-  return 'small'
+// 生成密集点分布
+const generateDensePoints = (providers) => {
+  const densePoints = []
+  
+  console.log('generateDensePoints input:', providers) // 调试日志
+  
+  providers.forEach((provider, index) => {
+    console.log(`Processing provider ${index}:`, provider) // 调试日志
+    
+    const baseRecords = provider.recordCount || provider.records || 0
+    const lat = provider.lat || provider.latitude
+    const lng = provider.lng || provider.longitude
+    
+    console.log(`Provider ${index} - lat: ${lat}, lng: ${lng}, records: ${baseRecords}`) // 调试日志
+    
+    if (baseRecords === 0 || !lat || !lng) {
+      console.warn(`Skipping provider ${index} - missing data:`, { lat, lng, baseRecords })
+      return
+    }
+    
+    // 根据记录数量生成更多密集点
+    const numPoints = Math.min(Math.ceil(baseRecords / 100), 50) // 每100条记录1个点，最多50个点 (减少密度)
+    
+    console.log(`Generating ${numPoints} points for provider ${index}`)
+    
+    for (let i = 0; i < numPoints; i++) {
+      // 在原位置周围添加随机分布
+      const latOffset = (Math.random() - 0.5) * 1 // ±0.5度偏移 (减少散布)
+      const lngOffset = (Math.random() - 0.5) * 1
+      
+      // 计算局部密度 (基于记录数量)
+      const density = Math.min(baseRecords / 5000, 1) // 标准化到0-1，降低阈值
+      
+      densePoints.push({
+        lat: parseFloat(lat) + latOffset,
+        lng: parseFloat(lng) + lngOffset,
+        density: density,
+        recordCount: Math.ceil(baseRecords / numPoints),
+        source: provider.name || provider.institutionCode || provider.country
+      })
+    }
+  })
+  
+  console.log('Generated dense points total:', densePoints.length)
+  return densePoints
 }
 
-const getDotPixelSize = (dotSize) => {
-  switch (dotSize) {
-    case 'large': return 12
-    case 'medium': return 10
-    case 'small': return 8
-    default: return 8
-  }
+// 根据密度获取颜色 - 为浅色背景优化
+const getDensityColor = (density) => {
+  if (density > 0.8) return '#d32f2f' // 红色 (最高密度)
+  if (density > 0.6) return '#f57c00' // 橙色
+  if (density > 0.4) return '#ff9800' // 深橙
+  if (density > 0.2) return '#2196f3' // 蓝色
+  return '#4caf50' // 绿色 (最低密度)
 }
 
-const getProviderCategory = (records) => {
-  if (records > 10000) return 'Major Contributor'
-  if (records >= 1000) return 'Medium Contributor'
-  return 'Small Contributor'
+// 根据密度获取透明度
+const getDensityOpacity = (density) => {
+  return 0.8 + (density * 0.2) // 0.8到1.0的透明度 (增加不透明度)
+}
+
+// 获取密度级别文本
+const getDensityLevel = (density) => {
+  if (density > 0.8) return 'Very High'
+  if (density > 0.6) return 'High'
+  if (density > 0.4) return 'Medium'  
+  if (density > 0.2) return 'Low'
+  return 'Very Low'
 }
 
 const formatNumber = (num, format = 'full') => {
@@ -376,13 +413,14 @@ const formatNumber = (num, format = 'full') => {
   return num.toLocaleString()
 }
 
-const setFilter = (filterKey) => {
-  currentFilter.value = filterKey
-  updateMarkers()
-  if (filteredProviders.value.length > 0) {
-    fitMapToBounds()
-  }
+const getProviderCategory = (recordCount) => {
+  if (recordCount >= 10000) return 'Major Provider'
+  if (recordCount >= 5000) return 'Large Provider'
+  if (recordCount >= 1000) return 'Medium Provider'
+  if (recordCount >= 100) return 'Small Provider'
+  return 'Minimal Provider'
 }
+
 
 const changeMapStyle = () => {
   addTileLayer()
@@ -413,7 +451,8 @@ const retryMapInit = () => {
 // Lifecycle
 onMounted(() => {
   console.log('Component mounted, institutions:', props.institutions.length) // 调试日志
-  setTimeout(initMap, 100) // 稍微延迟以确保DOM渲染完成
+  console.log('Component mounted, mapData:', props.mapData.length) // 调试日志
+  setTimeout(initMap, 300) // 增加延迟确保DOM和样式完全加载
 })
 
 onUnmounted(() => {
@@ -434,14 +473,11 @@ watch(() => [props.institutions, props.mapData], () => {
   }
 }, { deep: true })
 
-watch(currentFilter, () => {
-  updateMarkers()
-})
 </script>
 
 <style scoped>
-/* 导入Leaflet CSS */
-@import 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css';
+/* 导入Leaflet CSS - 使用更稳定的方式 */
+@import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
 
 .world-map-section {
   background: white;
@@ -525,27 +561,6 @@ watch(currentFilter, () => {
   background: white;
 }
 
-.provider-filters {
-  display: flex;
-  gap: 8px;
-}
-
-.filter-btn {
-  padding: 6px 12px;
-  border: 1px solid #ddd;
-  background: white;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: all 0.2s;
-}
-
-.filter-btn:hover,
-.filter-btn.active {
-  background: #3498db;
-  color: white;
-  border-color: #3498db;
-}
 
 .debug-info {
   background: #f8f9fa;
@@ -602,6 +617,19 @@ watch(currentFilter, () => {
   z-index: 1000;
 }
 
+.map-debug {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 1000;
+  max-width: 300px;
+}
+
 .retry-btn {
   margin-top: 10px;
   padding: 8px 16px;
@@ -649,58 +677,83 @@ watch(currentFilter, () => {
   box-shadow: 0 0 6px rgba(255, 255, 255, 0.4);
 }
 
-.legend-dot.large {
-  width: 12px;
-  height: 12px;
-  background: #e74c3c;
+.legend-title {
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: #333;
 }
 
-.legend-dot.medium {
-  width: 10px;
-  height: 10px;
-  background: #f39c12;
-}
-
-.legend-dot.small {
-  width: 8px;
-  height: 8px;
-  background: #2ecc71;
-}
-
-/* 自定义marker样式 */
-:deep(.light-dot) {
-  border-radius: 50%;
-  border: 2px solid white;
-  transition: all 0.3s ease;
+.legend-density {
   display: flex;
-  align-items: center;
   justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
 }
 
-:deep(.light-dot.large) {
-  width: 12px;
-  height: 12px;
-  background: #e74c3c;
-  box-shadow: 0 0 10px rgba(231, 76, 60, 0.6);
-}
-
-:deep(.light-dot.medium) {
-  width: 10px;
-  height: 10px;
-  background: #f39c12;
-  box-shadow: 0 0 8px rgba(243, 156, 18, 0.6);
-}
-
-:deep(.light-dot.small) {
+.legend-dot.density-very-high {
   width: 8px;
   height: 8px;
-  background: #2ecc71;
-  box-shadow: 0 0 6px rgba(46, 204, 113, 0.6);
+  background: #b71c1c;
 }
 
-:deep(.light-dot:hover) {
-  transform: scale(1.3);
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.9);
+.legend-dot.density-high {
+  width: 8px;
+  height: 8px;
+  background: #d32f2f;
+}
+
+.legend-dot.density-medium {
+  width: 8px;
+  height: 8px;
+  background: #f57c00;
+}
+
+.legend-dot.density-low {
+  width: 8px;
+  height: 8px;
+  background: #fbc02d;
+}
+
+.legend-dot.density-very-low {
+  width: 8px;
+  height: 8px;
+  background: #388e3c;
+}
+
+/* 密集点样式 */
+:deep(.density-dot) {
+  border-radius: 50%;
+  border: none;
+  transition: opacity 0.2s ease;
+}
+
+.dense-dot-inner {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: none;
+  display: block;
+}
+
+:deep(.density-dot) {
+  background: none !important;
+  border: none !important;
+}
+
+:deep(.density-dot:hover) {
+  transform: scale(1.5);
+}
+
+/* 密集点tooltip样式 */
+:deep(.dense-tooltip) {
+  background: rgba(0, 0, 0, 0.8) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 4px !important;
+  font-size: 10px !important;
+  padding: 2px 6px !important;
 }
 
 .dot-inner {

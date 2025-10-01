@@ -57,7 +57,7 @@
           </div>
         </div>
 
-        <div class="family-stats">
+        <!-- <div class="family-stats">
           <div v-if="taxonType === 'family'" class="stat-item">
             <div class="stat-number">{{ formatNumber(currentTaxon.generaCount) }}</div>
             <div class="stat-label">Genera</div>
@@ -82,7 +82,7 @@
             <div class="stat-number">{{ currentTaxon.geoReferencingQuality || 0 }}%</div>
             <div class="stat-label">Georeferenced</div>
           </div>
-        </div>
+        </div> -->
 
         <div class="family-actions">
           <button class="action-button download" @click="exportTaxonData">
@@ -97,98 +97,182 @@
         </div>
       </div>
 
-      <!-- Navigation Tabs -->
-      <nav class="nav-tabs">
+      <!-- Navigation Menu -->
+      <nav class="nav-menu">
         <ul>
-          <li><a href="#overview" :class="{ active: activeTab === 'overview' }" @click.prevent="activeTab = 'overview'">Overview</a></li>
-          <li v-if="taxonType === 'family'"><a href="#genera" :class="{ active: activeTab === 'genera' }" @click.prevent="activeTab = 'genera'">Genera & Species</a></li>
-          <li v-else-if="taxonType === 'genus'"><a href="#species" :class="{ active: activeTab === 'species' }" @click.prevent="activeTab = 'species'">Species</a></li>
-          <li><a href="#distribution" :class="{ active: activeTab === 'distribution' }" @click.prevent="activeTab = 'distribution'">Geographic Distribution</a></li>
-          <li><a href="#temporal" :class="{ active: activeTab === 'temporal' }" @click.prevent="activeTab = 'temporal'">Temporal Patterns</a></li>
-          <li><a href="#institutions" :class="{ active: activeTab === 'institutions' }" @click.prevent="activeTab = 'institutions'">Contributing Institutions</a></li>
-          <li><a href="#records" :class="{ active: activeTab === 'records' }" @click.prevent="activeTab = 'records'">Recent Records</a></li>
-          <li><a href="#FishAir Images" :class="{ active: activeTab === 'fishair' }" @click.prevent="activeTab = 'fishair'">Fish-AIR Images</a></li>
-
+          <li><a @click.prevent="scrollToSection('overview')">Overview</a></li>
+          <li v-if="taxonType === 'family'"><a @click.prevent="scrollToSection('genera')">Genera & Species</a></li>
+          <li v-else-if="taxonType === 'genus'"><a @click.prevent="scrollToSection('species')">Species</a></li>
+          <li><a @click.prevent="scrollToSection('distribution')">Geographic Distribution</a></li>
+          <li><a @click.prevent="scrollToSection('temporal')">Temporal Patterns</a></li>
+          <li><a @click.prevent="scrollToSection('institutions')">Contributing Institutions</a></li>
+          <li><a @click.prevent="scrollToSection('fishair')">Fish-AIR Images</a></li>
         </ul>
       </nav>
 
-       Overview Section
-      <section v-if="activeTab === 'overview'" id="overview" class="section">
+      <!-- Overview Section -->
+      <section id="overview" class="section">
         <h2 class="section-title">{{ formatTaxonRank(taxonType) }} Overview</h2>
 
-<!--        <div class="summary-cards">-->
-<!--          <div class="summary-card">-->
-<!--            <div class="summary-number">{{ formatNumber(currentTaxon.recordCount) }}</div>-->
-<!--            <div class="summary-label">Total Records</div>-->
-<!--          </div>-->
-<!--          <div v-if="taxonType === 'family'" class="summary-card">-->
-<!--            <div class="summary-number">{{ formatNumber(currentTaxon.generaCount) }}</div>-->
-<!--            <div class="summary-label">Genera</div>-->
-<!--          </div>-->
-<!--          <div v-if="taxonType !== 'species'" class="summary-card">-->
-<!--            <div class="summary-number">{{ formatNumber(currentTaxon.speciesCount) }}</div>-->
-<!--            <div class="summary-label">Species</div>-->
-<!--          </div>-->
-<!--          <div class="summary-card">-->
-<!--            <div class="summary-number">{{ formatNumber(currentTaxon.institutionsCount) }}</div>-->
-<!--            <div class="summary-label">Institutions</div>-->
-<!--          </div>-->
-<!--          <div class="summary-card">-->
-<!--            <div class="summary-number">{{ formatNumber(currentTaxon.countriesCount) }}</div>-->
-<!--            <div class="summary-label">Countries</div>-->
-<!--&lt;!&ndash;          </div>&ndash;&gt;-->
-<!--        </div>-->
-
-        <div class="two-column">
-          <div>
-            <h3>Global Distribution</h3>
-            <div class="map-container">
-              <WorldMap
-                  v-if="institutionMapData.length > 0"
-                  :institutions="[]"
-                  :map-data="institutionMapData"
-                  :loading="loadingMapData"
-                  @provider-clicked="onInstitutionClicked"
-              />
-              <div v-else class="placeholder-content">
-                Loading global distribution data...
-                <br>
-                <small>Based on <span class="dc-field">decimalLatitude/decimalLongitude</span> fields</small>
-              </div>
-            </div>
-            <p><strong>Basis of Record Distribution:</strong></p>
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
-              <span class="basis-of-record basis-preserved">PreservedSpecimen (100%)</span>
+        <!-- Key Statistics Cards -->
+        <div class="overview-stats-grid">
+          <div class="overview-stat-card">
+            <div class="stat-content">
+              <div class="stat-number">{{ formatNumber(currentTaxon.recordCount) }}</div>
+              <div class="stat-label">Total Specimens</div>
+              <div class="stat-context">Preserved in global collections</div>
             </div>
           </div>
-          <div>
-            <h3>Diversity Metrics</h3>
-            <div class="chart-container chart-small">
-              {{ taxonType === 'family' ? 'Genera by Species Count' : 'Species Distribution' }}
+          <div class="overview-stat-card" v-if="taxonType === 'family'">
+            <div class="stat-content">
+              <div class="stat-number">{{ formatNumber(currentTaxon.generaCount) }}</div>
+              <div class="stat-label">Genera</div>
+              <div class="stat-context">{{ currentTaxon.speciesCount }} species total</div>
             </div>
-            <div style="margin-top: 15px;" v-if="diversityData.length">
-              <h4>{{ taxonType === 'family' ? 'Most Diverse Genera' : 'Top Species' }}</h4>
-              <div style="font-size: 14px; line-height: 1.6;">
-                <div v-for="item in diversityData.slice(0, 4)" :key="item.name" style="display: flex; justify-content: space-between; margin: 5px 0;">
-                  <span><em>{{ item.name }}</em></span>
-                  <strong>{{ item.count }} {{ taxonType === 'family' ? 'species' : 'records' }}</strong>
+          </div>
+          <div class="overview-stat-card" v-else-if="taxonType === 'genus'">
+            <div class="stat-content">
+              <div class="stat-number">{{ formatNumber(currentTaxon.speciesCount) }}</div>
+              <div class="stat-label">Species</div>
+              <div class="stat-context">In this genus</div>
+            </div>
+          </div>
+          <div class="overview-stat-card">
+            <div class="stat-content">
+              <div class="stat-number">{{ formatNumber(currentTaxon.institutionsCount) }}</div>
+              <div class="stat-label">Institutions</div>
+              <div class="stat-context">Contributing collections</div>
+            </div>
+          </div>
+          <div class="overview-stat-card">
+            <div class="stat-content">
+              <div class="stat-number">{{ formatNumber(currentTaxon.countriesCount) }}</div>
+              <div class="stat-label">Countries</div>
+              <div class="stat-context">Global distribution</div>
+            </div>
+          </div>
+          <div class="overview-stat-card">
+            <div class="stat-content">
+              <div class="stat-number">{{ currentTaxon.geoReferencingQuality || 0 }}%</div>
+              <div class="stat-label">Georeferenced</div>
+              <div class="stat-context">Location accuracy</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Overview Content -->
+        <div class="overview-main-content">
+          <div class="overview-left">
+            <div class="overview-summary-card">
+              <h3>{{ formatTaxonRank(taxonType) }} Summary</h3>
+              <div class="summary-text">
+                <p v-if="taxonType === 'family'">
+                  <strong>{{ taxonName }}</strong> is a fish family with <strong>{{ currentTaxon.generaCount }}</strong> 
+                  genera and <strong>{{ currentTaxon.speciesCount }}</strong> known species. This family is represented 
+                  by <strong>{{ formatNumber(currentTaxon.recordCount) }}</strong> specimens in natural history collections 
+                  worldwide, making it {{ getCollectionIntensity() }} documented family in ichthyological research.
+                </p>
+                <p v-else-if="taxonType === 'genus'">
+                  <strong>{{ taxonName }}</strong> is a fish genus comprising <strong>{{ currentTaxon.speciesCount }}</strong> 
+                  known species. With <strong>{{ formatNumber(currentTaxon.recordCount) }}</strong> specimens preserved 
+                  in collections across <strong>{{ currentTaxon.countriesCount }}</strong> countries, this genus 
+                  represents {{ getCollectionIntensity() }} studied group.
+                </p>
+                <p v-else>
+                  <strong>{{ taxonName }}</strong> is represented by <strong>{{ formatNumber(currentTaxon.recordCount) }}</strong> 
+                  specimens in natural history collections, collected from <strong>{{ currentTaxon.countriesCount }}</strong> 
+                  countries by <strong>{{ currentTaxon.institutionsCount }}</strong> institutions.
+                </p>
+                
+                <div class="data-quality-summary">
+                  <h4>Collection Data Quality</h4>
+                  <div class="quality-metrics">
+                    <div class="quality-item">
+                      <span class="quality-label">Geographic precision:</span>
+                      <span class="quality-value {{ getQualityClass(currentTaxon.geoReferencingQuality) }}">
+                        {{ getQualityText(currentTaxon.geoReferencingQuality) }}
+                      </span>
+                    </div>
+                    <div class="quality-item">
+                      <span class="quality-label">Temporal coverage:</span>
+                      <span class="quality-value">{{ getTemporalCoverage() }}</span>
+                    </div>
+                    <div class="quality-item">
+                      <span class="quality-label">Taxonomic status:</span>
+                      <span class="quality-value">{{ currentTaxon.taxonomicstatus || 'Active' }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="basis-of-record-card">
+              <h4>Specimen Types</h4>
+              <div class="basis-distribution">
+                <div class="basis-item">
+                  <span class="basis-of-record basis-preserved">PreservedSpecimen</span>
+                  <span class="basis-percentage">~100%</span>
+                </div>
+                <div class="basis-note">
+                  Most ichthyological specimens are preserved specimens in museum collections, 
+                  providing long-term research value and verification capability.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="overview-right">
+            <div class="map-card">
+              <h3>Global Distribution Heatmap</h3>
+              <div class="range-map-container">
+                <CompactHeatMap
+                    :data="heatMapData"
+                    :height="200"
+                />
+              </div>
+              <div class="map-legend">
+                <div class="legend-item">
+                  <div class="legend-color" style="background: #08519c;"></div>
+                  <span>High density</span>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-color" style="background: #3182bd;"></div>
+                  <span>Medium density</span>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-color" style="background: #9ecae1;"></div>
+                  <span>Low density</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="quick-facts-card">
+              <h4>Quick Facts</h4>
+              <div class="quick-facts-list">
+                <div class="fact-item">
+                  <span class="fact-label">Most common in:</span>
+                  <span class="fact-value">{{ getMostCommonRegion() }}</span>
+                </div>
+                <div class="fact-item">
+                  <span class="fact-label">Collection peak:</span>
+                  <span class="fact-value">{{ getCollectionPeak() }}</span>
+                </div>
+                <div class="fact-item">
+                  <span class="fact-label">Primary contributors:</span>
+                  <span class="fact-value">{{ getPrimaryContributors() }}</span>
+                </div>
+                <div class="fact-item" v-if="taxonType === 'family'">
+                  <span class="fact-label">Most diverse genus:</span>
+                  <span class="fact-value">{{ getMostDiverseGenus() }}</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
-
-        <h3>Geographic Distribution by Region</h3>
-        <div class="geo-stats">
-          <div v-for="region in geographicRegions" :key="region.name" class="geo-region">
-            <div class="geo-region-name">{{ region.name }} ({{ region.percentage }}% of records)</div>
-            <div class="geo-countries">{{ region.description }}</div>
-          </div>
-        </div>
       </section>
 
       <!-- Genera & Species Section (for Family) -->
-      <section v-if="activeTab === 'genera' && taxonType === 'family'" id="genera" class="section">
+      <section v-if="taxonType === 'family'" id="genera" class="section">
         <h2 class="section-title">Genera and Species Diversity</h2>
 
         <div class="section-controls">
@@ -239,7 +323,7 @@
       </section>
 
       <!-- Species Section (for Genus) -->
-      <section v-if="activeTab === 'species' && taxonType === 'genus'" id="species" class="section">
+      <section v-if="taxonType === 'genus'" id="species" class="section">
         <h2 class="section-title">Species in this Genus</h2>
 
         <div class="section-controls">
@@ -266,7 +350,7 @@
       </section>
 
       <!-- Geographic Distribution Section -->
-      <section v-if="activeTab === 'distribution'" id="distribution" class="section">
+      <section id="distribution" class="section">
         <h2 class="section-title">Geographic Distribution</h2>
 
         <div class="section-controls">
@@ -283,42 +367,13 @@
           </select>
         </div>
 
-        <div class="two-column">
-          <div>
-            <div class="map-container">
-              <WorldMap
-                  v-if="institutionMapData.length > 0"
-                  :institutions="[]"
-                  :map-data="institutionMapData"
-                  :loading="loadingMapData"
-                  @provider-clicked="onInstitutionClicked"
-              />
-              <div v-else class="placeholder-content">
-                Loading global distribution data...
-                <br>
-                <small>{{ formatNumber(currentTaxon.recordCount) }} records from {{ currentTaxon.countriesCount }} countries</small>
-              </div>
-            </div>
-          </div>
-          <div>
-            <h3>Continental Distribution</h3>
-            <div style="display: flex; flex-direction: column; gap: 12px;">
-              <div v-for="continent in continentalDistribution" :key="continent.name" style="display: flex; justify-content: space-between; padding: 12px; background: #f8f9fa; border-radius: 4px;">
-                <span><strong>{{ continent.name }}</strong></span>
-                <span>{{ formatNumber(continent.records) }} records ({{ continent.percentage }}%)</span>
-              </div>
-            </div>
-
-            <h3 style="margin-top: 25px;">Data Quality by Region</h3>
-            <div style="font-size: 14px; line-height: 1.8;">
-              <div v-for="region in dataQualityByRegion" :key="region.name">
-                <strong>{{ region.name }}:</strong> {{ region.georeferenced }}% georeferenced, {{ region.dated }}% with eventDate
-              </div>
-              <div style="margin-top: 10px; color: #666; font-size: 12px;">
-                Based on <span class="dc-field">decimalLatitude/decimalLongitude</span> and <span class="dc-field">eventDate</span> completeness
-              </div>
-            </div>
-          </div>
+        <!-- Global Distribution - Full Width -->
+        <h3>Global Distribution</h3>
+        <div class="full-width-map-container">
+          <WorldMap
+              :mapData="coordinatePoints"
+              :loading="false"
+          />
         </div>
 
         <h3>Biodiversity Hotspots</h3>
@@ -334,7 +389,7 @@
       </section>
 
       <!-- Temporal Patterns Section -->
-      <section v-if="activeTab === 'temporal'" id="temporal" class="section">
+      <section id="temporal" class="section">
         <h2 class="section-title">Temporal Collection Patterns</h2>
 
         <div class="section-controls">
@@ -357,14 +412,13 @@
 
         <div class="chart-container">
           <TimelineChart
-              v-if="timelineData.length > 0"
               :data="timelineData"
               :title="`${formatTaxonRank(taxonType)} ${taxonName} Collection Timeline`"
               :subtitle="`Based on eventDate field (${temporalCoverage}% coverage)`"
               @year-selected="onYearSelected"
               @period-selected="onPeriodSelected"
           />
-          <div v-else class="placeholder-content">
+          <div v-if="timelineData.length === 0" class="placeholder-content">
             Loading temporal patterns...
             <br>
             <small>Based on <span class="dc-field">eventDate</span> field (87% coverage)</small>
@@ -409,7 +463,7 @@
       </section>
 
       <!-- Contributing Institutions Section -->
-      <section v-if="activeTab === 'institutions'" id="institutions" class="section">
+      <section id="institutions" class="section">
         <h2 class="section-title">Contributing Institutions</h2>
 
         <div class="section-controls">
@@ -427,18 +481,59 @@
           </select>
         </div>
 
-        <div class="institutions-grid">
-          <div v-for="institution in filteredInstitutions" :key="institution.code" class="institution-card" @click="navigateToInstitution(institution)">
-            <div class="institution-header">
-              <div class="institution-code">{{ institution.code }}</div>
-              <div class="institution-name">{{ institution.name }}</div>
-            </div>
-            <div class="institution-stats">
-              <strong>{{ formatNumber(institution.recordCount) }} records</strong> ({{ institution.percentage }}% of {{ taxonType }} total)<br>
-              <span class="dc-field">collectionCode:</span> {{ institution.collectionCodes?.join(', ') || 'N/A' }}<br>
-              {{ institution.speciesCount || 0 }} species • {{ institution.generaCount || 0 }} genera • Latest: {{ institution.latestRecord || 'N/A' }}
-            </div>
-          </div>
+        <div class="table-container">
+          <table class="institutions-table">
+            <thead>
+              <tr>
+                <th><span class="dc-field">institutionCode</span></th>
+                <th>Institution Name</th>
+                <th>Records</th>
+                <th>Species</th>
+                <th>Countries</th>
+                <th>Georeferenced</th>
+                <th><span class="dc-field">collectionCode</span></th>
+                <th>Latest Record</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="institution in filteredInstitutions" 
+                  :key="institution.code" 
+                  class="table-row institution-row"
+                  @click="navigateToInstitution(institution)">
+                <td>
+                  <span class="institution-code-badge">{{ institution.code }}</span>
+                </td>
+                <td>
+                  <span class="institution-name">{{ institution.name || 'Unknown Institution' }}</span>
+                </td>
+                <td>
+                  <div class="records-bar-container">
+                    <div
+                        class="records-bar"
+                        :style="{ width: getInstitutionRecordsPercentage(institution.recordCount) + '%' }"
+                    ></div>
+                    <div class="records-text">
+                      {{ formatNumber(institution.recordCount, 'short') }}
+                    </div>
+                  </div>
+                </td>
+                <td>{{ formatNumber(institution.speciesCount || 0) }}</td>
+                <td>{{ formatNumber(institution.countriesCount || 0) }}</td>
+                <td>
+                  <span
+                      class="quality-badge"
+                      :class="getQualityClass(institution.geoReferencingQuality || 0)"
+                  >
+                    {{ (institution.geoReferencingQuality || 0).toFixed(1) }}%
+                  </span>
+                </td>
+                <td>
+                  <span class="collection-codes">{{ institution.collectionCodes?.join(', ') || 'N/A' }}</span>
+                </td>
+                <td>{{ institution.latestRecord || 'N/A' }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
         <h3 style="margin-top: 30px;">Institution Coverage Analysis</h3>
@@ -517,50 +612,16 @@
 <!--        </div>-->
       </section>
 
-      <!-- Recent Records Section -->
-      <section v-if="activeTab === 'records'" id="records" class="section">
-        <h2 class="section-title">Recent {{ formatTaxonRank(taxonType) }} Records</h2>
-
-        <div class="section-controls">
-          <input type="text" placeholder="Filter by scientificName, locality, or catalogNumber..." v-model="recordSearch" class="filter-input" style="flex: 1;">
-          <select v-if="taxonType === 'family'" v-model="recordGenusFilter" class="filter-select">
-            <option value="">All Genera</option>
-            <option v-for="genus in availableGenera" :key="genus" :value="genus">{{ genus }}</option>
-          </select>
-          <select v-model="recordTimeFilter" class="filter-select">
-            <option value="30">Last 30 Days</option>
-            <option value="180">Last 6 Months</option>
-            <option value="365">Last Year</option>
-          </select>
-        </div>
-
-        <table class="records-table">
-          <thead>
-          <tr>
-            <th><span class="dc-field">catalogNumber</span></th>
-            <th><span class="dc-field">scientificName</span></th>
-            <th><span class="dc-field">institutionCode</span></th>
-            <th><span class="dc-field">locality</span></th>
-            <th><span class="dc-field">eventDate</span></th>
-            <th><span class="dc-field">basisOfRecord</span></th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr v-for="record in filteredRecentRecords" :key="record.catalogNumber" @click="viewRecordDetail(record)">
-            <td>{{ record.catalogNumber }}</td>
-            <td><em>{{ record.scientificName }}</em></td>
-            <td>{{ record.institutionCode }}</td>
-            <td>{{ record.locality }}</td>
-            <td>{{ record.eventDate }}</td>
-            <td>
-                <span class="basis-of-record" :class="getBasisClass(record.basisOfRecord)">
-                  {{ record.basisOfRecord }}
-                </span>
-            </td>
-          </tr>
-          </tbody>
-        </table>
+      <!-- Fish-AIR Images Section -->
+      <section id="fishair" class="section">
+        <h2 class="section-title">Fish-AIR Images</h2>
+        <FishImages 
+          v-if="currentTaxon?.scientificName || taxonName" 
+          :scientific-name="currentTaxon?.scientificName || taxonName"
+          :limit="5"
+        />
       </section>
+
     </div>
   </div>
 </template>
@@ -570,7 +631,9 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTaxonomy } from '@/composables/useTaxonomy.js'
 import WorldMap from '@/components/charts/WorldMap.vue'
+import CompactHeatMap from '@/components/charts/CompactHeatMap.vue'
 import TimelineChart from '@/components/charts/TimelineChart.vue'
+import FishImages from '@/components/FishImages.vue'
 
 // Props
 const props = defineProps({
@@ -605,23 +668,18 @@ const {
   fetchTaxonRecords,
 } = useTaxonomy()
 
-// Local state
-const activeTab = ref('overview')
-// const activeTab = ref('distribution')
+// Local state (activeTab removed - now using scroll navigation)
 const loadingChildren = ref(false)
 const children = ref([])
 const childrenSearch = ref('')
 const childrenSort = ref('records_desc')
+
+// Coordinate records for map display
+const actualCoordinateRecords = ref([])
 const diversityFilter = ref('')
 const institutionSearch = ref('')
 const institutionTypeFilter = ref('')
 const institutionSort = ref('records_desc')
-const recordSearch = ref('')
-const recordGenusFilter = ref('')
-const recordTimeFilter = ref('30')
-
-// Recent records state
-const recentRecords = ref([])
 
 // Map and timeline specific state
 const loadingMapData = ref(false)
@@ -702,6 +760,47 @@ const biodiversityHotspots = computed(() => {
   return geographicData.value.biodiversityHotspots || []
 })
 
+// Heat map data for overview - using test data
+const heatMapData = computed(() => {
+  // Use test data instead of API data
+  return [
+    { name: 'United States', value: 15420 },
+    { name: 'Brazil', value: 12380 },
+    { name: 'Canada', value: 8960 },
+    { name: 'Colombia', value: 6570 },
+    { name: 'Mexico', value: 4820 },
+    { name: 'Australia', value: 3290 },
+    { name: 'Argentina', value: 2840 },
+    { name: 'Peru', value: 2150 },
+    { name: 'Venezuela', value: 1890 },
+    { name: 'Chile', value: 1560 },
+    { name: 'Ecuador', value: 1340 },
+    { name: 'Costa Rica', value: 980 }
+  ]
+})
+
+// Coordinate points for full-width distribution map - using test data
+const coordinatePoints = computed(() => {
+  // Use test coordinate points instead of API data
+  return [
+    { name: 'United States - Atlantic Coast', lat: 39.8283, lng: -98.5795, records: 2840, country: 'United States', species: 145, dataQuality: 87 },
+    { name: 'Brazil - Amazon Basin', lat: -14.2350, lng: -51.9253, records: 2156, country: 'Brazil', species: 123, dataQuality: 91 },
+    { name: 'Canada - Pacific Coast', lat: 56.1304, lng: -106.3468, records: 1897, country: 'Canada', species: 98, dataQuality: 85 },
+    { name: 'Colombia - Caribbean', lat: 4.5709, lng: -74.2973, records: 1654, country: 'Colombia', species: 87, dataQuality: 89 },
+    { name: 'Mexico - Gulf Coast', lat: 23.6345, lng: -102.5528, records: 1423, country: 'Mexico', species: 76, dataQuality: 82 },
+    { name: 'Australia - Great Barrier Reef', lat: -25.2744, lng: 133.7751, records: 1298, country: 'Australia', species: 65, dataQuality: 93 },
+    { name: 'Argentina - Patagonia', lat: -38.4161, lng: -63.6167, records: 987, country: 'Argentina', species: 54, dataQuality: 78 },
+    { name: 'Peru - Amazon River', lat: -9.1900, lng: -75.0152, records: 876, country: 'Peru', species: 47, dataQuality: 84 },
+    { name: 'Venezuela - Orinoco Basin', lat: 6.4238, lng: -66.5897, records: 743, country: 'Venezuela', species: 39, dataQuality: 81 },
+    { name: 'Chile - Pacific Coast', lat: -35.6751, lng: -71.5430, records: 654, country: 'Chile', species: 32, dataQuality: 86 },
+    { name: 'Ecuador - Galapagos', lat: -1.8312, lng: -78.1834, records: 567, country: 'Ecuador', species: 28, dataQuality: 92 },
+    { name: 'Costa Rica - Caribbean Coast', lat: 9.7489, lng: -83.7534, records: 432, country: 'Costa Rica', species: 24, dataQuality: 88 },
+    { name: 'Japan - Kuroshio Current', lat: 36.2048, lng: 138.2529, records: 389, country: 'Japan', species: 21, dataQuality: 95 },
+    { name: 'Norway - North Sea', lat: 60.4720, lng: 8.4689, records: 298, country: 'Norway', species: 18, dataQuality: 90 },
+    { name: 'South Africa - Cape Coast', lat: -30.5595, lng: 22.9375, records: 234, country: 'South Africa', species: 15, dataQuality: 83 }
+  ]
+})
+
 // Temporal data computed properties
 const historicalPeriods = computed(() => {
   return temporalData.value.historicalPeriods || []
@@ -767,38 +866,6 @@ const filteredInstitutions = computed(() => {
   return filtered
 })
 
-const filteredRecentRecords = computed(() => {
-  let filtered = recentRecords.value
-
-  // Apply search filter
-  if (recordSearch.value) {
-    const search = recordSearch.value.toLowerCase()
-    filtered = filtered.filter(record =>
-        record.scientificName.toLowerCase().includes(search) ||
-        record.locality.toLowerCase().includes(search) ||
-        record.catalogNumber.toString().toLowerCase().includes(search)
-    )
-  }
-
-  // Apply genus filter for family pages
-  if (props.taxonType === 'family' && recordGenusFilter.value) {
-    filtered = filtered.filter(record => {
-      const genus = record.scientificName.split(' ')[0]
-      return genus === recordGenusFilter.value
-    })
-  }
-
-  return filtered
-})
-
-const availableGenera = computed(() => {
-  const genera = new Set()
-  recentRecords.value.forEach(record => {
-    const genus = record.scientificName.split(' ')[0]
-    genera.add(genus)
-  })
-  return Array.from(genera).sort()
-})
 
 // Map data transformation
 const transformInstitutionsToMapData = (institutions) => {
@@ -810,6 +877,42 @@ const transformInstitutionsToMapData = (institutions) => {
     recordCount: inst.recordCount || 0,
     country: inst.country || 'Unknown'
   })).filter(item => item.lat !== null && item.lng !== null)
+}
+
+// Transform country distribution to multiple map points based on record density
+const transformCountryDistributionToMapData = (countryDistribution) => {
+  const mapPoints = []
+  
+  countryDistribution.forEach(country => {
+    const countryCoords = generateCoordinatesForCountry(country.name)
+    if (!countryCoords.lat || !countryCoords.lng) return
+    
+    const recordCount = country.records || country.recordCount || 0
+    if (recordCount === 0) return
+    
+    // Generate multiple points based on record density
+    // More records = more points to show density
+    const numPoints = Math.min(Math.ceil(recordCount / 100), 50) // 每100条记录1个点，最多50个点
+    
+    for (let i = 0; i < numPoints; i++) {
+      // Add random offset within country bounds to distribute points
+      const latOffset = (Math.random() - 0.5) * 4 // ±2度随机偏移
+      const lngOffset = (Math.random() - 0.5) * 4
+      
+      mapPoints.push({
+        institutionCode: `${country.name}-${i}`,
+        institutionName: `Records from ${country.name}`,
+        lat: countryCoords.lat + latOffset,
+        lng: countryCoords.lng + lngOffset,
+        recordCount: Math.ceil(recordCount / numPoints), // 每个点代表的记录数
+        country: country.name,
+        isDataPoint: true // 标记这是数据点而不是机构点
+      })
+    }
+  })
+  
+  console.log(`Generated ${mapPoints.length} map points from ${countryDistribution.length} countries`)
+  return mapPoints
 }
 
 // Simple coordinate generation for countries (you can replace with real geocoding data)
@@ -862,9 +965,6 @@ const loadTaxonData = async () => {
       await loadChildren()
     }
 
-    // 加载最新记录
-    await loadRecentRecords()
-
     // 加载并转换地图数据
     await loadMapData()
 
@@ -894,26 +994,36 @@ const loadChildren = async () => {
   }
 }
 
-const loadRecentRecords = async () => {
-  try {
-    const response = await fetchTaxonRecords(props.taxonType, props.taxonName, {
-      page: 1,
-      per_page: 10,
-      sort_by: 'date_desc'
-    })
-    recentRecords.value = response || []
-  } catch (err) {
-    console.error('Failed to load recent records:', err)
-    recentRecords.value = []
-  }
-}
 
 const loadMapData = async () => {
   loadingMapData.value = true
   try {
-    if (institutions.value.length > 0) {
+    console.log('Loading map data from geographic distribution...')
+    
+    // 优先使用地理分布数据（国家分布）而不是机构数据
+    if (geographicData.value.countryDistribution && geographicData.value.countryDistribution.length > 0) {
+      institutionMapData.value = transformCountryDistributionToMapData(geographicData.value.countryDistribution)
+      console.log('Transformed country distribution data:', institutionMapData.value.length, 'data points')
+    } else if (institutions.value.length > 0) {
+      // 备选方案：使用机构数据
       institutionMapData.value = transformInstitutionsToMapData(institutions.value)
+      console.log('Transformed institution data:', institutionMapData.value.length, 'items')
+    } else {
+      // 最后备选：使用测试数据
+      console.log('No geographic or institution data, using test data')
+      const testData = [
+        { name: 'USA', records: 15000 },
+        { name: 'Brazil', records: 12000 },
+        { name: 'Canada', records: 8000 },
+        { name: 'Colombia', records: 6500 },
+        { name: 'Mexico', records: 4000 }
+      ]
+      institutionMapData.value = transformCountryDistributionToMapData(testData)
     }
+    console.log('Final map data:', institutionMapData.value.length, 'points')
+    
+    // Load actual coordinate records for distribution map
+    await loadCoordinateRecords()
   } catch (err) {
     console.error('Failed to load map data:', err)
     institutionMapData.value = []
@@ -922,19 +1032,144 @@ const loadMapData = async () => {
   }
 }
 
+const loadCoordinateRecords = async () => {
+  try {
+    console.log('=== loadCoordinateRecords START ===')
+    console.log('Loading coordinate records for', props.taxonType, props.taxonName)
+    
+    // Convert species name for API if needed
+    let apiTaxonName = props.taxonName
+    if (props.taxonType === 'species') {
+      const parts = props.taxonName.trim().split(' ')
+      if (parts.length >= 2) {
+        apiTaxonName = parts[1]
+      }
+    }
+    
+    let allRecords = []
+    let page = 1
+    let hasMore = true
+    
+    // Load all coordinate records with pagination
+    while (hasMore && allRecords.length < 5000) { // Limit to 5000 to avoid performance issues
+      try {
+        const records = await fetchTaxonRecords(props.taxonType, apiTaxonName, {
+          has_coordinates: true,
+          per_page: 1000,
+          page: page
+        })
+        
+        console.log(`Page ${page}: loaded ${records.length} records`)
+        
+        if (records.length === 0) {
+          hasMore = false
+        } else {
+          allRecords = allRecords.concat(records)
+          page++
+        }
+      } catch (pageError) {
+        console.error(`Failed to load page ${page}:`, pageError)
+        hasMore = false
+      }
+    }
+    
+    console.log(`Total records loaded: ${allRecords.length}`)
+    
+    // Debug: check first record structure
+    if (allRecords.length > 0) {
+      console.log('First record structure:', allRecords[0])
+      console.log('Coordinate fields check:')
+      console.log('- decimalLatitude:', allRecords[0].decimalLatitude)
+      console.log('- decimalLongitude:', allRecords[0].decimalLongitude)
+    }
+    
+    // Transform records to coordinate points
+    actualCoordinateRecords.value = allRecords
+      .filter(record => record.decimalLatitude && record.decimalLongitude)
+      .map(record => ({
+        name: `${record.country || 'Unknown'} - ${record.locality || 'Unknown location'}`,
+        lat: parseFloat(record.decimalLatitude),
+        lng: parseFloat(record.decimalLongitude),
+        records: 1,
+        country: record.country,
+        locality: record.locality,
+        institution: record.institutionCode,
+        collectionDate: record.eventDate
+      }))
+    
+    console.log('Final coordinate records for map:', actualCoordinateRecords.value.length)
+    console.log('=== loadCoordinateRecords END ===')
+    
+  } catch (err) {
+    console.error('Failed to load coordinate records:', err)
+    actualCoordinateRecords.value = []
+  }
+}
+
 const loadTimelineData = async () => {
   try {
-    if (temporalData.value.yearlyTrend) {
-      timelineData.value = transformTemporalToTimelineData(temporalData.value)
-
-      // For detailed timeline, we could use the same data or create a subset
-      detailedTimelineData.value = timelineData.value.filter(item => item.year >= 2000)
+    console.log('Loading timeline data...', temporalData.value)
+    
+    if (temporalData.value && temporalData.value.yearlyTrend && temporalData.value.yearlyTrend.length > 0) {
+      // 使用真实的时间线数据，直接使用后端返回的yearlyTrend数据
+      timelineData.value = temporalData.value.yearlyTrend.map(item => ({
+        year: item.year,
+        records: item.records
+      }))
+      console.log('Using real temporal data:', timelineData.value.length, 'data points')
+    } else {
+      // 生成示例时间线数据
+      console.log('No temporal data found, generating sample data')
+      timelineData.value = generateSampleTimelineData()
     }
+    
+    // For detailed timeline, we could use the same data or create a subset
+    detailedTimelineData.value = timelineData.value.filter(item => item.year >= 2000)
+    
   } catch (err) {
     console.error('Failed to load timeline data:', err)
-    timelineData.value = []
-    detailedTimelineData.value = []
+    // 即使出错也提供示例数据
+    timelineData.value = generateSampleTimelineData()
+    detailedTimelineData.value = timelineData.value.filter(item => item.year >= 2000)
   }
+}
+
+// 生成示例时间线数据
+const generateSampleTimelineData = () => {
+  const sampleData = []
+  const currentYear = new Date().getFullYear()
+  const startYear = 1850
+  
+  for (let year = startYear; year <= currentYear; year += 2) {
+    let records = 0
+    
+    // 模拟收集模式：早期较少，1950-2000年增长，最近稳定
+    if (year < 1900) {
+      records = Math.floor(Math.random() * 50) + 5
+    } else if (year < 1950) {
+      records = Math.floor(Math.random() * 150) + 20
+    } else if (year < 1980) {
+      records = Math.floor(Math.random() * 500) + 100
+    } else if (year < 2000) {
+      records = Math.floor(Math.random() * 800) + 300
+    } else if (year < 2020) {
+      records = Math.floor(Math.random() * 600) + 400
+    } else {
+      records = Math.floor(Math.random() * 400) + 200
+    }
+    
+    // 添加一些随机波动
+    const variance = records * 0.3
+    records += Math.floor((Math.random() - 0.5) * variance)
+    records = Math.max(1, records)
+    
+    sampleData.push({
+      year: year,
+      records: records
+    })
+  }
+  
+  return sampleData.sort((a, b) => a.year - b.year)
 }
 
 const loadMoreInstitutions = async () => {
@@ -983,12 +1218,6 @@ const navigateToInstitution = (institution) => {
   })
 }
 
-const viewRecordDetail = (record) => {
-  router.push({
-    name: 'RecordDetail',
-    params: { catalogNumber: record.catalogNumber }
-  })
-}
 
 // Map and timeline event handlers
 const onInstitutionClicked = (institution) => {
@@ -1050,6 +1279,80 @@ const compareTaxa = () => {
 
 const generateReport = () => {
   alert(`Generating comprehensive ${formatTaxonRank(props.taxonType).toLowerCase()} report...\n\nReport will include:\n- Taxonomic diversity analysis\n- Geographic distribution maps\n- Temporal collection trends\n- Data quality assessment\n- Institution contribution summary`)
+}
+
+// Scroll navigation function
+const scrollToSection = (sectionId) => {
+  const element = document.getElementById(sectionId)
+  if (element) {
+    element.scrollIntoView({ 
+      behavior: 'smooth',
+      block: 'start'
+    })
+  }
+}
+
+// New computed methods for overview section
+const getCollectionIntensity = () => {
+  const recordCount = currentTaxon.value?.recordCount || 0
+  if (recordCount > 50000) return 'a very well'
+  if (recordCount > 10000) return 'a well'
+  if (recordCount > 1000) return 'a moderately well'
+  return 'a'
+}
+
+const getQualityClass = (percentage) => {
+  if (percentage >= 80) return 'quality-excellent'
+  if (percentage >= 60) return 'quality-good'
+  if (percentage >= 40) return 'quality-fair'
+  return 'quality-poor'
+}
+
+const getQualityText = (percentage) => {
+  if (percentage >= 80) return 'Excellent'
+  if (percentage >= 60) return 'Good' 
+  if (percentage >= 40) return 'Fair'
+  return 'Needs improvement'
+}
+
+const getTemporalCoverage = () => {
+  // Mock data - would be calculated from actual temporal data
+  return '1850-2024 (174 years)'
+}
+
+const getMostCommonRegion = () => {
+  const regions = geographicData.value.continentalDistribution || []
+  if (regions.length > 0) {
+    return regions[0].name || 'North America'
+  }
+  return 'North America'
+}
+
+const getCollectionPeak = () => {
+  // Mock data - would be calculated from temporal data
+  return '1990s-2000s'
+}
+
+const getPrimaryContributors = () => {
+  const institutions = institutionData.value || []
+  if (institutions.length >= 2) {
+    return `${institutions[0].code}, ${institutions[1].code}`
+  }
+  return 'Multiple institutions'
+}
+
+const getMostDiverseGenus = () => {
+  const genera = diversityData.value || []
+  if (genera.length > 0) {
+    return genera[0].name || 'Various genera'
+  }
+  return 'Various genera'
+}
+
+// Institution table helper functions
+const getInstitutionRecordsPercentage = (recordCount) => {
+  const maxRecords = Math.max(...institutionData.value.map(inst => inst.recordCount || 0))
+  return maxRecords > 0 ? (recordCount / maxRecords) * 100 : 0
 }
 
 // Watch for changes and reload data
@@ -1267,8 +1570,8 @@ watch(() => [props.taxonType, props.taxonName], () => {
 
 .action-icon { margin-right: 5px; }
 
-/* Navigation tabs */
-.nav-tabs {
+/* Navigation menu */
+.nav-menu {
   background: white;
   border-radius: 5px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.12);
@@ -1279,7 +1582,7 @@ watch(() => [props.taxonType, props.taxonName], () => {
   z-index: 100;
 }
 
-.nav-tabs ul {
+.nav-menu ul {
   display: flex;
   list-style: none;
   margin: 0;
@@ -1287,11 +1590,11 @@ watch(() => [props.taxonType, props.taxonName], () => {
   border-bottom: 1px solid #e0e0e0;
 }
 
-.nav-tabs li {
+.nav-menu li {
   flex: 1;
 }
 
-.nav-tabs a {
+.nav-menu a {
   display: block;
   padding: 15px 20px;
   text-decoration: none;
@@ -1300,12 +1603,348 @@ watch(() => [props.taxonType, props.taxonName], () => {
   transition: all 0.2s;
   text-align: center;
   font-weight: 500;
+  cursor: pointer;
 }
 
-.nav-tabs a:hover, .nav-tabs a.active {
+.nav-menu a:hover {
   color: #3498db;
   border-bottom-color: #3498db;
   background: #f8f9fa;
+}
+
+/* Overview Section Styles */
+.overview-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.overview-stat-card {
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 20px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.overview-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-number {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 4px;
+  color: #2c3e50;
+}
+
+.stat-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #666;
+  margin-bottom: 2px;
+}
+
+.stat-context {
+  font-size: 11px;
+  color: #999;
+}
+
+/* Overview Main Content */
+.overview-main-content {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.overview-left, .overview-right {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.overview-summary-card, .map-card, .basis-of-record-card, .quick-facts-card {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 25px;
+}
+
+.overview-summary-card h3, .map-card h3 {
+  margin: 0 0 15px 0;
+  color: #2c3e50;
+  font-size: 18px;
+}
+
+.summary-text p {
+  line-height: 1.6;
+  margin-bottom: 15px;
+  color: #444;
+}
+
+.data-quality-summary {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e9ecef;
+}
+
+.data-quality-summary h4 {
+  margin: 0 0 15px 0;
+  color: #2c3e50;
+  font-size: 16px;
+}
+
+.quality-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quality-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.quality-label {
+  font-weight: 500;
+  color: #666;
+}
+
+.quality-value {
+  font-weight: 600;
+}
+
+.quality-excellent { color: #27ae60; }
+.quality-good { color: #3498db; }
+.quality-fair { color: #f39c12; }
+.quality-poor { color: #e74c3c; }
+
+.basis-distribution {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.basis-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.basis-percentage {
+  font-weight: bold;
+  color: #3498db;
+}
+
+.basis-note {
+  font-size: 13px;
+  color: #666;
+  font-style: italic;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.map-legend {
+  display: flex;
+  gap: 15px;
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.quick-facts-card h4 {
+  margin: 0 0 15px 0;
+  color: #2c3e50;
+  font-size: 16px;
+}
+
+.quick-facts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fact-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fact-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.fact-value {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.fishair-placeholder {
+  text-align: center;
+  padding: 40px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  color: #666;
+}
+
+.fishair-placeholder p {
+  margin: 10px 0;
+}
+
+/* Full width map container */
+.full-width-map-container {
+  width: 100%;
+  margin: 20px 0;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Institutions Table Styles (similar to AllFamilies.vue) */
+.institutions-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.institutions-table th {
+  background: #f8f9fa;
+  padding: 15px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #555;
+  border-bottom: 2px solid #e9ecef;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.institutions-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e9ecef;
+  vertical-align: middle;
+}
+
+.institution-row {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.institution-row:hover {
+  background-color: #f8f9fa;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.institution-code-badge {
+  background: #e3f2fd;
+  color: #1565c0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.institution-name {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.records-bar-container {
+  position: relative;
+  height: 20px;
+  background: #f5f5f5;
+  border-radius: 10px;
+  overflow: hidden;
+  min-width: 100px;
+}
+
+.records-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #4caf50, #2196f3);
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+.records-text {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 11px;
+  font-weight: 600;
+  color: #333;
+  text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+}
+
+.quality-badge {
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  min-width: 40px;
+  display: inline-block;
+}
+
+.quality-excellent {
+  background: #e8f5e8;
+  color: #2e7d32;
+}
+
+.quality-good {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.quality-fair {
+  background: #fff3e0;
+  color: #ef6c00;
+}
+
+.quality-poor {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.collection-codes {
+  font-size: 12px;
+  color: #666;
+  font-family: 'Courier New', monospace;
 }
 
 /* Section styles */
@@ -1351,15 +1990,26 @@ watch(() => [props.taxonType, props.taxonName], () => {
   height: 400px;
   border: 1px solid #eee;
   border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   background: #f9f9f9;
   margin-bottom: 15px;
-  flex-direction: column;
-  text-align: center;
   position: relative;
   overflow: hidden;
+}
+
+/* 确保地图组件能完全填充容器 */
+.map-container > * {
+  width: 100%;
+  height: 100%;
+}
+
+.heatmap-container {
+  margin-bottom: 15px;
+}
+
+.range-map-container {
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: center;
 }
 
 .chart-container {
@@ -1689,6 +2339,14 @@ watch(() => [props.taxonType, props.taxonName], () => {
   .family-actions {
     flex-direction: column;
   }
+
+  .overview-stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+
+  .overview-main-content {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 768px) {
@@ -1712,8 +2370,12 @@ watch(() => [props.taxonType, props.taxonName], () => {
     grid-template-columns: 1fr;
   }
 
-  .nav-tabs ul {
+  .nav-menu ul {
     flex-wrap: wrap;
+  }
+
+  .overview-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .section {
@@ -1753,9 +2415,13 @@ watch(() => [props.taxonType, props.taxonName], () => {
     grid-template-columns: 1fr;
   }
 
-  .nav-tabs a {
+  .nav-menu a {
     padding: 12px 8px;
     font-size: 12px;
+  }
+
+  .overview-stats-grid {
+    grid-template-columns: 1fr;
   }
 
   .summary-cards {

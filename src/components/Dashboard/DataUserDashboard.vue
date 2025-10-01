@@ -248,6 +248,10 @@ const userFlags = ref([
   }
 ])
 
+// Outlier flags data
+const outlierFlags = ref([])
+const API_BASE_URL = 'http://localhost:8001'
+
 const recentActivity = ref([
   {
     id: 1,
@@ -376,8 +380,88 @@ const initInterestChart = () => {
   })
 }
 
+// Outlier flag functions
+const loadUserOutlierFlags = async () => {
+  try {
+    const token = getUserToken()
+    const headers = {
+      'Content-Type': 'application/json'
+    }
+    
+    // Add Authorization header only if token exists
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+    
+    const response = await fetch(`${API_BASE_URL}/flags/outlier`, {
+      headers: headers,
+      credentials: 'include' // Include cookies for session-based auth
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    }
+    
+    const data = await response.json()
+    outlierFlags.value = data.flags || []
+    
+    // Convert outlier flags to user flag format and merge with existing flags
+    const outlierFlagsFormatted = outlierFlags.value.map(flag => ({
+      id: `outlier-${flag.id}`,
+      title: `${flag.flag_type === 'severe_outlier' ? 'Severe Outlier' : flag.flag_type.charAt(0).toUpperCase() + flag.flag_type.slice(1)} - ${flag.species_name}`,
+      type: `Outlier (${flag.analysis_type})`,
+      date: new Date(flag.created_at).toLocaleDateString(),
+      status: flag.status,
+      outlierData: flag // Store original outlier flag data
+    }))
+    
+    // Merge with existing flags, but only show recent outlier flags (limit to 3)
+    const recentOutlierFlags = outlierFlagsFormatted
+      .sort((a, b) => new Date(b.outlierData.created_at) - new Date(a.outlierData.created_at))
+      .slice(0, 3)
+    
+    // Update userFlags to include outlier flags
+    const originalFlags = userFlags.value.filter(flag => !flag.id.toString().startsWith('outlier-'))
+    userFlags.value = [...originalFlags, ...recentOutlierFlags]
+    
+  } catch (error) {
+    console.error('Failed to load user outlier flags:', error)
+  }
+}
+
+const getUserToken = () => {
+  // Try different possible token storage locations used by SSO systems
+  const possibleTokenKeys = [
+    'access_token',
+    'authToken', 
+    'jwt_token',
+    'token',
+    'fn2_token',
+    'project_token'
+  ]
+  
+  // Check localStorage first
+  for (const key of possibleTokenKeys) {
+    const token = localStorage.getItem(key)
+    if (token && token !== 'null' && token !== 'undefined') {
+      return token
+    }
+  }
+  
+  // Check sessionStorage
+  for (const key of possibleTokenKeys) {
+    const token = sessionStorage.getItem(key)
+    if (token && token !== 'null' && token !== 'undefined') {
+      return token
+    }
+  }
+  
+  return null
+}
+
 onMounted(() => {
   initInterestChart()
+  loadUserOutlierFlags()
 })
 </script>
 

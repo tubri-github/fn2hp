@@ -455,6 +455,10 @@ const recentFlags = ref([
   }
 ])
 
+// Outlier flags data
+const outlierFlags = ref([])
+const API_BASE_URL = 'http://localhost:8001'
+
 const recentMessages = ref([
   { id: 1, from: 'Dr. Sarah Johnson', text: 'Question about specimen ZSM-001234...', time: '2 hours ago' },
   { id: 2, from: 'System Admin', text: 'Monthly data quality report is ready', time: '1 day ago' },
@@ -551,6 +555,96 @@ const sendReply = () => {
   }
 }
 
+// Outlier flag functions
+const loadOutlierFlags = async () => {
+  try {
+    const token = getUserToken()
+    const headers = {
+      'Content-Type': 'application/json'
+    }
+    
+    // Add Authorization header only if token exists
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+    
+    const response = await fetch(`${API_BASE_URL}/flags/outlier`, {
+      headers: headers,
+      credentials: 'include' // Include cookies for session-based auth
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    }
+    
+    const data = await response.json()
+    outlierFlags.value = data.flags || []
+    
+    // Convert outlier flags to standard flag format and merge with existing flags
+    const outlierFlagsFormatted = outlierFlags.value.map(flag => ({
+      id: `outlier-${flag.id}`,
+      title: `${flag.flag_type === 'severe_outlier' ? 'Severe Outlier' : flag.flag_type.charAt(0).toUpperCase() + flag.flag_type.slice(1)} - ${flag.species_name}`,
+      type: `Outlier Detection (${flag.analysis_type})`,
+      date: new Date(flag.created_at).toLocaleDateString(),
+      status: flag.status,
+      description: `Sample point #${flag.sample_point_id} flagged as ${flag.flag_type} during ${flag.analysis_type} analysis at ${flag.huc_level.toUpperCase()} level.`,
+      affectedRecords: '1',
+      severity: flag.flag_type === 'severe_outlier' ? 'High' : flag.flag_type === 'outlier' ? 'Medium' : 'Low',
+      outlierData: flag, // Store original outlier flag data
+      timeline: [
+        { 
+          id: 1, 
+          date: new Date(flag.created_at).toLocaleDateString(), 
+          user: flag.username, 
+          action: `Marked as ${flag.flag_type}${flag.notes ? `: ${flag.notes}` : ''}` 
+        }
+      ]
+    }))
+    
+    // Merge with existing flags, but only show recent outlier flags (limit to 5)
+    const recentOutlierFlags = outlierFlagsFormatted
+      .sort((a, b) => new Date(b.outlierData.created_at) - new Date(a.outlierData.created_at))
+      .slice(0, 5)
+    
+    // Update recentFlags to include outlier flags
+    const originalFlags = recentFlags.value.filter(flag => !flag.id.toString().startsWith('outlier-'))
+    recentFlags.value = [...originalFlags, ...recentOutlierFlags]
+    
+  } catch (error) {
+    console.error('Failed to load outlier flags:', error)
+  }
+}
+
+const getUserToken = () => {
+  // Try different possible token storage locations used by SSO systems
+  const possibleTokenKeys = [
+    'access_token',
+    'authToken', 
+    'jwt_token',
+    'token',
+    'fn2_token',
+    'project_token'
+  ]
+  
+  // Check localStorage first
+  for (const key of possibleTokenKeys) {
+    const token = localStorage.getItem(key)
+    if (token && token !== 'null' && token !== 'undefined') {
+      return token
+    }
+  }
+  
+  // Check sessionStorage
+  for (const key of possibleTokenKeys) {
+    const token = sessionStorage.getItem(key)
+    if (token && token !== 'null' && token !== 'undefined') {
+      return token
+    }
+  }
+  
+  return null
+}
+
 const openDataManagement = () => {
   window.open('http://localhost:9528/tummt/#/dashboard', '_blank')
 }
@@ -616,6 +710,7 @@ const initCharts = () => {
 
 onMounted(() => {
   initCharts()
+  loadOutlierFlags()
 })
 </script>
 

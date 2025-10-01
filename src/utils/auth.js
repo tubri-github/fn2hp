@@ -4,7 +4,7 @@ import { ref, computed } from 'vue'
 
 // 认证配置
 const AUTH_CONFIG = {
-  authCenterUrl: 'http://localhost:8000',  // 认证中心地址
+  authCenterUrl: 'http://localhost:8010',  // 认证中心地址
   projectCode: 'FN2',  // 项目代码，与后端保持一致
   apiPrefix: '/api/v1',
   apiBaseUrl: 'http://localhost:8001',  // FishesOfLAAPI地址
