@@ -51,8 +51,7 @@
           </div>
           <div class="image-overlay">
             <div class="image-info">
-              <p class="filename">{{ image.filename || 'Unknown' }}</p>
-              <p class="ark-id">ARK: {{ image.ark_id }}</p>
+              <p class="ark-id">ARK ID: {{ image.ark_id }}</p>
               <p class="dataset-type">Type: {{ formatImageType(image.dataset) }}</p>
               <div v-if="image.license || image.source" class="copyright-info">
                 <p v-if="image.license" class="license">© {{ image.license }}</p>

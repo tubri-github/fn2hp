@@ -26,7 +26,7 @@
       <!-- Family Header with Darwin Core Fields -->
       <div class="family-header">
         <div class="family-title">
-          <h1 class="family-name">{{ currentTaxon.scientificName || taxonName }}</h1>
+          <h1 class="family-name" :class="{ 'italic-name': taxonType === 'species' }">{{ currentTaxon.scientificName || taxonName }}</h1>
           <span class="taxon-rank">{{ formatTaxonRank(taxonType) }}</span>
         </div>
 
@@ -48,8 +48,8 @@
             <div class="dc-value">{{ currentTaxon.order || '-' }}</div>
           </div>
           <div class="dc-field-group">
-            <div class="dc-label">{{ taxonType }}</div>
-            <div class="dc-value">{{ currentTaxon.scientificName || taxonName }}</div>
+            <div class="dc-label">scientificName</div>
+            <div class="dc-value" :class="{ 'italic-name': taxonType === 'species' }">{{ currentTaxon.scientificName || taxonName }}</div>
           </div>
           <div class="dc-field-group">
             <div class="dc-label">vernacularName</div>
@@ -1479,6 +1479,10 @@ watch(() => [props.taxonType, props.taxonName], () => {
   font-weight: bold;
   margin: 0;
   margin-right: 15px;
+}
+
+.italic-name {
+  font-style: italic;
 }
 
 .taxon-rank {

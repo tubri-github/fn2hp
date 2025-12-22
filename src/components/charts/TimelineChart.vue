@@ -268,7 +268,20 @@ const yAxisTicks = computed(() => {
 })
 
 const barWidth = computed(() => {
-  return Math.max(chartWidth / displayData.value.length - 2, 5)
+  if (displayData.value.length < 2) return 20
+
+  // 计算相邻年份之间的最小间距（像素）
+  const yearGaps = []
+  for (let i = 1; i < displayData.value.length; i++) {
+    const year1 = displayData.value[i - 1].year
+    const year2 = displayData.value[i].year
+    const pixelGap = getXPosition(year2) - getXPosition(year1)
+    yearGaps.push(pixelGap)
+  }
+
+  const minGap = Math.min(...yearGaps)
+  // bar 宽度为最小间距的 80%，留 20% 作为间隔
+  return Math.max(minGap * 0.8, 2)
 })
 
 const linePath = computed(() => {
