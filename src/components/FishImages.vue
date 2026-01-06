@@ -327,10 +327,12 @@ const TreeNode = defineComponent({
   }
 })
 
+const IMAGE_SERVER_URL = import.meta.env.VITE_IMAGE_SERVER_URL || 'http://127.0.0.1:8003'
+
 const getImageUrl = (path) => {
   if (!path) return ''
   if (path.startsWith('http')) return path
-  return `http://127.0.0.1:8003${path.startsWith('/') ? path : '/' + path}`
+  return `${IMAGE_SERVER_URL}${path.startsWith('/') ? path : '/' + path}`
 }
 
 const getNodeIcon = (dataset) => {

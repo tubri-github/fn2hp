@@ -3,8 +3,8 @@ import axios from 'axios'
 
 // 创建专门用于FishnetUserSystem的axios实例
 const fishnetApi = axios.create({
-    baseURL: 'http://localhost:8010/api',
-    timeout: 30000,
+    baseURL: import.meta.env.VITE_FISHAIR_API_URL || 'http://localhost:8010/api',
+    timeout: Number(import.meta.env.VITE_API_TIMEOUT) || 30000,
     headers: {
         'Content-Type': 'application/json',
     }

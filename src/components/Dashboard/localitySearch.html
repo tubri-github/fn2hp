@@ -289,7 +289,9 @@
 
 <script>
     // Basic Configuration
-    const ES_HOST = 'http://localhost:9200'; // Elasticsearch address
+    // NOTE: 部署时需要修改此地址为生产环境 Elasticsearch 地址
+    // For production deployment, update ES_HOST to your Elasticsearch server URL
+    const ES_HOST = window.__ENV__?.VITE_ELASTICSEARCH_URL || 'http://localhost:9200'; // Elasticsearch address
     const ES_INDEX = 'geo_gazetteer'; // Index name
     let currentPage = 1;
     const resultsPerPage = 10;

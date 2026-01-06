@@ -645,8 +645,10 @@ const getUserToken = () => {
   return null
 }
 
+const TUMMT_URL = import.meta.env.VITE_TUMMT_URL || 'http://localhost:9528'
+
 const openDataManagement = () => {
-  window.open('http://localhost:9528/tummt/#/dashboard', '_blank')
+  window.open(`${TUMMT_URL}/tummt/#/dashboard`, '_blank')
 }
 
 const initCharts = () => {

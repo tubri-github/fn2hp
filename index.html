@@ -9,6 +9,12 @@
   </head>
   <body>
     <div id="app"></div>
+    <!-- 注入环境变量到全局，供非模块脚本使用 -->
+    <script>
+      window.__ENV__ = {
+        VITE_ELASTICSEARCH_URL: '%VITE_ELASTICSEARCH_URL%'
+      };
+    </script>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
