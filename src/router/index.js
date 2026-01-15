@@ -11,6 +11,15 @@ const routes = [
         component: HomePage, // 首页组件
     },
     {
+        path: '/search',
+        name: 'Search',
+        component: () => import('@/views/search/SearchPage.vue'),
+        meta: {
+            title: 'Advanced Search',
+            description: 'Search fish occurrence records with advanced filters'
+        }
+    },
+    {
         path: '/browse',
         name: 'Browse',
         redirect: '/browse/families'

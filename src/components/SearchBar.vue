@@ -21,9 +21,10 @@
           size="large"
           input-style="height:3rem;border-width:5px"
           clearable
+          @keyup.enter="handleSearch"
       >
         <template #suffix>
-          <el-icon class="search-icon"><Search /></el-icon>
+          <el-icon class="search-icon" @click="handleSearch" style="cursor: pointer;"><Search /></el-icon>
         </template>
       </el-input>
     </div>
@@ -61,6 +62,11 @@ export default {
     };
   },
   methods: {
+    handleSearch() {
+      if (this.searchQuery.trim()) {
+        this.$router.push({ path: "/search", query: { q: this.searchQuery.trim() } });
+      }
+    },
     selectTag(tag) {
       console.log(`Selected tag: ${tag}`);
     },
@@ -68,7 +74,7 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 /* 引入 Inter 字体的 100 weight */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
 

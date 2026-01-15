@@ -109,7 +109,7 @@
   font-size: 2.5rem;
   font-weight: bolder;
   color: #3f8ba1;
-  margin-bottom: 60px;
+  /*margin-bottom: 60px;*/
   letter-spacing: -0.5px;
 }
 

@@ -3,7 +3,7 @@
     <div class="logo"> <img src="@/assets/fn2logo.png" alt="FishNet2 Logo" /></div>
     <nav class="nav">
       <a href="/dist/" class="nav-link">HOME</a>
-      <a href="#" class="nav-link">SEARCH</a>
+      <router-link to="/search" class="nav-link">SEARCH</router-link>
       <a href="#" class="nav-link">TEAM</a>
       <a href="#" class="nav-link">ABOUT</a>
 
