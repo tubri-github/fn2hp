@@ -263,7 +263,7 @@ class AuthClient {
     } finally {
       this.clearAuth()
       // 刷新页面或跳转到首页
-      window.location.href = '/'
+      window.location.href = import.meta.env.PROD ? '/dist/' : '/'
     }
   }
 
