@@ -75,7 +75,7 @@ export default {
         const params = new URLSearchParams({
           code: code,
           project: authClient.config.projectCode,
-          redirect_uri: `${window.location.origin}/auth/callback`
+          redirect_uri: `${window.location.origin}${import.meta.env.PROD ? '/dist' : ''}/gate/callback`
         })
         
         const response = await fetch(`${authClient.config.authCenterUrl}${authClient.config.apiPrefix}/sso/exchange-token?${params.toString()}`, {
