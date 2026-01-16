@@ -15,7 +15,7 @@
         <transition name="fade">
           <div v-show="showDropdown" class="dropdown-menu">
             <router-link to="/browse/species" class="dropdown-item">Species</router-link>
-            <router-link to="/browse/countries" class="dropdown-item">Countries</router-link>
+            <!-- <router-link to="/browse/countries" class="dropdown-item">Countries</router-link> -->
             <router-link to="/browse/providers" class="dropdown-item">Providers</router-link>
           </div>
         </transition>

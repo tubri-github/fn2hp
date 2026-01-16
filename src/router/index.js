@@ -91,24 +91,24 @@ const routes = [
         }
     },
     {
-        path: '/browse/institutions',
-        name: 'AllInstitutions',
+        path: '/browse/providers',
+        name: 'AllProviders',
         component: () => import('@/views/browse/AllInstitutions.vue'),
         meta: {
-            title: 'Browse All Contributing Institutions',
+            title: 'Browse All Data Providers',
             description: 'Explore data providers and their collections'
         }
     },
     {
-        path: '/browse/institutions/:institutionCode',
-        name: 'InstitutionDetail',
+        path: '/browse/providers/:institutionCode',
+        name: 'ProviderDetail',
         component: () => import('@/views/browse/InstitutionPage.vue'),
         props: route => ({
             institutionCode: route.params.institutionCode
         }),
         meta: {
-            title: 'Institution Details',
-            description: 'Detailed information about contributing institution'
+            title: 'Provider Details',
+            description: 'Detailed information about data provider'
         }
     },
     // Dashboard Routes - 需要登录认证
@@ -186,12 +186,12 @@ const routes = [
     
     // 认证回调
     {
-        path: '/auth/callback',
-        name: 'AuthCallback',
+        path: '/gate/callback',
+        name: 'GateCallback',
         component: () => import('@/views/auth/AuthCallback.vue'),
         meta: {
-            title: 'Authentication Callback',
-            description: 'Processing authentication...'
+            title: 'Processing',
+            description: 'Processing...'
         }
     },
     
