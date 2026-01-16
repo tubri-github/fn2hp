@@ -204,7 +204,7 @@ class AuthClient {
 
     // 构建SSO登录URL - 重定向到认证中心
     const params = new URLSearchParams({
-      redirect_uri: `${window.location.origin}/gate/callback`,
+      redirect_uri: `${window.location.origin}${import.meta.env.PROD ? '/dist' : ''}/gate/callback`,
       project: this.config.projectCode,
       state: state
     })
