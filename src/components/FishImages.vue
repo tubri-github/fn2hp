@@ -367,7 +367,7 @@ const loadFishImages = async (reset = true) => {
   try {
     const options = {
       page: currentPage.value,
-      per_page: 20,
+      per_page: 10,
       limit: props.limit
     }
 
@@ -377,24 +377,23 @@ const loadFishImages = async (reset = true) => {
 
     const response = await fishairApi.getFishImages(props.scientificName, options)
 
-    if (response.success && response.data) {
-      let newImages = response.data.images || []
+    // API 实际返回格式: { message, data: [{ark_id, path, ...}, ...] }
+    // axios 拦截器已 unwrap response.data，所以 response = { message, data: [...] }
+    const rawImages = Array.isArray(response?.data) ? response.data
+                    : Array.isArray(response) ? response
+                    : []
 
-      // 处理图片数据
-      // 根据 dataset 字段：segmentation, bounding_box, landmark 是处理过的图片
-      // 其他值都是原始图片
-      newImages = newImages.map((image) => {
+    if (rawImages.length > 0) {
+      let newImages = rawImages.map((image) => {
         const dataset = image.dataset || 'original'
         const isProcessed = ['segmentation', 'bounding_box', 'landmark'].includes(dataset)
 
         return {
           ...image,
           dataset: isProcessed ? dataset : 'original',
-          // 版权信息从数据库字段获取，保持原始值
           license: image.license || null,
           source: image.source || null,
           owner_institution_code: image.owner_institution_code || null,
-          // parent_ark_id 记录了图片之间的层级关系
           parent_ark_id: image.parent_ark_id || null
         }
       })
@@ -406,17 +405,13 @@ const loadFishImages = async (reset = true) => {
       }
 
       currentImages.value = images.value
-      totalImages.value = response.data.total_images || newImages.length
-      hasMore.value = images.value.length < totalImages.value
-
-      if (response.data.stats) {
-        imageStats.value = response.data.stats
+      // total 从 stats 获取（loadImageStats 先执行），fallback 用当前数量
+      if (!totalImages.value) {
+        totalImages.value = newImages.length
       }
+      hasMore.value = images.value.length < totalImages.value
     } else {
       if (reset) images.value = []
-      if (response.message && !response.success) {
-        error.value = response.message
-      }
     }
   } catch (err) {
     console.error('Error loading fish images:', err)
@@ -430,8 +425,10 @@ const loadFishImages = async (reset = true) => {
 const loadImageStats = async () => {
   try {
     const response = await fishairApi.getImageStats(props.scientificName)
-    if (response.success && response.data) {
-      imageStats.value = response.data.stats || {}
+    // API 返回: { scientific_name, total_images, stats: { original: N, segmentation: N, ... } }
+    if (response?.stats) {
+      imageStats.value = response.stats
+      totalImages.value = response.total_images || 0
     }
   } catch (err) {
     console.error('Error loading image stats:', err)
@@ -517,6 +514,7 @@ const previousImage = () => {
   if (selectedIndex.value > 0) {
     selectedIndex.value--
     selectedImage.value = images.value[selectedIndex.value]
+    closeImageTree()
   }
 }
 
@@ -524,6 +522,7 @@ const nextImage = () => {
   if (selectedIndex.value < images.value.length - 1) {
     selectedIndex.value++
     selectedImage.value = images.value[selectedIndex.value]
+    closeImageTree()
   }
 }
 

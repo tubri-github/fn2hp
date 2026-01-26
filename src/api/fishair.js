@@ -3,7 +3,7 @@ import axios from 'axios'
 
 // 创建专门用于FishnetUserSystem的axios实例
 const fishnetApi = axios.create({
-    baseURL: import.meta.env.VITE_FISHAIR_API_URL || 'http://localhost:8010/api',
+    baseURL: import.meta.env.VITE_FISHAIR_API_URL || 'http://localhost:8010',
     timeout: Number(import.meta.env.VITE_API_TIMEOUT) || 30000,
     headers: {
         'Content-Type': 'application/json',
@@ -50,12 +50,12 @@ export const fishairApi = {
             params.dataset = options.dataset
         }
 
-        return fishnetApi.get('/fish-images', { params })
+        return fishnetApi.get('/fish-images/', { params })
     },
 
     // 获取图片类型统计
     getImageStats(scientificName) {
-        return fishnetApi.get('/fish-images/stats', {
+        return fishnetApi.get('/fish-images/stats/', {
             params: {
                 scientific_name: scientificName
             }
@@ -69,6 +69,6 @@ export const fishairApi = {
 
     // 检查FishAIR API连接状态
     healthCheck() {
-        return fishnetApi.get('/health')
+        return fishnetApi.get('/health/')
     }
 }

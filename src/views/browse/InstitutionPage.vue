@@ -59,27 +59,39 @@
   <!-- Statistics Overview -->
   <div class="stats-overview">
   <div class="stat-card">
-    <div class="stat-number">{{ formatNumber(currentInstitution.recordCount) }}</div>
+    <div class="stat-number" :class="{ 'skeleton-text': currentInstitution.recordCount == null }">
+      {{ currentInstitution.recordCount != null ? formatNumber(currentInstitution.recordCount) : '' }}
+    </div>
     <div class="stat-label">Total Records</div>
   </div>
   <div class="stat-card">
-    <div class="stat-number">{{ formatNumber(currentInstitution.speciesCount) }}</div>
+    <div class="stat-number" :class="{ 'skeleton-text': currentInstitution.speciesCount == null }">
+      {{ currentInstitution.speciesCount != null ? formatNumber(currentInstitution.speciesCount) : '' }}
+    </div>
     <div class="stat-label">Species</div>
   </div>
   <div class="stat-card">
-    <div class="stat-number">{{ formatNumber(currentInstitution.familiesCount) }}</div>
+    <div class="stat-number" :class="{ 'skeleton-text': currentInstitution.familiesCount == null }">
+      {{ currentInstitution.familiesCount != null ? formatNumber(currentInstitution.familiesCount) : '' }}
+    </div>
     <div class="stat-label">Families</div>
   </div>
   <div class="stat-card">
-    <div class="stat-number">{{ formatNumber(currentInstitution.countriesCount) }}</div>
+    <div class="stat-number" :class="{ 'skeleton-text': currentInstitution.countriesCount == null }">
+      {{ currentInstitution.countriesCount != null ? formatNumber(currentInstitution.countriesCount) : '' }}
+    </div>
     <div class="stat-label">Countries</div>
   </div>
   <div class="stat-card">
-    <div class="stat-number">{{ currentInstitution.geoReferencingQuality || 0 }}%</div>
+    <div class="stat-number" :class="{ 'skeleton-text': currentInstitution.geoReferencingQuality == null }">
+      {{ currentInstitution.geoReferencingQuality != null ? currentInstitution.geoReferencingQuality + '%' : '' }}
+    </div>
     <div class="stat-label">Georeferenced</div>
   </div>
   <div class="stat-card">
-    <div class="stat-number">{{ currentInstitution.dateQuality || 0 }}%</div>
+    <div class="stat-number" :class="{ 'skeleton-text': currentInstitution.dateQuality == null }">
+      {{ currentInstitution.dateQuality != null ? currentInstitution.dateQuality + '%' : '' }}
+    </div>
     <div class="stat-label">Date Quality</div>
   </div>
   </div>
@@ -507,7 +519,7 @@ const loadInstitutionData = async () => {
         loadSpeciesData(),
         loadGeographyData(),
         loadCollaborationData(),
-        loadInstitutionRecords() // 添加记录加载
+        loadInstitutionRecords()
       ])
     }
   } catch (err) {
@@ -1423,5 +1435,21 @@ watch([loading, error, currentInstitution], ([newLoading, newError, newInstituti
   .metric-value {
     order: 3;
   }
+}
+
+/* Skeleton loading */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-text {
+  background: linear-gradient(90deg, #eee 25%, #ddd 50%, #eee 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+  color: transparent !important;
+  min-width: 60px;
+  min-height: 1.2em;
 }
 </style>

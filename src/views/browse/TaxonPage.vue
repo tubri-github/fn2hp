@@ -122,42 +122,54 @@
         <div class="overview-stats-grid">
           <div class="overview-stat-card">
             <div class="stat-content">
-              <div class="stat-number">{{ formatNumber(currentTaxon.recordCount) }}</div>
+              <div class="stat-number" :class="{ 'skeleton-text': currentTaxon.recordCount == null }">
+                {{ currentTaxon.recordCount != null ? formatNumber(currentTaxon.recordCount) : '' }}
+              </div>
               <div class="stat-label">Total Specimens</div>
               <div class="stat-context">Preserved in global collections</div>
             </div>
           </div>
           <div class="overview-stat-card" v-if="taxonType === 'family'">
             <div class="stat-content">
-              <div class="stat-number">{{ formatNumber(currentTaxon.generaCount) }}</div>
+              <div class="stat-number" :class="{ 'skeleton-text': currentTaxon.generaCount == null }">
+                {{ currentTaxon.generaCount != null ? formatNumber(currentTaxon.generaCount) : '' }}
+              </div>
               <div class="stat-label">Genera</div>
               <div class="stat-context">{{ currentTaxon.speciesCount }} species total</div>
             </div>
           </div>
           <div class="overview-stat-card" v-else-if="taxonType === 'genus'">
             <div class="stat-content">
-              <div class="stat-number">{{ formatNumber(currentTaxon.speciesCount) }}</div>
+              <div class="stat-number" :class="{ 'skeleton-text': currentTaxon.speciesCount == null }">
+                {{ currentTaxon.speciesCount != null ? formatNumber(currentTaxon.speciesCount) : '' }}
+              </div>
               <div class="stat-label">Species</div>
               <div class="stat-context">In this genus</div>
             </div>
           </div>
           <div class="overview-stat-card">
             <div class="stat-content">
-              <div class="stat-number">{{ formatNumber(currentTaxon.institutionsCount) }}</div>
+              <div class="stat-number" :class="{ 'skeleton-text': currentTaxon.institutionsCount == null }">
+                {{ currentTaxon.institutionsCount != null ? formatNumber(currentTaxon.institutionsCount) : '' }}
+              </div>
               <div class="stat-label">Institutions</div>
               <div class="stat-context">Contributing collections</div>
             </div>
           </div>
           <div class="overview-stat-card">
             <div class="stat-content">
-              <div class="stat-number">{{ formatNumber(currentTaxon.countriesCount) }}</div>
+              <div class="stat-number" :class="{ 'skeleton-text': currentTaxon.countriesCount == null }">
+                {{ currentTaxon.countriesCount != null ? formatNumber(currentTaxon.countriesCount) : '' }}
+              </div>
               <div class="stat-label">Countries</div>
               <div class="stat-context">Global distribution</div>
             </div>
           </div>
           <div class="overview-stat-card">
             <div class="stat-content">
-              <div class="stat-number">{{ currentTaxon.geoReferencingQuality || 0 }}%</div>
+              <div class="stat-number" :class="{ 'skeleton-text': currentTaxon.geoReferencingQuality == null }">
+                {{ currentTaxon.geoReferencingQuality != null ? currentTaxon.geoReferencingQuality + '%' : '' }}
+              </div>
               <div class="stat-label">Georeferenced</div>
               <div class="stat-context">Location accuracy</div>
             </div>
@@ -199,7 +211,9 @@
             <div class="map-card">
               <h3>Distribution Overview</h3>
               <div class="range-map-container">
+                <div v-if="!overviewMapReady" class="skeleton-block" style="height: 200px"></div>
                 <CompactHeatMap
+                    v-else
                     :data="heatMapData"
                     :height="200"
                 />
@@ -294,7 +308,9 @@
         <!-- Global Distribution - Full Width (Hotspots 在地图内叠加显示) -->
         <h3>Global Distribution</h3>
         <div class="full-width-map-container">
+          <div v-if="!distMapReady && loadingMapData" class="skeleton-block" style="height: 400px"></div>
           <CompactHeatMap
+              v-else
               :data="coordinatePoints"
               :height="400"
               :mode="distMapMode"
@@ -309,32 +325,32 @@
         <h2 class="section-title">Temporal Collection Patterns</h2>
 
         <div class="timeline-chart-container">
+          <div v-if="!temporalReady" class="skeleton-block" style="height: 300px"></div>
           <TimelineChart
+              v-else
               :data="timelineData"
               :title="`${formatTaxonRank(taxonType)} ${taxonName} Collection Timeline`"
               :subtitle="`Based on eventDate field (${temporalCoverage}% coverage)`"
               @year-selected="onYearSelected"
               @period-selected="onPeriodSelected"
           />
-          <div v-if="timelineData.length === 0" class="placeholder-content">
-            Loading temporal patterns...
-            <br>
-            <small>Based on <span class="dc-field">eventDate</span> field (87% coverage)</small>
-          </div>
         </div>
 
         <div class="three-column" style="margin-top: 20px;">
           <div>
             <h3>Historical Periods</h3>
-            <HistoricalPeriodsChart :data="historicalPeriods" />
+            <div v-if="!chartsReady" class="skeleton-block" style="height: 160px"></div>
+            <HistoricalPeriodsChart v-else :data="historicalPeriods" />
           </div>
           <div>
             <h3>Seasonal Collection Patterns</h3>
-            <SeasonalPatternsChart :data="seasonalPatterns" />
+            <div v-if="!chartsReady" class="skeleton-block" style="height: 160px"></div>
+            <SeasonalPatternsChart v-else :data="seasonalPatterns" />
           </div>
           <div>
             <h3>Recent Collection Activity</h3>
-            <RecentActivityChart :data="recentActivity" />
+            <div v-if="!chartsReady" class="skeleton-block" style="height: 160px"></div>
+            <RecentActivityChart v-else :data="recentActivity" />
           </div>
         </div>
       </section>
@@ -359,7 +375,17 @@
         </div>
 
         <div class="table-container">
-          <table class="institutions-table">
+          <!-- Skeleton rows while loading -->
+          <div v-if="!institutionsReady" class="skeleton-table">
+            <div v-for="i in 5" :key="i" class="skeleton-table-row">
+              <div class="skeleton-text" style="width: 60px"></div>
+              <div class="skeleton-text" style="width: 200px"></div>
+              <div class="skeleton-text" style="width: 80px"></div>
+              <div class="skeleton-text" style="width: 50px"></div>
+              <div class="skeleton-text" style="width: 50px"></div>
+            </div>
+          </div>
+          <table v-else class="institutions-table">
             <thead>
               <tr>
                 <th>Code</th>
@@ -372,8 +398,8 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="institution in filteredInstitutions" 
-                  :key="institution.code" 
+              <tr v-for="institution in filteredInstitutions"
+                  :key="institution.code"
                   class="table-row institution-row"
                   @click="navigateToInstitution(institution)">
                 <td>
@@ -413,15 +439,18 @@
         <div class="three-column">
           <div>
             <h4>Geographic Coverage</h4>
-            <HistoricalPeriodsChart :data="geoCoverageChartData" color="#74c476" />
+            <div v-if="!institutionsReady" class="skeleton-block" style="height: 160px"></div>
+            <HistoricalPeriodsChart v-else :data="geoCoverageChartData" color="#74c476" />
           </div>
           <div>
             <h4>Taxonomic Specialization</h4>
-            <SeasonalPatternsChart :data="taxSpecChartData" />
+            <div v-if="!institutionsReady" class="skeleton-block" style="height: 160px"></div>
+            <SeasonalPatternsChart v-else :data="taxSpecChartData" />
           </div>
           <div>
             <h4>Data Quality Leaders</h4>
-            <HistoricalPeriodsChart :data="qualityChartData" color="#e6954b" />
+            <div v-if="!institutionsReady" class="skeleton-block" style="height: 160px"></div>
+            <HistoricalPeriodsChart v-else :data="qualityChartData" color="#e6954b" />
           </div>
         </div>
 
@@ -679,6 +708,13 @@ const recentActivity = computed(() => {
 const temporalCoverage = computed(() => {
   return temporalData.value.dataCoverage?.dateCoverage || 87
 })
+
+// 各区域数据是否已加载（用于 skeleton 占位）
+const overviewMapReady = computed(() => heatMapData.value.length > 0)
+const distMapReady = computed(() => coordinatePoints.value.length > 0)
+const temporalReady = computed(() => timelineData.value.length > 0)
+const chartsReady = computed(() => historicalPeriods.value.length > 0 || seasonalPatterns.value.length > 0)
+const institutionsReady = computed(() => institutionData.value && institutionData.value.length > 0)
 
 const institutions = computed(() => {
   return institutionData.value || []
@@ -2361,5 +2397,48 @@ watch(() => [props.taxonType, props.taxonName], () => {
   .records-table th, .records-table td {
     padding: 6px;
   }
+}
+
+/* Skeleton loading */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-text {
+  background: linear-gradient(90deg, #eee 25%, #ddd 50%, #eee 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+  color: transparent !important;
+  min-width: 60px;
+  min-height: 1.2em;
+}
+
+.skeleton-block {
+  background: linear-gradient(90deg, #eee 25%, #e4e4e4 50%, #eee 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 8px;
+  width: 100%;
+}
+
+.skeleton-table {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 0;
+}
+
+.skeleton-table-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.skeleton-table-row .skeleton-text {
+  height: 14px;
 }
 </style>
