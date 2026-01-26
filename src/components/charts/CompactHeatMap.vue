@@ -194,11 +194,13 @@ const addHeatmapLayer = async () => {
       if (legendControl.value) { map.value.removeControl(legendControl.value); legendControl.value = null }
       if (heatLayer.value) { map.value.removeLayer(heatLayer.value) }
       if (!L.heatLayer) await loadHeatmapPlugin()
+      // weight 是第三个元素，动态取最大值做归一化
+      const maxWeight = Math.max(...props.data.map(p => (Array.isArray(p) && p[2]) || 1), 1)
       heatLayer.value = L.heatLayer(props.data, {
         radius: 8,
         blur: 6,
         maxZoom: 15,
-        max: 1.0,
+        max: maxWeight,
         minOpacity: 0.3,
         gradient: {
           0.2: '#2b8cbe',
