@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch, nextTick, onMounted } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 import api from "@/api/base.js";
 import SearchBox from "@/components/Search/SearchBox.vue";
 import AdvancedSearch from "@/components/Search/AdvancedSearch.vue";
@@ -19,7 +19,6 @@ import { exportToCSV, exportToXLSX, exportRecordsToGeoJSON, generateFilename, ex
 import { ArrowDown } from '@element-plus/icons-vue';
 
 const route = useRoute();
-const router = useRouter();
 
 const searchTerm = ref("");
 const conditions = ref([]);
@@ -68,15 +67,15 @@ const quickSearches = [
 
 const hasSearched = computed(() => searchState.value !== "initial");
 
-// Check for query parameter on mount
-onMounted(async () => {
+// Check for query parameter on mount (from homepage search)
+onMounted(() => {
   const q = route.query.q;
   if (q) {
     searchTerm.value = q;
-    await fetchTableData();
+    // Clean URL: remove query params using native API (bypasses Vue Router, no remount)
+    window.history.replaceState({}, '', window.location.pathname);
+    fetchTableData();
     fetchTreeData();
-    // Clear URL query params while preserving the base path
-    router.replace({ path: route.path });
   }
 });
 
