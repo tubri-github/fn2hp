@@ -32,7 +32,7 @@
         </div>
       </div>
 
-      <div class="page-actions">
+      <!-- <div class="page-actions">
         <button class="action-button export" @click="exportGeneraSummary">
           <span class="action-icon">📊</span> Export Genera Summary
         </button>
@@ -42,7 +42,7 @@
         <button class="action-button analyze" @click="startDiversityAnalysis">
           <span class="action-icon">🔍</span> Diversity Analysis
         </button>
-      </div>
+      </div> -->
     </div>
 
     <!-- Top Genera Highlight -->

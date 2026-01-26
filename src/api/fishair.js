@@ -50,12 +50,12 @@ export const fishairApi = {
             params.dataset = options.dataset
         }
 
-        return fishnetApi.get('/v1/fishair/fish-images', { params })
+        return fishnetApi.get('/fish-images', { params })
     },
 
     // 获取图片类型统计
     getImageStats(scientificName) {
-        return fishnetApi.get('/v1/fishair/fish-images/stats', {
+        return fishnetApi.get('/fish-images/stats', {
             params: {
                 scientific_name: scientificName
             }
@@ -64,11 +64,11 @@ export const fishairApi = {
 
     // 获取图片树结构
     getImageTree(arkId) {
-        return fishnetApi.get(`/v1/fishair/fish-images/tree/${arkId}`)
+        return fishnetApi.get(`/fish-images/tree/${arkId}`)
     },
 
     // 检查FishAIR API连接状态
     healthCheck() {
-        return fishnetApi.get('/v1/fishair/health')
+        return fishnetApi.get('/health')
     }
 }

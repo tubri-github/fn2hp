@@ -34,6 +34,11 @@ export const recordsApi = {
         })
     },
 
+    // 获取聚合地图点（支持 precision + viewport bounds）
+    getMapPoints(taxonType, taxonName, params = {}) {
+        return api.get(`/records/taxon/${taxonType}/${encodeURIComponent(taxonName)}/map-points`, { params })
+    },
+
     // 获取地理分布数据
     getGeographicDistribution(params = {}) {
         return api.get('/records/geography', { params })

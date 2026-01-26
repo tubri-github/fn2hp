@@ -32,7 +32,7 @@
         </div>
       </div>
 
-      <div class="page-actions">
+      <!-- <div class="page-actions">
         <button class="action-button export" @click="exportSpeciesList">
           <span class="action-icon">📊</span> Export Species List
         </button>
@@ -42,7 +42,7 @@
         <button class="action-button checklist" @click="generateChecklist">
           <span class="action-icon">📋</span> Generate Checklist
         </button>
-      </div>
+      </div> -->
     </div>
 
     <!-- Top Species Highlight -->
@@ -58,8 +58,7 @@
           <div class="top-species-rank">{{ index + 1 }}</div>
           <div class="top-species-name">{{ species.scientificName }}</div>
           <div class="top-species-stats">
-            {{ formatNumber(species.recordCount) }} records<br>
-            {{ species.vernacularName || 'No common name' }}
+            {{ formatNumber(species.recordCount) }} records
           </div>
         </div>
       </div>
@@ -136,7 +135,7 @@
       <div class="search-grid">
         <div class="search-field">
           <div class="search-label">
-            <span class="dc-field">scientificName</span> / <span class="dc-field">vernacularName</span>
+            <span class="dc-field">scientificName</span>
           </div>
           <input
               type="text"
@@ -241,7 +240,7 @@
         <tr>
           <th><span class="dc-field">scientificName</span></th>
           <th>Authority</th>
-          <th><span class="dc-field">vernacularName</span></th>
+          <!-- <th><span class="dc-field">vernacularName</span></th> -->
           <th><span class="dc-field">family</span></th>
           <th>Records</th>
           <th>Countries</th>
@@ -259,7 +258,7 @@
         >
           <td><span class="species-name">{{ species.scientificName }}</span></td>
           <td><span class="species-authority">{{ species.authority }}</span></td>
-          <td><span class="common-name">{{ species.vernacularName || '—' }}</span></td>
+          <!-- <td><span class="common-name">{{ species.vernacularName || '—' }}</span></td> -->
           <td>
             <router-link
                 :to="{ name: 'FamilyDetail', params: { familyName: species.family } }"
@@ -304,7 +303,7 @@
             <div class="species-item-count">{{ formatNumber(species.recordCount) }}</div>
           </div>
           <div class="species-item-meta">
-            {{ species.authority }} • {{ species.vernacularName || 'No common name' }} • {{ species.family }}<br>
+            {{ species.authority }} • {{ species.family }}<br>
             {{ formatNumber(species.countriesCount) }} countries • {{ formatNumber(species.institutionsCount) }} institutions • Last: {{ formatDate(species.lastRecord) }}
           </div>
         </div>

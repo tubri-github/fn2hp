@@ -1,0 +1,425 @@
+{
+  "filename": "dr346.zip",
+  "Institution": "South Australian Museum Australia",
+ "Institution Code": "SAMA",
+  "processing_time": {
+    "start": "2026-01-25T21:11:37.571730",
+    "end": "2026-01-25T21:12:20.515575",
+    "duration_seconds": 42.94
+  },
+  "total_records": 499013,
+  "field_statistics": {
+    "decimallatitude": {
+      "total": 499013,
+      "empty": 132610,
+      "modified": 0,
+      "valid": 366403
+    },
+    "decimallongitude": {
+      "total": 499013,
+      "empty": 132614,
+      "modified": 0,
+      "valid": 366399
+    },
+    "country": {
+      "total": 499013,
+      "empty": 54548,
+      "modified": 168,
+      "valid": 444465
+    },
+    "scientificname": {
+      "total": 499013,
+      "empty": 25802,
+      "modified": 71140,
+      "valid": 473211
+    },
+    "validname": {
+      "total": 499013,
+      "empty": 480226,
+      "modified": 8,
+      "valid": 18787
+    },
+    "genus": {
+      "total": 499013,
+      "empty": 60374,
+      "modified": 0,
+      "valid": 438639
+    },
+    "specificepithet": {
+      "total": 499013,
+      "empty": 499013,
+      "modified": 0,
+      "valid": 0
+    },
+    "eventdate": {
+      "total": 499013,
+      "empty": 173319,
+      "modified": 35333,
+      "valid": 325694
+    }
+  },
+  "modification_summary": {
+    "countrycode": {
+      "count": 443786,
+      "reasons": [
+        "inferred_from_country"
+      ],
+      "samples": [
+        {
+          "record_id": "6a1bf64c-38be-49a1-986e-c6478d29838d",
+          "original": null,
+          "modified": "AU",
+          "reason": "inferred_from_country"
+        },
+        {
+          "record_id": "7b57af6f-6ad7-43ea-9598-1dca236152e2",
+          "original": null,
+          "modified": "AU",
+          "reason": "inferred_from_country"
+        },
+        {
+          "record_id": "e06d05d1-7e9b-4987-a10a-4b6572dbff4e",
+          "original": null,
+          "modified": "AU",
+          "reason": "inferred_from_country"
+        },
+        {
+          "record_id": "59a2c0e3-dcf6-49b7-9298-4c7c8445ff9e",
+          "original": null,
+          "modified": "PG",
+          "reason": "inferred_from_country"
+        },
+        {
+          "record_id": "e8f76ed9-95d4-449c-92bf-c403671a3bd5",
+          "original": null,
+          "modified": "AU",
+          "reason": "inferred_from_country"
+        }
+      ]
+    },
+    "eventdate": {
+      "count": 35333,
+      "reasons": [
+        "D-T001_format_date_range_start",
+        "constructed_from_ym",
+        "constructed_from_y"
+      ],
+      "samples": [
+        {
+          "record_id": "c3457f37-c110-4910-bb90-e75c7e359b66",
+          "original": "",
+          "modified": "1917-01",
+          "reason": "constructed_from_ym"
+        },
+        {
+          "record_id": "4fd957d4-21df-440e-accc-66897ad1bcd4",
+          "original": "",
+          "modified": "1993-12",
+          "reason": "constructed_from_ym"
+        },
+        {
+          "record_id": "545d7ae2-d203-438c-a95a-ee433f37c0b2",
+          "original": "",
+          "modified": "1986-07",
+          "reason": "constructed_from_ym"
+        },
+        {
+          "record_id": "3787076c-5c72-4718-a0cc-44f63698ea5c",
+          "original": "",
+          "modified": "1988-09",
+          "reason": "constructed_from_ym"
+        },
+        {
+          "record_id": "892d2c13-9b8c-48ac-901a-9f7b40709fae",
+          "original": "1954-10-01/1954-10-31",
+          "modified": "1954-10-01",
+          "reason": "D-T001_format_date_range_start"
+        }
+      ]
+    },
+    "day": {
+      "count": 5292,
+      "reasons": [
+        "D-E003_extracted_from_eventdate"
+      ],
+      "samples": [
+        {
+          "record_id": "73143843-5915-474f-8c2b-5a6187b08595",
+          "original": "",
+          "modified": "1",
+          "reason": "D-E003_extracted_from_eventdate"
+        },
+        {
+          "record_id": "fc4507be-9274-4792-9c69-655eb8eee550",
+          "original": "",
+          "modified": "1",
+          "reason": "D-E003_extracted_from_eventdate"
+        },
+        {
+          "record_id": "892d2c13-9b8c-48ac-901a-9f7b40709fae",
+          "original": "",
+          "modified": "1",
+          "reason": "D-E003_extracted_from_eventdate"
+        },
+        {
+          "record_id": "9c6155c1-c526-490c-b63e-ce83054eaeb1",
+          "original": "",
+          "modified": "1",
+          "reason": "D-E003_extracted_from_eventdate"
+        },
+        {
+          "record_id": "a20f47a4-dcc5-4bd0-907e-7e5fefdde23d",
+          "original": "",
+          "modified": "1",
+          "reason": "D-E003_extracted_from_eventdate"
+        }
+      ]
+    },
+    "country": {
+      "count": 168,
+      "reasons": [
+        "standardized",
+        "extracted_and_standardized"
+      ],
+      "samples": [
+        {
+          "record_id": "bd43b386-2925-44fd-a1af-58bfea3c46f6",
+          "original": "Viet Nam",
+          "modified": "Vietnam",
+          "reason": "standardized"
+        },
+        {
+          "record_id": "f2a51251-af8e-4c8d-bee8-6b7e39ac6430",
+          "original": "Viet Nam",
+          "modified": "Vietnam",
+          "reason": "standardized"
+        },
+        {
+          "record_id": "05a1d5b5-7c41-4be6-a8fa-6464b278238f",
+          "original": "Congo",
+          "modified": "Republic of the Congo",
+          "reason": "standardized"
+        },
+        {
+          "record_id": "1ecf7472-d311-4e28-8b7b-ad27c3d59478",
+          "original": "Congo",
+          "modified": "Republic of the Congo",
+          "reason": "standardized"
+        },
+        {
+          "record_id": "a04ce622-ff4d-4ef7-bff7-5022a61368a8",
+          "original": "Viet Nam",
+          "modified": "Vietnam",
+          "reason": "standardized"
+        }
+      ]
+    },
+    "month": {
+      "count": 51,
+      "reasons": [
+        "D-E002_extracted_from_eventdate"
+      ],
+      "samples": [
+        {
+          "record_id": "20c4da73-4d7b-458e-9816-d8d207a69510",
+          "original": "",
+          "modified": "9",
+          "reason": "D-E002_extracted_from_eventdate"
+        },
+        {
+          "record_id": "52f6a35e-85df-4835-9873-545aadee44a5",
+          "original": "",
+          "modified": "12",
+          "reason": "D-E002_extracted_from_eventdate"
+        },
+        {
+          "record_id": "0e0f7065-58e1-4bcc-b982-3503bf1799bc",
+          "original": "",
+          "modified": "11",
+          "reason": "D-E002_extracted_from_eventdate"
+        },
+        {
+          "record_id": "4b064fb4-85de-4acd-81d3-14fdc188a31a",
+          "original": "",
+          "modified": "11",
+          "reason": "D-E002_extracted_from_eventdate"
+        },
+        {
+          "record_id": "b9c9c300-8f0c-4d62-b6b4-42e1cd39c67e",
+          "original": "",
+          "modified": "11",
+          "reason": "D-E002_extracted_from_eventdate"
+        }
+      ]
+    },
+    "year": {
+      "count": 10,
+      "reasons": [
+        "D-E001_extracted_from_eventdate"
+      ],
+      "samples": [
+        {
+          "record_id": "52f6a35e-85df-4835-9873-545aadee44a5",
+          "original": "",
+          "modified": "2001",
+          "reason": "D-E001_extracted_from_eventdate"
+        },
+        {
+          "record_id": "776cebf2-3ec5-4852-997d-62985de7f2e6",
+          "original": "",
+          "modified": "1928",
+          "reason": "D-E001_extracted_from_eventdate"
+        },
+        {
+          "record_id": "4537cca9-be47-4119-afa7-bff7f38de20f",
+          "original": "",
+          "modified": "2001",
+          "reason": "D-E001_extracted_from_eventdate"
+        },
+        {
+          "record_id": "39648597-f410-416c-85ea-27827cf3a6c5",
+          "original": "",
+          "modified": "1928",
+          "reason": "D-E001_extracted_from_eventdate"
+        },
+        {
+          "record_id": "db6aa8b1-4346-4c40-b6d3-d68a0c89e820",
+          "original": "",
+          "modified": "2001",
+          "reason": "D-E001_extracted_from_eventdate"
+        }
+      ]
+    },
+    "validname": {
+      "count": 8,
+      "reasons": [
+        "X-V001_synonym_resolved"
+      ],
+      "samples": [
+        {
+          "record_id": "30e46322-370e-4275-bb8f-0553ee004a74",
+          "original": "Stiphodon birdsong",
+          "modified": "Stiphodon surrufus",
+          "reason": "X-V001_synonym_resolved"
+        },
+        {
+          "record_id": "35fa5d51-0b35-48c2-8eda-45dce7c19308",
+          "original": "Acanthurus blochii",
+          "modified": "Zebrasoma velifer",
+          "reason": "X-V001_synonym_resolved"
+        },
+        {
+          "record_id": "13f6ab8a-2554-405b-bf8f-4499c637e988",
+          "original": "Dasyatis thetidis",
+          "modified": "Bathytoshia lata",
+          "reason": "X-V001_synonym_resolved"
+        },
+        {
+          "record_id": "e12fb896-3066-4551-a7fc-f3786f93bb44",
+          "original": "Chaetodon lunulatus",
+          "modified": "Chaetodon lunula",
+          "reason": "X-V001_synonym_resolved"
+        },
+        {
+          "record_id": "484a8e77-1414-4148-aa6e-38f47f7fdb0e",
+          "original": "Hippocampus tristis",
+          "modified": "Hippocampus kuda",
+          "reason": "X-V001_synonym_resolved"
+        }
+      ]
+    }
+  },
+  "issues_summary": {
+    "taxon:missing_identification": {
+      "count": 25802,
+      "samples": [
+        "No scientificName, genus, or species provided",
+        "No scientificName, genus, or species provided",
+        "No scientificName, genus, or species provided",
+        "No scientificName, genus, or species provided",
+        "No scientificName, genus, or species provided",
+        "No scientificName, genus, or species provided",
+        "No scientificName, genus, or species provided",
+        "No scientificName, genus, or species provided",
+        "No scientificName, genus, or species provided",
+        "No scientificName, genus, or species provided"
+      ]
+    },
+    "taxon:rank_epithet_mismatch": {
+      "count": 376642,
+      "samples": [
+        "taxonRank='species' but specificEpithet is empty",
+        "taxonRank='species' but specificEpithet is empty",
+        "taxonRank='species' but specificEpithet is empty",
+        "taxonRank='species' but specificEpithet is empty",
+        "taxonRank='species' but specificEpithet is empty",
+        "taxonRank='species' but specificEpithet is empty",
+        "taxonRank='species' but specificEpithet is empty",
+        "taxonRank='species' but specificEpithet is empty",
+        "taxonRank='subspecies' but specificEpithet is empty",
+        "taxonRank='species' but specificEpithet is empty"
+      ]
+    },
+    "validname:I-X004_not_in_taxonomy": {
+      "count": 454424,
+      "samples": [
+        "'Phorticosomus grandis' not found in TaxonRank database",
+        "'Manorina' not found in TaxonRank database",
+        "'Egernia stokesii' not found in TaxonRank database",
+        "'Emoia' not found in TaxonRank database",
+        "'Zyzomys argurus' not found in TaxonRank database",
+        "'Hydrochus numerosepunctatus' not found in TaxonRank database",
+        "'Anilios bicolor' not found in TaxonRank database",
+        "'TYDEIDAE' not found in TaxonRank database",
+        "'Hemiergis peronii' not found in TaxonRank database",
+        "'Onychoprion fuscatus serratus' not found in TaxonRank database"
+      ]
+    },
+    "taxon:rank_inconsistency": {
+      "count": 79636,
+      "samples": [
+        "Stated rank 'species' differs from inferred 'genus'",
+        "Stated rank 'family' differs from inferred 'genus'",
+        "Stated rank 'species' differs from inferred 'genus'",
+        "Stated rank 'subspecies' differs from inferred 'genus'",
+        "Stated rank 'family' differs from inferred 'genus'",
+        "Stated rank 'species' differs from inferred 'genus'",
+        "Stated rank 'order' differs from inferred 'genus'",
+        "Stated rank 'species' differs from inferred 'genus'",
+        "Stated rank 'subspecies' differs from inferred 'genus'",
+        "Stated rank 'family' differs from inferred 'genus'"
+      ]
+    },
+    "country:unknown_country": {
+      "count": 679,
+      "samples": [
+        "Norfolk Island",
+        "Norfolk Island",
+        "French Southern Territories",
+        "Norfolk Island",
+        "Christmas Island",
+        "Uzbekistan",
+        "Norfolk Island",
+        "French Southern Territories",
+        "East Timor",
+        "East Timor"
+      ]
+    },
+    "decimallongitude:out_of_range": {
+      "count": 5,
+      "samples": [
+        "1340.8",
+        "1340.8",
+        "1340.8",
+        "1340.8",
+        "1340.8"
+      ]
+    },
+    "decimallatitude:out_of_range": {
+      "count": 1,
+      "samples": [
+        "453.96022231150"
+      ]
+    }
+  }
+}

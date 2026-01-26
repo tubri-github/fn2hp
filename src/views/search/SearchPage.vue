@@ -75,8 +75,8 @@ onMounted(async () => {
     searchTerm.value = q;
     await fetchTableData();
     fetchTreeData();
-    // Clear URL query without triggering Vue Router navigation
-    window.history.replaceState({}, '', route.path);
+    // Clear URL query params while preserving the base path
+    router.replace({ path: route.path });
   }
 });
 

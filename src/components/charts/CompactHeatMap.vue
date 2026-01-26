@@ -46,13 +46,37 @@ const props = defineProps({
   height: {
     type: Number,
     default: 180
+  },
+  // 'auto' = heatmap for coords / circles for countries
+  // 'points' = always circle markers (适合分布图)
+  // 'heatmap' = L.heatLayer with raw [[lat,lng,count]] data
+  // 'clusters' = circle markers with {lat, lng, records} data
+  mode: {
+    type: String,
+    default: 'auto',
+    validator: v => ['auto', 'points', 'heatmap', 'clusters'].includes(v)
+  },
+  // heatmap 模式下的最大计数值（用于 L.heatLayer max 参数）
+  maxCount: {
+    type: Number,
+    default: 0
+  },
+  // 可选：在地图上叠加显示的 hotspot 列表
+  hotspots: {
+    type: Array,
+    default: () => []
   }
 })
+
+// Emits
+const emit = defineEmits(['boundsChanged'])
 
 // Reactive state
 const mapElement = ref(null)
 const map = ref(null)
 const heatLayer = ref(null)
+const hotspotsControl = ref(null)
+const legendControl = ref(null)
 const loading = ref(false)
 const mapError = ref('')
 const showDebug = ref(false)
@@ -78,26 +102,29 @@ const initMap = async () => {
       throw new Error(`Container too narrow: ${rect.width}px`)
     }
 
-    // 创建紧凑的地图实例
+    // 根据高度决定是否启用交互（大地图启用交互）
+    const isLargeMap = props.height > 300
+
+    // 创建地图实例
     map.value = L.map(mapElement.value, {
       center: [20, 0],
-      zoom: 1,
-      zoomControl: false, // 隐藏zoom控件
+      zoom: isLargeMap ? 2 : 1,
+      zoomControl: isLargeMap,
       worldCopyJump: true,
       preferCanvas: true,
-      attributionControl: false, // 隐藏attribution
-      scrollWheelZoom: false, // 禁用滚轮缩放，保持紧凑
-      doubleClickZoom: false, // 禁用双击缩放
-      boxZoom: false, // 禁用框选缩放
-      keyboard: false, // 禁用键盘控制
-      dragging: false // 可选：禁用拖拽使其更像静态图
+      attributionControl: false,
+      scrollWheelZoom: isLargeMap,
+      doubleClickZoom: isLargeMap,
+      boxZoom: isLargeMap,
+      keyboard: isLargeMap,
+      dragging: isLargeMap
     })
 
     // 添加轻量级的地图瓦片
     const tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
       attribution: '',
       subdomains: 'abcd',
-      maxZoom: 6, // 限制最大缩放保持概览视图
+      maxZoom: isLargeMap ? 12 : 6,
       minZoom: 1
     })
     
@@ -105,12 +132,19 @@ const initMap = async () => {
 
     // 等待DOM更新后添加热图层
     await nextTick()
-    
+
     // 强制调整地图尺寸，防止容器尺寸问题
     setTimeout(() => {
       if (map.value) {
         map.value.invalidateSize()
         addHeatmapLayer()
+        addHotspotsOverlay()
+
+        // 大地图：监听视窗变化并发射事件
+        if (isLargeMap) {
+          map.value.on('moveend', emitBounds)
+          map.value.on('zoomend', emitBounds)
+        }
       }
     }, 100)
 
@@ -124,6 +158,22 @@ const initMap = async () => {
   }
 }
 
+// 发射视窗变化事件（用于动态加载地图数据）
+const emitBounds = () => {
+  if (!map.value) return
+  const bounds = map.value.getBounds()
+  const zoom = map.value.getZoom()
+  emit('boundsChanged', {
+    bounds: {
+      south: bounds.getSouth(),
+      north: bounds.getNorth(),
+      west: bounds.getWest(),
+      east: bounds.getEast()
+    },
+    zoom
+  })
+}
+
 // 添加连续热力图层
 const addHeatmapLayer = async () => {
   try {
@@ -132,11 +182,73 @@ const addHeatmapLayer = async () => {
       return
     }
 
-    // 移除现有图层
+    // mode='heatmap' → L.heatLayer with [[lat,lng],...] 点数据
+    if (props.mode === 'heatmap' && props.data && props.data.length > 0) {
+      // 如果已有热力图层，直接更新数据（moveend 场景）
+      if (heatLayer.value && typeof heatLayer.value.setLatLngs === 'function') {
+        heatLayer.value.setLatLngs(props.data)
+        console.log('Heatmap updated via setLatLngs:', props.data.length, 'points')
+        return
+      }
+      // 否则新建
+      if (legendControl.value) { map.value.removeControl(legendControl.value); legendControl.value = null }
+      if (heatLayer.value) { map.value.removeLayer(heatLayer.value) }
+      if (!L.heatLayer) await loadHeatmapPlugin()
+      heatLayer.value = L.heatLayer(props.data, {
+        radius: 8,
+        blur: 6,
+        maxZoom: 15,
+        max: 1.0,
+        minOpacity: 0.3,
+        gradient: {
+          0.2: '#2b8cbe',
+          0.4: '#7bccc4',
+          0.6: '#f0f9e8',
+          0.7: '#fec44f',
+          0.85: '#f03b20',
+          1.0: '#bd0026'
+        }
+      })
+      heatLayer.value.addTo(map.value)
+      addHeatmapLegend()
+      console.log('Heatmap layer created with', props.data.length, 'points')
+      return
+    }
+
+    // 非 heatmap 模式：移除现有图层和图例
+    if (legendControl.value) {
+      map.value.removeControl(legendControl.value)
+      legendControl.value = null
+    }
     if (heatLayer.value) {
       map.value.removeLayer(heatLayer.value)
     }
 
+    // mode='clusters' → 圆标记（后端返回聚合对象）
+    if (props.mode === 'clusters' && props.data && props.data.length > 0) {
+      fallbackToCircleMarkers()
+      console.log('Clusters mode: circle markers for', props.data.length, 'points')
+      return
+    }
+
+    // 检测数据类型
+    const hasCoords = props.data && props.data.length > 0 && props.data.some(item =>
+      item.lat !== undefined || item.latitude !== undefined
+    )
+
+    // mode='points' → 强制用圆标记（分布图场景）
+    if (props.mode === 'points' && hasCoords && props.data.length > 0) {
+      fallbackToCircleMarkers()
+      return
+    }
+
+    // 国家聚合数据 → 用比例圆标记（不做热力图）
+    if (!hasCoords && props.data && props.data.length > 0) {
+      addCountryCircleMarkers()
+      return
+    }
+
+    // 坐标数据 + auto mode → 用热力图
     // 动态加载热力图插件
     if (!L.heatLayer) {
       await loadHeatmapPlugin()
@@ -145,30 +257,31 @@ const addHeatmapLayer = async () => {
     // 生成热力图数据点
     const heatPoints = generateContinuousHeatmapData()
     debugInfo.value.heatPoints = heatPoints.length
-    
+
     console.log('Generated continuous heatmap points:', heatPoints.length)
 
     if (heatPoints.length > 0) {
-      // 创建连续热力图层 - 适合小地图的参数
+      const isLargeMap = props.height > 300
+
       heatLayer.value = L.heatLayer(heatPoints, {
-        radius: 25,           // 热点半径 - 减小适合紧凑显示
-        blur: 15,             // 模糊程度 - 减小
-        maxZoom: 6,           // 最大缩放级别
-        gradient: {           // 自定义渐变色
-          0.0: '#c6dbef',     // 最浅蓝
-          0.2: '#9ecae1',     // 浅蓝
-          0.4: '#6baed6',     // 中蓝
-          0.6: '#3182bd',     // 深蓝
-          0.8: '#08519c',     // 很深蓝
-          1.0: '#041e42'      // 最深蓝
+        radius: isLargeMap ? 15 : 25,
+        blur: isLargeMap ? 10 : 15,
+        maxZoom: isLargeMap ? 12 : 6,
+        gradient: {
+          0.0: '#c6dbef',
+          0.2: '#9ecae1',
+          0.4: '#6baed6',
+          0.6: '#3182bd',
+          0.8: '#08519c',
+          1.0: '#041e42'
         },
-        minOpacity: 0.4,      // 最小透明度 - 增加一点
-        maxOpacity: 0.7       // 最大透明度 - 减小一点
+        minOpacity: 0.4,
+        maxOpacity: 0.7
       })
 
       heatLayer.value.addTo(map.value)
       console.log('Continuous heatmap layer added with', heatPoints.length, 'data points')
-      
+
       // 添加图例和信息提示
       addHeatmapLegend()
     } else {
@@ -177,11 +290,86 @@ const addHeatmapLayer = async () => {
 
   } catch (error) {
     console.error('Heatmap layer error:', error)
-    mapError.value = 'Failed to create heatmap: ' + error.message
-    
-    // fallback到原始点标记方式
-    fallbackToPointMarkers()
+    // fallback: 热力图插件加载失败时使用圆标记
+    fallbackToCircleMarkers()
   }
+}
+
+// 坐标数据的 fallback：直接用圆标记
+const fallbackToCircleMarkers = () => {
+  try {
+    const layerGroup = L.layerGroup()
+    const maxRecords = Math.max(...props.data.map(d => d.records || d.recordCount || 1), 1)
+
+    props.data.forEach(item => {
+      const lat = parseFloat(item.lat ?? item.latitude)
+      const lng = parseFloat(item.lng ?? item.longitude)
+      if (isNaN(lat) || isNaN(lng)) return
+
+      const records = item.records || item.recordCount || 1
+      const normalizedValue = records / maxRecords
+      const radius = Math.max(3, Math.sqrt(normalizedValue) * 12)
+
+      const marker = L.circleMarker([lat, lng], {
+        radius: radius,
+        fillColor: '#4292c6',
+        fillOpacity: 0.5,
+        color: '#08519c',
+        weight: 1,
+        opacity: 0.7
+      })
+
+      if (item.name || item.country) {
+        marker.bindTooltip(
+          `${item.name || item.country || ''}<br>${records.toLocaleString()} records`,
+          { direction: 'top' }
+        )
+      }
+
+      layerGroup.addLayer(marker)
+    })
+
+    heatLayer.value = layerGroup
+    layerGroup.addTo(map.value)
+    console.log('Fallback circle markers added:', layerGroup.getLayers().length)
+  } catch (err) {
+    console.error('Fallback circle markers failed:', err)
+  }
+}
+
+// 国家聚合数据 → 比例圆标记（取代 Gaussian blob 热力图）
+const addCountryCircleMarkers = () => {
+  const layerGroup = L.layerGroup()
+  const maxValue = Math.max(...props.data.map(d => d.value || 0), 1)
+
+  props.data.forEach(item => {
+    const coords = getCountryCoords(item.name)
+    if (!coords || !item.value) return
+
+    const normalizedValue = item.value / maxValue
+    const radius = Math.max(4, Math.sqrt(normalizedValue) * 18)
+
+    const marker = L.circleMarker([coords.lat, coords.lng], {
+      radius: radius,
+      fillColor: '#4292c6',
+      fillOpacity: 0.55,
+      color: '#08519c',
+      weight: 1,
+      opacity: 0.8
+    })
+
+    marker.bindTooltip(
+      `<strong>${item.name}</strong><br>${item.value.toLocaleString()} records`,
+      { direction: 'top', offset: [0, -radius] }
+    )
+
+    layerGroup.addLayer(marker)
+  })
+
+  heatLayer.value = layerGroup
+  layerGroup.addTo(map.value)
+  debugInfo.value.heatPoints = props.data.length
+  console.log('Country circle markers added:', props.data.length)
 }
 
 // 加载热力图插件
@@ -209,89 +397,71 @@ const loadHeatmapPlugin = () => {
 // 生成连续热力图数据
 const generateContinuousHeatmapData = () => {
   const heatPoints = []
-  
-  if (props.data && props.data.length > 0) {
-    // 使用真实数据生成连续热力图点
+
+  if (!props.data || props.data.length === 0) {
+    return heatPoints
+  }
+
+  // 检测数据类型：坐标数据(lat/lng) vs 国家聚合数据(name/value)
+  const hasCoords = props.data.some(item =>
+    (item.lat !== undefined && item.lng !== undefined) ||
+    (item.latitude !== undefined && item.longitude !== undefined)
+  )
+
+  if (hasCoords) {
+    // 直接使用坐标数据生成热力点（用于分布地图）
     props.data.forEach(item => {
-      const coords = getCountryCoords(item.name)
-      if (coords && item.value > 0) {
-        const normalizedIntensity = Math.min(item.value / 15000, 1) // 标准化到0-1
-        
-        // 为每个数据点生成多个热力点，创建连续效果
-        const numPoints = Math.max(8, Math.min(30, Math.ceil(item.value / 500)))
-        const spread = Math.max(2, Math.min(8, 2 + normalizedIntensity * 6)) // 扩散范围
-        
-        for (let i = 0; i < numPoints; i++) {
-          // 使用正态分布创建更自然的点分布
-          const angle = Math.random() * 2 * Math.PI
-          const distance = Math.sqrt(-2 * Math.log(Math.random())) * spread / 3 // Box-Muller变换
-          
-          const lat = coords.lat + Math.cos(angle) * distance
-          const lng = coords.lng + Math.sin(angle) * distance
-          
-          // 根据距离中心的远近调整强度
-          const distanceFactor = Math.max(0.3, 1 - (distance / spread))
-          const pointIntensity = normalizedIntensity * distanceFactor
-          
-          heatPoints.push([lat, lng, pointIntensity])
-        }
-        
-        // 添加中心高强度点
-        heatPoints.push([coords.lat, coords.lng, normalizedIntensity])
+      const lat = parseFloat(item.lat || item.latitude)
+      const lng = parseFloat(item.lng || item.longitude)
+      if (!isNaN(lat) && !isNaN(lng)) {
+        const intensity = Math.min((item.records || item.recordCount || 1) / 10, 1)
+        heatPoints.push([lat, lng, intensity])
       }
     })
   } else {
-    // 使用示例数据生成连续热力图
-    const sampleRegions = [
-      { name: 'Amazon Basin', lat: -8, lng: -60, intensity: 1.0, spread: 8 },
-      { name: 'North America Great Lakes', lat: 45, lng: -85, intensity: 0.9, spread: 6 },
-      { name: 'Mekong River Basin', lat: 16, lng: 104, intensity: 0.8, spread: 7 },
-      { name: 'European River Systems', lat: 48, lng: 8, intensity: 0.6, spread: 5 },
-      { name: 'African Great Lakes', lat: -5, lng: 30, intensity: 0.7, spread: 6 },
-      { name: 'Australian East Coast', lat: -25, lng: 145, intensity: 0.5, spread: 4 },
-      { name: 'North American Pacific', lat: 40, lng: -120, intensity: 0.8, spread: 7 },
-      { name: 'Southeast Asian Waters', lat: 5, lng: 115, intensity: 0.9, spread: 8 },
-      { name: 'Mediterranean Basin', lat: 38, lng: 15, intensity: 0.4, spread: 4 },
-      { name: 'Caribbean Waters', lat: 18, lng: -75, intensity: 0.6, spread: 5 },
-      { name: 'Patagonian Coast', lat: -45, lng: -70, intensity: 0.3, spread: 5 }
-    ]
-    
-    sampleRegions.forEach(region => {
-      const numPoints = Math.max(15, Math.ceil(region.intensity * 40))
-      
-      for (let i = 0; i < numPoints; i++) {
-        // 使用正态分布
-        const angle = Math.random() * 2 * Math.PI
-        const distance = Math.sqrt(-2 * Math.log(Math.random())) * region.spread / 2.5
-        
-        const lat = region.lat + Math.cos(angle) * distance
-        const lng = region.lng + Math.sin(angle) * distance
-        
-        const distanceFactor = Math.max(0.2, 1 - (distance / region.spread))
-        const pointIntensity = region.intensity * distanceFactor * (0.7 + Math.random() * 0.3)
-        
-        heatPoints.push([lat, lng, pointIntensity])
+    // 国家聚合数据（name/value 格式，用于概览热力图）
+    props.data.forEach(item => {
+      const coords = getCountryCoords(item.name)
+      if (coords && item.value > 0) {
+        const normalizedIntensity = Math.min(item.value / 15000, 1)
+
+        const numPoints = Math.max(8, Math.min(30, Math.ceil(item.value / 500)))
+        const spread = Math.max(2, Math.min(8, 2 + normalizedIntensity * 6))
+
+        for (let i = 0; i < numPoints; i++) {
+          const angle = Math.random() * 2 * Math.PI
+          const distance = Math.sqrt(-2 * Math.log(Math.random())) * spread / 3
+
+          const lat = coords.lat + Math.cos(angle) * distance
+          const lng = coords.lng + Math.sin(angle) * distance
+
+          const distanceFactor = Math.max(0.3, 1 - (distance / spread))
+          const pointIntensity = normalizedIntensity * distanceFactor
+
+          heatPoints.push([lat, lng, pointIntensity])
+        }
+
+        heatPoints.push([coords.lat, coords.lng, normalizedIntensity])
       }
-      
-      // 添加中心强度点
-      heatPoints.push([region.lat, region.lng, region.intensity])
     })
   }
-  
+
   return heatPoints
 }
 
 // 添加热力图图例
 const addHeatmapLegend = () => {
   if (!map.value) return
-  
+  if (legendControl.value) {
+    map.value.removeControl(legendControl.value)
+    legendControl.value = null
+  }
   const legend = L.control({ position: 'bottomright' })
-  
   legend.onAdd = function() {
     const div = L.DomUtil.create('div', 'heatmap-legend')
     div.innerHTML = `
-      <div class="legend-title">Species Density</div>
-      <div class="legend-gradient"></div>
+      <div class="legend-title">Record Density</div>
+      <div class="legend-gradient" style="background: linear-gradient(to right, #2b8cbe, #7bccc4, #fec44f, #f03b20, #bd0026)"></div>
       <div class="legend-labels">
         <span>Low</span>
         <span>High</span>
@@ -299,8 +469,37 @@ const addHeatmapLegend = () => {
     `
     return div
   }
-  
   legend.addTo(map.value)
+  legendControl.value = legend
+}
+
+// 在地图右侧叠加 Hotspot 面板
+const hotspotColors = ['#e6550d', '#3182bd', '#31a354', '#756bb1', '#636363']
+const addHotspotsOverlay = () => {
+  if (!map.value) return
+
+  // 移除旧控件
+  if (hotspotsControl.value) {
+    map.value.removeControl(hotspotsControl.value)
+    hotspotsControl.value = null
+  }
+
+  if (!props.hotspots || props.hotspots.length === 0) return
+
+  const ctrl = L.control({ position: 'topright' })
+  ctrl.onAdd = function () {
+    const div = L.DomUtil.create('div', 'hotspots-overlay')
+    L.DomEvent.disableClickPropagation(div)
+    const rows = props.hotspots.map((h, i) => {
+      const c = hotspotColors[i % hotspotColors.length]
+      const rec = (h.records || 0).toLocaleString()
+      return `<div class="hs-row"><span class="hs-dot" style="background:${c}"></span><span class="hs-name">${h.name}</span><span class="hs-count">${rec}</span></div>`
+    }).join('')
+    div.innerHTML = `<div class="hs-title">Hotspots</div>${rows}`
+    return div
+  }
+  ctrl.addTo(map.value)
+  hotspotsControl.value = ctrl
 }
 
 // 备用方案：点标记显示
@@ -375,33 +574,6 @@ const generateHeatmapPoints = () => {
         }
       }
     })
-  } else {
-    // 使用示例数据生成热力图
-    const sampleData = [
-      { name: 'Amazon Basin', lat: -8, lng: -60, intensity: 1.0, points: 25 },
-      { name: 'Great Lakes', lat: 45, lng: -85, intensity: 0.9, points: 20 },
-      { name: 'Mekong River', lat: 16, lng: 104, intensity: 0.8, points: 18 },
-      { name: 'European Rivers', lat: 48, lng: 8, intensity: 0.6, points: 15 },
-      { name: 'African Rivers', lat: 5, lng: 25, intensity: 0.7, points: 16 },
-      { name: 'Australian Coast', lat: -25, lng: 145, intensity: 0.5, points: 12 },
-      { name: 'North America Pacific', lat: 40, lng: -120, intensity: 0.8, points: 18 },
-      { name: 'Southeast Asia', lat: 10, lng: 110, intensity: 0.9, points: 22 },
-      { name: 'Mediterranean', lat: 35, lng: 15, intensity: 0.4, points: 10 },
-      { name: 'Caribbean', lat: 18, lng: -75, intensity: 0.6, points: 14 }
-    ]
-    
-    sampleData.forEach(region => {
-      for (let i = 0; i < region.points; i++) {
-        const offsetLat = (Math.random() - 0.5) * 8
-        const offsetLng = (Math.random() - 0.5) * 8
-        
-        const lat = region.lat + offsetLat
-        const lng = region.lng + offsetLng
-        const pointIntensity = region.intensity * (0.3 + Math.random() * 0.7)
-        
-        heatPoints.push([lat, lng, pointIntensity])
-      }
-    })
   }
   
   return heatPoints
@@ -426,31 +598,6 @@ const generateLargeHeatmapRegions = () => {
           name: item.name
         })
       }
-    })
-  } else {
-    // 使用示例数据生成大面积热力图区域
-    const sampleRegions = [
-      { name: 'Amazon Basin', lat: -8, lng: -60, intensity: 1.0, radius: 8 },
-      { name: 'Great Lakes Region', lat: 45, lng: -85, intensity: 0.9, radius: 6 },
-      { name: 'Mekong River Basin', lat: 16, lng: 104, intensity: 0.8, radius: 7 },
-      { name: 'European River Systems', lat: 48, lng: 8, intensity: 0.6, radius: 5 },
-      { name: 'Congo River Basin', lat: 0, lng: 20, intensity: 0.7, radius: 6 },
-      { name: 'Australian East Coast', lat: -25, lng: 145, intensity: 0.5, radius: 4 },
-      { name: 'North American Pacific', lat: 40, lng: -120, intensity: 0.8, radius: 7 },
-      { name: 'Southeast Asian Waters', lat: 5, lng: 115, intensity: 0.9, radius: 8 },
-      { name: 'Mediterranean Basin', lat: 38, lng: 15, intensity: 0.4, radius: 4 },
-      { name: 'Caribbean Sea', lat: 18, lng: -75, intensity: 0.6, radius: 5 },
-      { name: 'North Sea Region', lat: 56, lng: 3, intensity: 0.5, radius: 4 },
-      { name: 'Patagonian Waters', lat: -45, lng: -70, intensity: 0.3, radius: 5 }
-    ]
-    
-    sampleRegions.forEach(region => {
-      heatRegions.push({
-        center: { lat: region.lat, lng: region.lng },
-        radius: region.radius,
-        intensity: region.intensity,
-        name: region.name
-      })
     })
   }
   
@@ -540,59 +687,6 @@ const generatePointMarkers = () => {
         }
       })
     }
-  } else {
-    // 使用示例数据生成点标记
-    const samplePoints = [
-      // Amazon Basin
-      { lat: -8.2, lng: -60.1, count: 1500, name: 'Amazon Basin' },
-      { lat: -7.8, lng: -59.8, count: 800, name: 'Amazon Basin' },
-      { lat: -8.5, lng: -60.5, count: 1200, name: 'Amazon Basin' },
-      
-      // Great Lakes
-      { lat: 45.2, lng: -85.1, count: 900, name: 'Great Lakes' },
-      { lat: 44.8, lng: -84.9, count: 600, name: 'Great Lakes' },
-      
-      // Southeast Asia
-      { lat: 10.1, lng: 104.2, count: 750, name: 'Mekong River' },
-      { lat: 9.8, lng: 103.8, count: 450, name: 'Mekong River' },
-      
-      // European Rivers
-      { lat: 48.1, lng: 8.2, count: 400, name: 'European Rivers' },
-      { lat: 47.8, lng: 7.9, count: 350, name: 'European Rivers' },
-      
-      // North American Pacific
-      { lat: 40.2, lng: -120.1, count: 650, name: 'Pacific Coast' },
-      { lat: 39.8, lng: -119.8, count: 550, name: 'Pacific Coast' },
-      
-      // Australian Coast
-      { lat: -25.1, lng: 145.2, count: 300, name: 'Australian Coast' },
-      { lat: -24.8, lng: 144.9, count: 250, name: 'Australian Coast' },
-      
-      // Caribbean
-      { lat: 18.2, lng: -75.1, count: 200, name: 'Caribbean' },
-      { lat: 17.8, lng: -74.8, count: 150, name: 'Caribbean' },
-      
-      // 添加一些重复坐标来测试合并功能
-      { lat: -8.2, lng: -60.1, count: 500, name: 'Amazon Basin (Additional)' }, // 重复坐标
-      { lat: 45.2, lng: -85.1, count: 300, name: 'Great Lakes (Additional)' }   // 重复坐标
-    ]
-    
-    samplePoints.forEach(point => {
-      const key = `${point.lat},${point.lng}`
-      if (pointMap.has(key)) {
-        const existing = pointMap.get(key)
-        existing.count += point.count
-        existing.name = `${existing.name}, ${point.name}`
-      } else {
-        pointMap.set(key, {
-          lat: point.lat,
-          lng: point.lng,
-          count: point.count,
-          name: point.name,
-          intensity: Math.min(point.count / 1000, 1)
-        })
-      }
-    })
   }
   
   return Array.from(pointMap.values())
@@ -615,48 +709,6 @@ const generateCurvedRangeData = () => {
         })
       }
     })
-  } else {
-    // 使用示例数据 - 创建连续的鱼类分布range区域
-    const fishRangePolygons = [
-      // 亚马逊流域 - 连续的蜿蜒范围
-      {
-        name: 'Amazon Basin',
-        polygon: generateAmazonPolygon(),
-        intensity: 1.0
-      },
-      // 北美五大湖系统
-      {
-        name: 'Great Lakes System', 
-        polygon: generateGreatLakesPolygon(),
-        intensity: 0.9
-      },
-      // 湄公河流域
-      {
-        name: 'Mekong River System',
-        polygon: generateMekongPolygon(),
-        intensity: 0.8
-      },
-      // 欧洲河流网络
-      {
-        name: 'European River Network',
-        polygon: generateEuropeanPolygon(),
-        intensity: 0.6
-      },
-      // 非洲河流系统
-      {
-        name: 'African Rivers',
-        polygon: generateAfricanPolygon(),
-        intensity: 0.7
-      },
-      // 澳洲东海岸
-      {
-        name: 'Australian East Coast',
-        polygon: generateAustralianPolygon(),
-        intensity: 0.5
-      }
-    ]
-
-    rangeRegions.push(...fishRangePolygons)
   }
   
   return rangeRegions
@@ -1022,6 +1074,13 @@ watch(() => props.data, () => {
     addHeatmapLayer()
   }
 }, { deep: true })
+
+// 监听 hotspots 变化（数据异步加载后重新渲染控件）
+watch(() => props.hotspots, () => {
+  if (map.value) {
+    addHotspotsOverlay()
+  }
+}, { deep: true })
 </script>
 
 <style scoped>
@@ -1147,13 +1206,58 @@ watch(() => props.data, () => {
   margin-top: 2px;
 }
 
-/* 隐藏Leaflet控件以保持简洁，但保留图例 */
+/* 大地图显示缩放控件，小地图隐藏 */
 :deep(.leaflet-control-zoom) {
-  display: none;
+  /* zoom control visibility is handled by Leaflet zoomControl option */
 }
 
 :deep(.leaflet-control-attribution) {
   display: none;
+}
+
+/* Hotspots overlay */
+:deep(.hotspots-overlay) {
+  background: rgba(255, 255, 255, 0.92);
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  font-size: 11px;
+  line-height: 1;
+  min-width: 120px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+:deep(.hs-title) {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 5px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+:deep(.hs-row) {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 0;
+}
+:deep(.hs-dot) {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+:deep(.hs-name) {
+  flex: 1;
+  color: #444;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 110px;
+}
+:deep(.hs-count) {
+  color: #888;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
 }
 
 /* 响应式 */

@@ -4,7 +4,7 @@
     <div class="sidebar">
       <div class="sidebar-header">
         <div class="logo">Fishnet2</div>
-        <div class="user-info">Zoologische Staatssammlung München</div>
+        <div class="user-info">{{ reportData.Institution }}</div>
       </div>
       
       <ul class="sidebar-menu">
@@ -28,33 +28,131 @@
         </div>
       </div>
 
-      <!-- Stats Summary -->
-      <div class="stats-summary">
+      <!-- Stats Summary (powered by ETL report data) -->
+      <div v-if="activeMenu === 'dashboard'" class="stats-summary">
         <div class="stat-card">
-          <div class="stat-value">3,562,428</div>
+          <div class="stat-value">{{ formatNumber(reportData.total_records) }}</div>
           <div class="stat-label">Total Records</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value">428</div>
-          <div class="stat-label">Species</div>
+          <div class="stat-value">{{ Object.keys(reportData.field_statistics).length }}</div>
+          <div class="stat-label">Fields Analyzed</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value">92.7%</div>
+          <div class="stat-value">{{ averageValidPct }}%</div>
           <div class="stat-label">Data Completeness</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value">8</div>
-          <div class="stat-label">Active Flags</div>
+          <div class="stat-value">{{ formatNumber(totalModifications) }}</div>
+          <div class="stat-label">Modifications</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value">3</div>
-          <div class="stat-label">Unread Messages</div>
+          <div class="stat-value">{{ formatNumber(totalIssues) }}</div>
+          <div class="stat-label">Issues Found</div>
         </div>
       </div>
 
       <!-- Panels Grid -->
-      <div class="panels-grid">
-        <!-- Data Source Information -->
+      <div v-if="activeMenu === 'dashboard'" class="panels-grid">
+        <!-- ETL Processing Report Panel -->
+        <div class="panel panel-full-width report-panel">
+          <div class="report-panel-header">
+            <div>
+              <h2 class="panel-title">Latest Processing Report</h2>
+              <span class="report-panel-meta">{{ reportData.filename }} &bull; {{ reportData.Institution }} ({{ reportData['Institution Code'] }}) &bull; {{ reportData.processing_time.duration_seconds.toFixed(1) }}s</span>
+            </div>
+            <button class="button" @click="showReportDetail = !showReportDetail">
+              {{ showReportDetail ? 'Collapse' : 'View Details' }}
+            </button>
+          </div>
+          <!-- Field health mini bars -->
+          <div class="field-health-row">
+            <div v-for="(stats, field) in reportData.field_statistics" :key="field" class="field-health-item">
+              <div class="field-health-name">{{ field }}</div>
+              <div class="field-health-bar">
+                <div class="field-health-fill" :style="{ width: ((stats.valid / stats.total) * 100) + '%' }" :class="getValidPctClass(stats.valid, stats.total)"></div>
+              </div>
+              <div class="field-health-pct">{{ ((stats.valid / stats.total) * 100).toFixed(0) }}%</div>
+            </div>
+          </div>
+          <!-- Expandable detail section -->
+          <div v-if="showReportDetail" class="report-detail-section">
+            <h3 class="report-detail-heading">Field Statistics</h3>
+            <table class="table report-detail-table">
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Total</th>
+                  <th>Empty</th>
+                  <th>Empty %</th>
+                  <th>Valid</th>
+                  <th>Valid %</th>
+                  <th>Modified</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(stats, field) in reportData.field_statistics" :key="field">
+                  <td><code class="field-name">{{ field }}</code></td>
+                  <td>{{ formatNumber(stats.total) }}</td>
+                  <td>{{ formatNumber(stats.empty) }}</td>
+                  <td>
+                    <span class="pct-badge" :class="getEmptyPctClass(stats.empty, stats.total)">
+                      {{ ((stats.empty / stats.total) * 100).toFixed(1) }}%
+                    </span>
+                  </td>
+                  <td>{{ formatNumber(stats.valid) }}</td>
+                  <td>
+                    <span class="pct-badge" :class="getValidPctClass(stats.valid, stats.total)">
+                      {{ ((stats.valid / stats.total) * 100).toFixed(1) }}%
+                    </span>
+                  </td>
+                  <td>{{ formatNumber(stats.modified) }}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h3 class="report-detail-heading">Modification Records</h3>
+            <div v-for="(mod, field) in reportData.modification_summary" :key="field" class="mod-block">
+              <div class="mod-header">
+                <code class="field-name">{{ field }}</code>
+                <span class="mod-count">{{ formatNumber(mod.count) }} records</span>
+                <span class="mod-reasons">{{ mod.reasons.join(', ') }}</span>
+              </div>
+              <div class="mod-samples" v-if="mod.samples && mod.samples.length">
+                <div v-for="(s, i) in mod.samples.slice(0, 3)" :key="i" class="mod-sample">
+                  <span class="sample-original">{{ s.original || '(empty)' }}</span>
+                  <span class="sample-arrow">&rarr;</span>
+                  <span class="sample-modified">{{ s.modified }}</span>
+                  <span class="sample-reason">{{ s.reason }}</span>
+                </div>
+              </div>
+            </div>
+
+            <h3 class="report-detail-heading">Issues Summary</h3>
+            <table class="table report-detail-table">
+              <thead>
+                <tr>
+                  <th>Issue</th>
+                  <th>Count</th>
+                  <th>Sample</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(issue, key) in reportData.issues_summary" :key="key">
+                  <td><code class="issue-key">{{ key }}</code></td>
+                  <td>
+                    <span class="issue-count" :class="getIssueSeverity(issue.count)">
+                      {{ formatNumber(issue.count) }}
+                    </span>
+                  </td>
+                  <td class="issue-sample">{{ issue.samples[0] }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Data Source Information (from report) -->
         <div class="panel">
           <div class="panel-header">
             <h2 class="panel-title">Data Source Information</h2>
@@ -62,16 +160,16 @@
           <div class="panel-content">
             <div class="data-source-info">
               <div class="info-item">
-                <span class="info-label">Institution:</span> Zoologische Staatssammlung München
+                <span class="info-label">Institution:</span> {{ reportData.Institution }}
               </div>
               <div class="info-item">
-                <span class="info-label">Collection Code:</span> ZSM
+                <span class="info-label">Institution Code:</span> {{ reportData['Institution Code'] }}
               </div>
               <div class="info-item">
-                <span class="info-label">Last Update:</span> 2024-01-15
+                <span class="info-label">Source File:</span> {{ reportData.filename }}
               </div>
               <div class="info-item">
-                <span class="info-label">Update Frequency:</span> Monthly
+                <span class="info-label">Processing Time:</span> {{ reportData.processing_time.duration_seconds.toFixed(1) }}s
               </div>
             </div>
           </div>
@@ -131,10 +229,10 @@
           </div>
         </div>
 
-        <!-- Data Processing Overview -->
+        <!-- Data Processing Overview (from report) -->
         <div class="panel panel-double-width">
           <div class="panel-header">
-            <h2 class="panel-title">Data Processing Overview</h2>
+            <h2 class="panel-title">Field Processing Summary</h2>
             <div class="panel-actions">
               <button class="button" @click="showProcessingModal = true">View Logs</button>
             </div>
@@ -143,18 +241,22 @@
             <table class="table">
               <thead>
                 <tr>
-                  <th>Process</th>
-                  <th>Status</th>
-                  <th>Last Run</th>
-                  <th>Records Processed</th>
+                  <th>Field</th>
+                  <th>Valid %</th>
+                  <th>Empty</th>
+                  <th>Modified</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="process in processingData" :key="process.id">
-                  <td>{{ process.name }}</td>
-                  <td><span :class="['status-badge', process.status]">{{ process.status }}</span></td>
-                  <td>{{ process.lastRun }}</td>
-                  <td>{{ formatNumber(process.recordsProcessed) }}</td>
+                <tr v-for="(stats, field) in reportData.field_statistics" :key="field">
+                  <td><code class="field-name">{{ field }}</code></td>
+                  <td>
+                    <span class="pct-badge" :class="getValidPctClass(stats.valid, stats.total)">
+                      {{ ((stats.valid / stats.total) * 100).toFixed(1) }}%
+                    </span>
+                  </td>
+                  <td>{{ formatNumber(stats.empty) }}</td>
+                  <td>{{ formatNumber(stats.modified) }}</td>
                 </tr>
               </tbody>
             </table>
@@ -225,16 +327,16 @@
           <div class="panel-content">
             <div class="data-source-info">
               <div class="info-item">
-                <span class="info-label">Full Name:</span> Zoologische Staatssammlung München
+                <span class="info-label">Full Name:</span> {{ reportData.Institution }}
               </div>
               <div class="info-item">
-                <span class="info-label">Type:</span> Natural History Museum
+                <span class="info-label">Institution Code:</span> {{ reportData['Institution Code'] }}
               </div>
               <div class="info-item">
-                <span class="info-label">Country:</span> Germany
+                <span class="info-label">Source File:</span> {{ reportData.filename }}
               </div>
               <div class="info-item">
-                <span class="info-label">Contact:</span> info@zsm.mwn.de
+                <span class="info-label">Total Records:</span> {{ formatNumber(reportData.total_records) }}
               </div>
             </div>
           </div>
@@ -392,8 +494,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import * as echarts from 'echarts'
+import reportData from '@/assets/institutionreport/dr346_report.json'
 
 // Reactive data
 const activeMenu = ref('dashboard')
@@ -405,6 +508,7 @@ const showProcessingModal = ref(false)
 const selectedFlag = ref(null)
 const replyMessage = ref('')
 const newStatus = ref('in-progress')
+const showReportDetail = ref(false)
 
 // Chart refs
 const analyticsChart = ref(null)
@@ -510,9 +614,45 @@ const errorLogs = ref([
   }
 ])
 
+// Report computed
+const averageValidPct = computed(() => {
+  const fields = Object.values(reportData.field_statistics)
+  if (fields.length === 0) return 0
+  const avg = fields.reduce((sum, f) => sum + (f.valid / f.total) * 100, 0) / fields.length
+  return avg.toFixed(1)
+})
+const totalModifications = computed(() => {
+  if (!reportData.modification_summary) return 0
+  return Object.values(reportData.modification_summary).reduce((sum, m) => sum + m.count, 0)
+})
+const totalIssues = computed(() => {
+  if (!reportData.issues_summary) return 0
+  return Object.values(reportData.issues_summary).reduce((sum, i) => sum + i.count, 0)
+})
+
 // Methods
 const formatNumber = (num) => {
   return new Intl.NumberFormat().format(num)
+}
+
+const getEmptyPctClass = (empty, total) => {
+  const pct = (empty / total) * 100
+  if (pct > 50) return 'pct-high'
+  if (pct > 20) return 'pct-medium'
+  return 'pct-low'
+}
+
+const getValidPctClass = (valid, total) => {
+  const pct = (valid / total) * 100
+  if (pct >= 80) return 'pct-good'
+  if (pct >= 50) return 'pct-medium'
+  return 'pct-poor'
+}
+
+const getIssueSeverity = (count) => {
+  if (count > 100000) return 'severity-high'
+  if (count > 1000) return 'severity-medium'
+  return 'severity-low'
 }
 
 const openFlagModal = (flag) => {
@@ -1449,5 +1589,272 @@ onMounted(() => {
   font-size: 13px;
   color: #666;
   margin-bottom: 6px;
+}
+
+/* Processing Report Styles */
+.report-view {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.report-summary {
+  background: white;
+  border-radius: 5px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+
+.report-summary-header {
+  margin-bottom: 16px;
+}
+
+.report-summary-header h2 {
+  font-size: 18px;
+  margin: 0 0 4px 0;
+  color: #2c3e50;
+}
+
+.report-meta {
+  font-size: 14px;
+  color: #666;
+}
+
+.report-stats-row {
+  display: flex;
+  gap: 15px;
+}
+
+.report-stat {
+  flex: 1;
+  text-align: center;
+  background: #f8f9fa;
+  border-radius: 5px;
+  padding: 12px 8px;
+}
+
+.report-stat-value {
+  font-size: 20px;
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.report-stat-label {
+  font-size: 11px;
+  color: #777;
+  margin-top: 2px;
+}
+
+.field-name {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: #555;
+}
+
+.pct-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.pct-high { background: #fbe9e7; color: #d84315; }
+.pct-medium { background: #fff3e0; color: #e65100; }
+.pct-low { background: #e8f5e9; color: #2e7d32; }
+.pct-good { background: #e8f5e9; color: #2e7d32; }
+.pct-poor { background: #fbe9e7; color: #d84315; }
+
+.mod-block {
+  border-bottom: 1px solid #eee;
+  padding: 12px 0;
+}
+
+.mod-block:last-child {
+  border-bottom: none;
+}
+
+.mod-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.mod-count {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 13px;
+}
+
+.mod-reasons {
+  font-size: 12px;
+  color: #888;
+}
+
+.mod-samples {
+  margin-left: 8px;
+  padding-left: 10px;
+  border-left: 2px solid #e0e0e0;
+}
+
+.mod-sample {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  padding: 3px 0;
+  color: #555;
+}
+
+.sample-original {
+  color: #c0392b;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+}
+
+.sample-arrow {
+  color: #999;
+}
+
+.sample-modified {
+  color: #27ae60;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+}
+
+.sample-reason {
+  color: #aaa;
+  font-size: 10px;
+  margin-left: 4px;
+}
+
+.issue-key {
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  background: #f8f8f8;
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: #555;
+}
+
+.issue-count {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.severity-high { background: #fbe9e7; color: #d84315; }
+.severity-medium { background: #fff3e0; color: #e65100; }
+.severity-low { background: #e8f5e9; color: #2e7d32; }
+
+.issue-sample {
+  font-size: 12px;
+  color: #777;
+  max-width: 400px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Report Panel */
+.report-panel {
+  background: #f8fafe;
+  border: 1px solid #d6e4f0;
+}
+
+.report-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.report-panel-meta {
+  font-size: 12px;
+  color: #888;
+  margin-top: 2px;
+  display: block;
+}
+
+/* Field health mini bars in report panel */
+.field-health-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+}
+
+.field-health-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.field-health-name {
+  width: 110px;
+  flex-shrink: 0;
+  color: #555;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.field-health-bar {
+  flex: 1;
+  height: 6px;
+  background: #eee;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.field-health-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
+.field-health-fill.pct-good { background: #27ae60; }
+.field-health-fill.pct-medium { background: #e67e22; }
+.field-health-fill.pct-poor { background: #e74c3c; }
+
+.field-health-pct {
+  width: 32px;
+  text-align: right;
+  color: #666;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.report-detail-section {
+  margin-top: 16px;
+  border-top: 1px solid #eee;
+  padding-top: 16px;
+}
+
+.report-detail-heading {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 18px 0 8px 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #eee;
+}
+
+.report-detail-heading:first-child {
+  margin-top: 0;
+}
+
+.report-detail-table {
+  font-size: 13px;
 }
 </style>

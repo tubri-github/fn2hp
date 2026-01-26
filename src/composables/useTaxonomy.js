@@ -270,26 +270,16 @@ export function useTaxonomy() {
         error.value = null
 
         try {
-            // 对于species类型，需要提取specificepithet（种加词）
-            let apiTaxonName = taxonName
-            if (taxonType === 'species') {
-                const parts = taxonName.trim().split(' ')
-                if (parts.length >= 2) {
-                    apiTaxonName = parts[1]
-                    console.log(`Converting species name "${taxonName}" to specificepithet "${apiTaxonName}" for detail`)
-                }
-            }
-            
             let response
             switch (taxonType) {
                 case 'family':
-                    response = await taxonomyApi.getFamilyDetail(apiTaxonName)
+                    response = await taxonomyApi.getFamilyDetail(taxonName)
                     break
                 case 'genus':
-                    response = await taxonomyApi.getGenusDetail(apiTaxonName)
+                    response = await taxonomyApi.getGenusDetail(taxonName)
                     break
                 case 'species':
-                    response = await taxonomyApi.getSpeciesDetail(apiTaxonName)
+                    response = await taxonomyApi.getSpeciesDetail(taxonName)
                     break
                 default:
                     throw new Error(`Invalid taxon type: ${taxonType}`)
@@ -356,18 +346,7 @@ export function useTaxonomy() {
 
     const fetchTaxonGeographic = async (taxonType, taxonName) => {
         try {
-            // 对于species类型，需要提取specificepithet（种加词）
-            let apiTaxonName = taxonName
-            if (taxonType === 'species') {
-                // 从 "Brycon henni" 提取 "henni"
-                const parts = taxonName.trim().split(' ')
-                if (parts.length >= 2) {
-                    apiTaxonName = parts[1] // 获取种加词
-                    console.log(`Converting species name "${taxonName}" to specificepithet "${apiTaxonName}"`)
-                }
-            }
-            
-            const response = await taxonomyApi.getTaxonGeographic(taxonType, apiTaxonName)
+            const response = await taxonomyApi.getTaxonGeographic(taxonType, taxonName)
             geographicData.value = response
             console.log('Fetched geographic data:', geographicData.value)
             return response
@@ -380,18 +359,7 @@ export function useTaxonomy() {
 
     const fetchTaxonTemporal = async (taxonType, taxonName) => {
         try {
-            // 对于species类型，需要提取specificepithet（种加词）
-            let apiTaxonName = taxonName
-            if (taxonType === 'species') {
-                // 从 "Brycon henni" 提取 "henni"
-                const parts = taxonName.trim().split(' ')
-                if (parts.length >= 2) {
-                    apiTaxonName = parts[1] // 获取种加词
-                    console.log(`Converting species name "${taxonName}" to specificepithet "${apiTaxonName}" for temporal data`)
-                }
-            }
-            
-            const response = await taxonomyApi.getTaxonTemporal(taxonType, apiTaxonName)
+            const response = await taxonomyApi.getTaxonTemporal(taxonType, taxonName)
             temporalData.value = response
             console.log('Fetched temporal data:', temporalData.value)
             return response
@@ -404,17 +372,7 @@ export function useTaxonomy() {
 
     const fetchTaxonInstitutions = async (taxonType, taxonName, params = {}) => {
         try {
-            // 对于species类型，需要提取specificepithet（种加词）
-            let apiTaxonName = taxonName
-            if (taxonType === 'species') {
-                const parts = taxonName.trim().split(' ')
-                if (parts.length >= 2) {
-                    apiTaxonName = parts[1]
-                    console.log(`Converting species name "${taxonName}" to specificepithet "${apiTaxonName}" for institution data`)
-                }
-            }
-            
-            const response = await taxonomyApi.getTaxonInstitutions(taxonType, apiTaxonName, params)
+            const response = await taxonomyApi.getTaxonInstitutions(taxonType, taxonName, params)
             institutionData.value = response.data || []
             console.log('Fetched institution data:', institutionData.value)
             return response
@@ -440,17 +398,7 @@ export function useTaxonomy() {
 
     const fetchInstitutionCoverage = async (taxonType, taxonName) => {
         try {
-            // 对于species类型，需要提取specificepithet（种加词）
-            let apiTaxonName = taxonName
-            if (taxonType === 'species') {
-                const parts = taxonName.trim().split(' ')
-                if (parts.length >= 2) {
-                    apiTaxonName = parts[1]
-                    console.log(`Converting species name "${taxonName}" to specificepithet "${apiTaxonName}" for institution coverage`)
-                }
-            }
-            
-            const response = await taxonomyApi.getTaxonInstitutionCoverage(taxonType, apiTaxonName)
+            const response = await taxonomyApi.getTaxonInstitutionCoverage(taxonType, taxonName)
             institutionCoverage.value = response
             console.log('Fetched institution coverage:', institutionCoverage.value)
             return response
@@ -617,15 +565,7 @@ export function useTaxonomy() {
     // ========== 工具方法 ==========
     // 转换taxonName为API期望的格式
     const convertTaxonNameForAPI = (taxonType, taxonName) => {
-        if (taxonType === 'species') {
-            // 对于species，API期望的是specificepithet（种加词），而不是完整学名
-            const parts = taxonName.trim().split(' ')
-            if (parts.length >= 2) {
-                const specificEpithet = parts[1]
-                console.log(`Converting species name "${taxonName}" to specificepithet "${specificEpithet}"`)
-                return specificEpithet
-            }
-        }
+        // species类型应传完整二分名（如 "Brycon henni"），直接返回
         return taxonName
     }
 

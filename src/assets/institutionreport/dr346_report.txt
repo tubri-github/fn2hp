@@ -1,0 +1,185 @@
+======================================================================
+ETL Processing Report: dr346.zip
+======================================================================
+Institution: South Australian Museum Australia
+Institution Code: SAMA
+Processing Time: 2026-01-25 21:11:37
+Duration: 42.94 seconds
+Total Records (raw): 499013
+Total Records (fish only): 17380
+
+
+----------------------------------------------------------------------
+Non-Fish Filtering (T-F001)
+----------------------------------------------------------------------
+Rule T-F001: Source contains mixed taxa. Filtered by
+  collectioncode='Ichthyology' to retain fish records only.
+
+  Original records:    499,013
+  Filtered out:        481,633 (96.5%) - non-fish collections
+  Fish retained:        17,380 (3.5%) - collectioncode=Ichthyology
+
+  Collection distribution of filtered-out records:
+    AustralianBiologicalTissueCollection:    140,919
+    Entomology:     98,068
+    Herpetology:     76,269
+    Ornithology:     58,788
+    Arachnology:     57,319
+    Mammalogy:     33,337
+    Marine Invertebrates:     16,903
+    Palaeontology - Vertebrate:         24
+    AustralianBiologicalTissueCollection AustralianBiologicalTissueCollection:          6
+
+----------------------------------------------------------------------
+Field Statistics (fish-only, 17,380 records)
+----------------------------------------------------------------------
+Field                                      Total   Empty%   Valid%
+----------------------------------------------------------------------
+country                                   17,380    20.1%    79.9%
+decimallatitude                           17,380    19.6%    80.4%
+decimallongitude                          17,380    19.6%    80.4%
+eventdate                                 17,380    44.1%    55.9%
+genus                                     17,380    16.7%    83.3%
+scientificname                            17,380     6.2%    93.8%
+specificepithet                           17,380   100.0%     0.0%
+validname                                 17,380    26.9%    73.1%
+----------------------------------------------------------------------
+Field Statistics
+----------------------------------------------------------------------
+Field                                  Total   Empty%   Valid% Modified
+----------------------------------------------------------------------
+country                               499013    10.9%    89.1%      168
+decimallatitude                       499013    26.6%    73.4%        0
+decimallongitude                      499013    26.6%    73.4%        0
+eventdate                             499013    34.7%    65.3%    35333
+genus                                 499013    12.1%    87.9%        0
+scientificname                        499013     5.2%    94.8%    71140
+specificepithet                       499013   100.0%     0.0%        0
+validname                             499013    96.2%     3.8%        8
+
+----------------------------------------------------------------------
+Modification Records
+----------------------------------------------------------------------
+
+[country] 168 records modified
+  Reasons: standardized, extracted_and_standardized
+  Samples:
+    'Viet Nam' -> 'Vietnam' (standardized)
+    'Viet Nam' -> 'Vietnam' (standardized)
+    'Congo' -> 'Republic of the Congo' (standardized)
+    'Congo' -> 'Republic of the Congo' (standardized)
+    'Viet Nam' -> 'Vietnam' (standardized)
+
+[countrycode] 443786 records modified
+  Reasons: inferred_from_country
+  Samples:
+    'None' -> 'AU' (inferred_from_country)
+    'None' -> 'AU' (inferred_from_country)
+    'None' -> 'AU' (inferred_from_country)
+    'None' -> 'PG' (inferred_from_country)
+    'None' -> 'AU' (inferred_from_country)
+
+[day] 5292 records modified
+  Reasons: D-E003_extracted_from_eventdate
+  Samples:
+    '' -> '1' (D-E003_extracted_from_eventdate)
+    '' -> '1' (D-E003_extracted_from_eventdate)
+    '' -> '1' (D-E003_extracted_from_eventdate)
+    '' -> '1' (D-E003_extracted_from_eventdate)
+    '' -> '1' (D-E003_extracted_from_eventdate)
+
+[eventdate] 35333 records modified
+  Reasons: D-T001_format_date_range_start, constructed_from_ym, constructed_from_y
+  Samples:
+    '' -> '1917-01' (constructed_from_ym)
+    '' -> '1993-12' (constructed_from_ym)
+    '' -> '1986-07' (constructed_from_ym)
+    '' -> '1988-09' (constructed_from_ym)
+    '1954-10-01/1954-10-31' -> '1954-10-01' (D-T001_format_date_range_start)
+
+[month] 51 records modified
+  Reasons: D-E002_extracted_from_eventdate
+  Samples:
+    '' -> '9' (D-E002_extracted_from_eventdate)
+    '' -> '12' (D-E002_extracted_from_eventdate)
+    '' -> '11' (D-E002_extracted_from_eventdate)
+    '' -> '11' (D-E002_extracted_from_eventdate)
+    '' -> '11' (D-E002_extracted_from_eventdate)
+
+[validname] 8 records modified
+  Reasons: X-V001_synonym_resolved
+  Samples:
+    'Stiphodon birdsong' -> 'Stiphodon surrufus' (X-V001_synonym_resolved)
+    'Acanthurus blochii' -> 'Zebrasoma velifer' (X-V001_synonym_resolved)
+    'Dasyatis thetidis' -> 'Bathytoshia lata' (X-V001_synonym_resolved)
+    'Chaetodon lunulatus' -> 'Chaetodon lunula' (X-V001_synonym_resolved)
+    'Hippocampus tristis' -> 'Hippocampus kuda' (X-V001_synonym_resolved)
+
+[year] 10 records modified
+  Reasons: D-E001_extracted_from_eventdate
+  Samples:
+    '' -> '2001' (D-E001_extracted_from_eventdate)
+    '' -> '1928' (D-E001_extracted_from_eventdate)
+    '' -> '2001' (D-E001_extracted_from_eventdate)
+    '' -> '1928' (D-E001_extracted_from_eventdate)
+    '' -> '2001' (D-E001_extracted_from_eventdate)
+
+----------------------------------------------------------------------
+Issues Summary
+----------------------------------------------------------------------
+
+[country] unknown_country: 679 records
+  Samples:
+    Norfolk Island
+    Norfolk Island
+    French Southern Territories
+    Norfolk Island
+    Christmas Island
+
+[decimallatitude] out_of_range: 1 records
+  Samples:
+    453.96022231150
+
+[decimallongitude] out_of_range: 5 records
+  Samples:
+    1340.8
+    1340.8
+    1340.8
+    1340.8
+    1340.8
+
+[taxon] missing_identification: 25802 records
+  Samples:
+    No scientificName, genus, or species provided
+    No scientificName, genus, or species provided
+    No scientificName, genus, or species provided
+    No scientificName, genus, or species provided
+    No scientificName, genus, or species provided
+
+[taxon] rank_epithet_mismatch: 376642 records
+  Samples:
+    taxonRank='species' but specificEpithet is empty
+    taxonRank='species' but specificEpithet is empty
+    taxonRank='species' but specificEpithet is empty
+    taxonRank='species' but specificEpithet is empty
+    taxonRank='species' but specificEpithet is empty
+
+[taxon] rank_inconsistency: 79636 records
+  Samples:
+    Stated rank 'species' differs from inferred 'genus'
+    Stated rank 'family' differs from inferred 'genus'
+    Stated rank 'species' differs from inferred 'genus'
+    Stated rank 'subspecies' differs from inferred 'genus'
+    Stated rank 'family' differs from inferred 'genus'
+
+[validname] I-X004_not_in_taxonomy: 454424 records
+  Samples:
+    'Phorticosomus grandis' not found in TaxonRank database
+    'Manorina' not found in TaxonRank database
+    'Egernia stokesii' not found in TaxonRank database
+    'Emoia' not found in TaxonRank database
+    'Zyzomys argurus' not found in TaxonRank database
+
+======================================================================
+End of Report
+======================================================================

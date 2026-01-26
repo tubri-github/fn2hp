@@ -24,7 +24,7 @@
         </div>
       </div>
 
-      <div class="page-actions">
+      <!-- <div class="page-actions">
         <button class="action-button export" @click="exportInstitutionReport">
           <span class="action-icon">📊</span> Export Data Providers Report
         </button>
@@ -34,7 +34,7 @@
         <button class="action-button quality" @click="showDataQualityAssessment">
           <span class="action-icon">✅</span> Data Quality Assessment
         </button>
-      </div>
+      </div> -->
     </div>
     <WorldMap
         :map-data="transformedMapData"

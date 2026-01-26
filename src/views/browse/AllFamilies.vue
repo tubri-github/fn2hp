@@ -32,7 +32,7 @@
         </div>
       </div>
 
-      <div class="page-actions">
+      <!-- <div class="page-actions">
         <button class="action-button export" @click="exportFamilySummary">
           <span class="action-icon">📊</span> Export Family Summary
         </button>
@@ -42,7 +42,7 @@
         <button class="action-button analyze" @click="startDiversityAnalysis">
           <span class="action-icon">🔍</span> Diversity Analysis
         </button>
-      </div>
+      </div> -->
     </div>
 
     <!-- Quick Stats -->
@@ -164,7 +164,7 @@
                   </span>
               </td>
               <td>
-                <span class="table-family-name">{{ family.family }}</span>
+                <span class="table-family-name clickable" @click.stop="navigateToFamily(family.family)">{{ family.family }}</span>
               </td>
               <td>
                 <span class="order-badge">{{ family.order }}</span>
@@ -742,6 +742,16 @@ watch(() => filters.search, debouncedSearch)
   font-weight: bold;
   color: #2c3e50;
   font-size: 16px;
+}
+
+.table-family-name.clickable {
+  cursor: pointer;
+  color: #2980b9;
+}
+
+.table-family-name.clickable:hover {
+  color: #1a5276;
+  text-decoration: underline;
 }
 
 .order-badge {

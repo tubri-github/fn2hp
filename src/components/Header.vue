@@ -14,8 +14,19 @@
         <span class="nav-link-text">BROWSE</span>
         <transition name="fade">
           <div v-show="showDropdown" class="dropdown-menu">
-            <router-link to="/browse/species" class="dropdown-item">Species</router-link>
-            <!-- <router-link to="/browse/countries" class="dropdown-item">Countries</router-link> -->
+            <div class="dropdown-item has-submenu"
+                 @mouseenter="showTaxonSubmenu = true"
+                 @mouseleave="showTaxonSubmenu = false">
+              <span>Taxon</span>
+              <span class="submenu-arrow">›</span>
+              <transition name="fade">
+                <div v-show="showTaxonSubmenu" class="submenu">
+                  <router-link to="/browse/families" class="dropdown-item">Families</router-link>
+                  <router-link to="/browse/genera" class="dropdown-item">Genera</router-link>
+                  <router-link to="/browse/species" class="dropdown-item">Species</router-link>
+                </div>
+              </transition>
+            </div>
             <router-link to="/browse/providers" class="dropdown-item">Providers</router-link>
           </div>
         </transition>
@@ -81,6 +92,7 @@ export default {
   data() {
     return {
       showDropdown: false, // 控制Browse下拉菜单显示
+      showTaxonSubmenu: false, // 控制Taxon二级菜单显示
       showToolsDropdown: false, // 控制Tools下拉菜单显示
       showDashboardDropdown: false, // 控制个人数据中心下拉菜单显示
     };
@@ -172,7 +184,15 @@ export default {
   display: flex;
   flex-direction: column;
   min-width: 180px;
-  overflow: hidden;
+}
+
+/* 首尾子项圆角 */
+.dropdown-menu > :first-child {
+  border-radius: 8px 8px 0 0;
+}
+
+.dropdown-menu > :last-child {
+  border-radius: 0 0 8px 8px;
 }
 
 /* 添加过渡动画 */
@@ -212,6 +232,50 @@ export default {
 .dropdown-item:hover {
   background-color: #f5f9ff;
   color: #2c7cb9;
+}
+
+/* 二级展开菜单 */
+.has-submenu {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+/* 桥接区域：防止鼠标移向子菜单时丢失 hover */
+.has-submenu::after {
+  content: '';
+  position: absolute;
+  right: -10px;
+  top: 0;
+  width: 10px;
+  height: 100%;
+}
+
+.submenu-arrow {
+  font-size: 16px;
+  color: #999;
+  margin-left: 8px;
+}
+
+.has-submenu:hover .submenu-arrow {
+  color: #2c7cb9;
+}
+
+.submenu {
+  position: absolute;
+  left: 100%;
+  top: -1px;
+  background-color: white;
+  border: none;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  min-width: 160px;
+  overflow: hidden;
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
 }
 
 @media (max-width: 768px) {

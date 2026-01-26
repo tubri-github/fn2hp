@@ -43,7 +43,7 @@
   </div>
   </div>
 
-  <div class="institution-actions">
+  <!-- <div class="institution-actions">
   <button class="action-button primary" @click="exportInstitutionData">
     <span class="icon">📊</span> Export Data
   </button>
@@ -53,7 +53,7 @@
   <button class="action-button secondary" @click="contactInstitution">
     <span class="icon">📧</span> Contact
   </button>
-  </div>
+  </div> -->
   </div>
 
   <!-- Statistics Overview -->
@@ -259,7 +259,7 @@
         >
           <div class="species-header">
             <h4 class="species-name">{{ species.scientificName }}</h4>
-            <span v-if="species.vernacularName" class="species-common">{{ species.vernacularName }}</span>
+            <!-- <span v-if="species.vernacularName" class="species-common">{{ species.vernacularName }}</span> -->
           </div>
           <div class="species-meta">
             <span class="species-family">{{ species.family }}</span>
