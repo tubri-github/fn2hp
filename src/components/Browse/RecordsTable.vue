@@ -62,13 +62,13 @@
       <table class="records-table">
         <thead>
         <tr>
-          <th><span class="dc-field">catalogNumber</span></th>
-          <th><span class="dc-field">scientificName</span></th>
-          <th><span class="dc-field">recordedBy</span></th>
-          <th><span class="dc-field">eventDate</span></th>
-          <th><span class="dc-field">country</span></th>
-          <th><span class="dc-field">locality</span></th>
-          <th><span class="dc-field">institutionCode</span></th>
+          <th>Catalog Number</th>
+          <th>Scientific Name</th>
+          <th>Recorded By</th>
+          <th>Event Date</th>
+          <th>Country</th>
+          <th>Locality</th>
+          <th>Institution Code</th>
           <th>Quality</th>
           <th>Actions</th>
         </tr>

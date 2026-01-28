@@ -136,8 +136,8 @@
           <thead>
           <tr>
             <th></th>
-            <th><span class="dc-field">family</span></th>
-            <th><span class="dc-field">order</span></th>
+            <th>Family</th>
+            <th>Order</th>
             <th>Genera</th>
             <th>Species</th>
 <!--            <th>Records</th>-->

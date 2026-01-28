@@ -237,9 +237,9 @@
       <table v-else class="genera-table">
         <thead>
         <tr>
-          <th><span class="dc-field">genus</span></th>
-          <th><span class="dc-field">family</span></th>
-          <th><span class="dc-field">order</span></th>
+          <th>Genus</th>
+          <th>Family</th>
+          <th>Order</th>
           <th>Species</th>
           <th>Records</th>
           <th>Countries</th>
@@ -340,7 +340,7 @@ const {
 } = useTaxonomy()
 
 // 本地状态
-const viewMode = ref('cards')
+const viewMode = ref('table')
 const availableFamilies = ref([])
 
 // 计算属性
@@ -520,6 +520,7 @@ watch(() => filters.search, debouncedSearch)
 }
 
 .global-stat-number {
+  font-family: 'Montserrat', sans-serif;
   font-size: 28px;
   font-weight: bold;
   color: #3498db;
@@ -527,6 +528,7 @@ watch(() => filters.search, debouncedSearch)
 }
 
 .global-stat-label {
+  font-family: 'Inter', sans-serif;
   font-size: 12px;
   color: #666;
   text-transform: uppercase;
@@ -649,13 +651,15 @@ watch(() => filters.search, debouncedSearch)
 }
 
 .stat-category-title {
+  font-family: 'Inter', sans-serif;
   font-size: 14px;
-  font-weight: bold;
+  font-weight: 600;
   margin-bottom: 10px;
   color: #2c3e50;
 }
 
 .stat-category-value {
+  font-family: 'Montserrat', sans-serif;
   font-size: 28px;
   font-weight: bold;
   color: #3498db;
@@ -663,6 +667,7 @@ watch(() => filters.search, debouncedSearch)
 }
 
 .stat-category-desc {
+  font-family: 'Inter', sans-serif;
   font-size: 12px;
   color: #666;
 }
@@ -683,6 +688,7 @@ watch(() => filters.search, debouncedSearch)
 }
 
 .search-input, .filter-select {
+  font-family: 'Inter', sans-serif;
   padding: 10px 15px;
   border: 1px solid #ddd;
   border-radius: 6px;
@@ -810,6 +816,7 @@ watch(() => filters.search, debouncedSearch)
 }
 
 .genus-stat-number {
+  font-family: 'Montserrat', sans-serif;
   font-size: 18px;
   font-weight: bold;
   color: #3498db;
@@ -817,6 +824,7 @@ watch(() => filters.search, debouncedSearch)
 }
 
 .genus-stat-label {
+  font-family: 'Inter', sans-serif;
   font-size: 10px;
   color: #666;
   text-transform: uppercase;
@@ -885,6 +893,7 @@ watch(() => filters.search, debouncedSearch)
 .genera-table {
   width: 100%;
   border-collapse: collapse;
+  font-family: 'Inter', sans-serif;
   font-size: 14px;
 }
 
@@ -897,7 +906,7 @@ watch(() => filters.search, debouncedSearch)
 
 .genera-table th {
   background: #f8f9fa;
-  font-weight: bold;
+  font-weight: 600;
   color: #555;
   position: sticky;
   top: 0;

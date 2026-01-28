@@ -90,7 +90,7 @@
       <div class="browser-title">Browse by Taxonomic Hierarchy</div>
       <div class="taxonomy-levels">
         <div class="taxonomy-level">
-          <div class="level-title"><span class="dc-field">order</span></div>
+          <div class="level-title">Order</div>
           <select class="level-select" v-model="taxonomyFilters.order" @change="updateTaxonomyFilter">
             <option value="">All Orders ({{ availableOrders.length }})</option>
             <option v-for="order in availableOrders" :key="order.name" :value="order.name">
@@ -100,7 +100,7 @@
           <div class="level-count">{{ availableOrders.length }} orders available</div>
         </div>
         <div class="taxonomy-level">
-          <div class="level-title"><span class="dc-field">family</span></div>
+          <div class="level-title">Family</div>
           <select class="level-select" v-model="taxonomyFilters.family" @change="updateTaxonomyFilter">
             <option value="">All Families ({{ availableFamilies.length }})</option>
             <option v-for="family in availableFamilies" :key="family.name" :value="family.name">
@@ -110,7 +110,7 @@
           <div class="level-count">{{ availableFamilies.length }} families available</div>
         </div>
         <div class="taxonomy-level">
-          <div class="level-title"><span class="dc-field">genus</span></div>
+          <div class="level-title">Genus</div>
           <select class="level-select" v-model="taxonomyFilters.genus" @change="updateTaxonomyFilter">
             <option value="">All Genera ({{ availableGenera.length }})</option>
             <option v-for="genus in availableGenera" :key="genus.name" :value="genus.name">
@@ -135,7 +135,7 @@
       <div class="search-grid">
         <div class="search-field">
           <div class="search-label">
-            <span class="dc-field">scientificName</span>
+            Scientific Name
           </div>
           <input
               type="text"
@@ -238,10 +238,10 @@
       <table v-else-if="viewMode === 'table'" class="species-table">
         <thead>
         <tr>
-          <th><span class="dc-field">scientificName</span></th>
+          <th>Scientific Name</th>
           <th>Authority</th>
-          <!-- <th><span class="dc-field">vernacularName</span></th> -->
-          <th><span class="dc-field">family</span></th>
+          <!-- <th>Vernacular Name</th> -->
+          <th>Family</th>
           <th>Records</th>
           <th>Countries</th>
           <th>Institutions</th>

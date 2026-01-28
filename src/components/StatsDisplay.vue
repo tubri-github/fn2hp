@@ -122,15 +122,7 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  cursor: pointer;
   padding: 10px 15px;
-  border-radius: 10px;
-  transition: all 0.3s ease;
-}
-
-.stat-item:hover {
-  background: rgba(44, 124, 185, 0.05);
-  transform: translateY(-5px);
 }
 
 .stat-number {
