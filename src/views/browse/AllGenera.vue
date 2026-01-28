@@ -177,12 +177,14 @@
           <div class="genus-card-header">
             <h3 class="genus-name">{{ genus.genus }}</h3>
             <router-link
+                v-if="genus.family"
                 :to="{ name: 'FamilyDetail', params: { familyName: genus.family } }"
                 class="genus-family"
                 @click.stop
             >
               {{ genus.family }}
             </router-link>
+            <span v-else class="genus-family">—</span>
           </div>
           <div class="genus-stats-row">
             <div class="genus-stat">
@@ -257,12 +259,14 @@
           <td><span class="table-genus-name">{{ genus.genus }}</span></td>
           <td>
             <router-link
+                v-if="genus.family"
                 :to="{ name: 'FamilyDetail', params: { familyName: genus.family } }"
                 class="family-link"
                 @click.stop
             >
               {{ genus.family }}
             </router-link>
+            <span v-else>—</span>
           </td>
           <td>{{ genus.order || '—' }}</td>
           <td>{{ formatNumber(genus.speciesCount) }}</td>

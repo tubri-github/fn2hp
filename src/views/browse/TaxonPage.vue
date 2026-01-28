@@ -18,9 +18,16 @@
       <!-- Breadcrumb Navigation -->
       <div class="breadcrumb">
         <router-link to="/">Home</router-link> &gt;
-        <router-link to="/browse">Browse</router-link> &gt;
-        <router-link v-if="hierarchy.order" :to="`/browse/orders/${hierarchy.order}`">{{ hierarchy.order }}</router-link> &gt;
-        <strong>{{ taxonName }}</strong>
+        <router-link to="/browse">Browse</router-link>
+        <!-- Family level: show family name if viewing genus or species -->
+        <template v-if="taxonType === 'genus' || taxonType === 'species'">
+          &gt; <router-link v-if="hierarchy.family" :to="`/browse/families/${hierarchy.family}`">{{ hierarchy.family }}</router-link>
+        </template>
+        <!-- Genus level: show genus name if viewing species -->
+        <template v-if="taxonType === 'species'">
+          &gt; <router-link v-if="hierarchy.genus" :to="`/browse/genera/${hierarchy.genus}`">{{ hierarchy.genus }}</router-link>
+        </template>
+        &gt; <strong>{{ taxonName }}</strong>
       </div>
 
       <!-- Family Header with Darwin Core Fields -->
@@ -570,6 +577,7 @@ const institutionSort = ref('records_desc')
 // Map and timeline specific state
 const loadingMapData = ref(false)
 const institutionMapData = ref([])
+const mapPointsAbortController = ref(null)  // For cancelling pending map-points requests
 const timelineData = ref([])
 const detailedTimelineData = ref([])
 
@@ -911,9 +919,9 @@ const loadMapData = async () => {
       institutionMapData.value = []
     }
     console.log('Final map data:', institutionMapData.value.length, 'points')
-    
-    // Load all map points (heatmap)
-    await loadCoordinateRecords()
+
+    // Load initial map points with default zoom (coarse grid)
+    await loadCoordinateRecords({ zoom: 2 })
   } catch (err) {
     console.error('Failed to load map data:', err)
     institutionMapData.value = []
@@ -941,10 +949,21 @@ const normalizePoint = (point) => {
 
 // 通过 map-points API 加载聚合坐标数据（新统一格式）
 const loadCoordinateRecords = async (params = {}) => {
+  // Cancel any pending request
+  if (mapPointsAbortController.value) {
+    mapPointsAbortController.value.abort()
+  }
+  mapPointsAbortController.value = new AbortController()
+
   try {
     console.log('Loading map points for', props.taxonType, props.taxonName, params)
 
-    const response = await recordsApi.getMapPoints(props.taxonType, props.taxonName, params)
+    const response = await recordsApi.getMapPoints(
+      props.taxonType,
+      props.taxonName,
+      params,
+      { signal: mapPointsAbortController.value.signal }
+    )
 
     // { points: [[lat, lng], ...], total: N }
     const points = response.points || (Array.isArray(response) ? response : [])
@@ -952,6 +971,11 @@ const loadCoordinateRecords = async (params = {}) => {
     distMapMode.value = 'heatmap'
     console.log('Heatmap data loaded:', points.length, 'points')
   } catch (err) {
+    // Ignore abort errors
+    if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED') {
+      console.log('Map points request cancelled')
+      return
+    }
     console.error('Failed to load map points:', err)
     // Fallback: 如果新 API 不存在则用旧的分页方式
     if (err.response && err.response.status === 404) {
@@ -1015,15 +1039,16 @@ const zoomToPrecision = (zoom) => {
   return 3
 }
 
-// 地图视窗变化时动态加载数据（debounce 300ms）
-const onMapBoundsChanged = debounce(({ bounds }) => {
+// 地图视窗变化时动态加载数据（debounce 500ms）
+const onMapBoundsChanged = debounce(({ bounds, zoom }) => {
   loadCoordinateRecords({
     south: bounds.south.toFixed(4),
     north: bounds.north.toFixed(4),
     west: bounds.west.toFixed(4),
-    east: bounds.east.toFixed(4)
+    east: bounds.east.toFixed(4),
+    zoom: zoom || 2
   })
-}, 300)
+}, 500)
 
 const loadTimelineData = async () => {
   try {

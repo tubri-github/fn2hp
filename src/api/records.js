@@ -35,8 +35,8 @@ export const recordsApi = {
     },
 
     // 获取聚合地图点（支持 precision + viewport bounds）
-    getMapPoints(taxonType, taxonName, params = {}) {
-        return api.get(`/records/taxon/${taxonType}/${encodeURIComponent(taxonName)}/map-points`, { params })
+    getMapPoints(taxonType, taxonName, params = {}, config = {}) {
+        return api.get(`/records/taxon/${taxonType}/${encodeURIComponent(taxonName)}/map-points`, { params, ...config })
     },
 
     // 获取地理分布数据

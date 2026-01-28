@@ -199,7 +199,7 @@ export default {
       dialogVisible: false,
       selectedRow: null,
       fn2hpBaseUrl: 'http://localhost:5173',
-      linkableFields: ['ScientificName', 'Family', 'InstitutionCode', 'Genus'],
+      linkableFields: ['ScientificName', 'ValidName', 'Family', 'InstitutionCode', 'Genus'],
       sortableFields: ['ScientificName', 'Family', 'Genus', 'Country', 'YearCollected', 'InstitutionCode'],
       selectedColumns: [],
       columnSearchText: '',
@@ -326,6 +326,7 @@ export default {
 
       switch (fieldProp) {
         case 'ScientificName':
+        case 'ValidName':
           return `${this.fn2hpBaseUrl}/browse/species/${encodedValue}`;
         case 'Family':
           return `${this.fn2hpBaseUrl}/browse/families/${encodedValue}`;
