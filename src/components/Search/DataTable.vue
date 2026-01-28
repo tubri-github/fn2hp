@@ -198,7 +198,7 @@ export default {
     return {
       dialogVisible: false,
       selectedRow: null,
-      fn2hpBaseUrl: '',
+      fn2hpBaseUrl: import.meta.env.BASE_URL.replace(/\/$/, ''),
       linkableFields: ['ScientificName', 'ValidName', 'Family', 'InstitutionCode', 'Genus'],
       sortableFields: ['ScientificName', 'Family', 'Genus', 'Country', 'YearCollected', 'InstitutionCode'],
       selectedColumns: [],
