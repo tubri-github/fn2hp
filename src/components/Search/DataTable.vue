@@ -198,7 +198,7 @@ export default {
     return {
       dialogVisible: false,
       selectedRow: null,
-      fn2hpBaseUrl: 'http://localhost:5173',
+      fn2hpBaseUrl: '',
       linkableFields: ['ScientificName', 'ValidName', 'Family', 'InstitutionCode', 'Genus'],
       sortableFields: ['ScientificName', 'Family', 'Genus', 'Country', 'YearCollected', 'InstitutionCode'],
       selectedColumns: [],
