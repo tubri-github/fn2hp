@@ -103,7 +103,7 @@
           </td>
           <td class="institution-code">
             <router-link
-                :to="{ name: 'InstitutionDetail', params: { institutionCode: record.institutionCode } }"
+                :to="{ name: 'ProviderDetail', params: { institutionCode: record.institutionCode } }"
                 class="institution-link"
                 @click.stop
             >

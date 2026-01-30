@@ -14,400 +14,345 @@
     </div>
 
     <!-- Main Content -->
-    <div v-else-if="currentInstitution">
+    <div v-else-if="currentInstitution" class="container">
+      <!-- Breadcrumb Navigation -->
+      <div class="breadcrumb">
+        <router-link to="/">Home</router-link> &gt;
+        <router-link to="/browse">Browse</router-link> &gt;
+        <router-link to="/browse/providers">Data Providers</router-link> &gt;
+        <strong>{{ currentInstitution.institutionCode }}</strong>
+      </div>
+
       <!-- Institution Header -->
       <div class="institution-header">
-        <div class="institution-main-info">
-          <div class="institution-logo">
-            {{ currentInstitution.institutionCode }}
-          </div>
-          <div class="institution-details">
-            <h1 class="institution-name">{{ currentInstitution.institutionName }}</h1>
-            <div class="institution-codes">
-  <span class="code-tag">
-                  <span class="dc-field">institutionCode:</span> {{ currentInstitution.institutionCode }}
-                </span>
-  <span v-if="currentInstitution.ownerInstitutionCode" class="code-tag">
-                  <span class="dc-field">ownerInstitutionCode:</span> {{ currentInstitution.ownerInstitutionCode }}
-                </span>
-  </div>
-
-  <div class="institution-location">
-  <span class="icon">📍</span>
-  {{ formatLocation(currentInstitution) }}
-  </div>
-
-  <div v-if="currentInstitution.institutionType" class="institution-type">
-  <span class="dc-field">institutionType:</span> {{ currentInstitution.institutionType }}
-  </div>
-  </div>
-  </div>
-
-  <!-- <div class="institution-actions">
-  <button class="action-button primary" @click="exportInstitutionData">
-    <span class="icon">📊</span> Export Data
-  </button>
-  <button class="action-button secondary" @click="viewRecords">
-    <span class="icon">🔍</span> View Records
-  </button>
-  <button class="action-button secondary" @click="contactInstitution">
-    <span class="icon">📧</span> Contact
-  </button>
-  </div> -->
-  </div>
-
-  <!-- Statistics Overview -->
-  <div class="stats-overview">
-  <div class="stat-card">
-    <div class="stat-number" :class="{ 'skeleton-text': currentInstitution.recordCount == null }">
-      {{ currentInstitution.recordCount != null ? formatNumber(currentInstitution.recordCount) : '' }}
-    </div>
-    <div class="stat-label">Total Records</div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-number" :class="{ 'skeleton-text': currentInstitution.speciesCount == null }">
-      {{ currentInstitution.speciesCount != null ? formatNumber(currentInstitution.speciesCount) : '' }}
-    </div>
-    <div class="stat-label">Species</div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-number" :class="{ 'skeleton-text': currentInstitution.familiesCount == null }">
-      {{ currentInstitution.familiesCount != null ? formatNumber(currentInstitution.familiesCount) : '' }}
-    </div>
-    <div class="stat-label">Families</div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-number" :class="{ 'skeleton-text': currentInstitution.countriesCount == null }">
-      {{ currentInstitution.countriesCount != null ? formatNumber(currentInstitution.countriesCount) : '' }}
-    </div>
-    <div class="stat-label">Countries</div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-number" :class="{ 'skeleton-text': currentInstitution.geoReferencingQuality == null }">
-      {{ currentInstitution.geoReferencingQuality != null ? currentInstitution.geoReferencingQuality + '%' : '' }}
-    </div>
-    <div class="stat-label">Georeferenced</div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-number" :class="{ 'skeleton-text': currentInstitution.dateQuality == null }">
-      {{ currentInstitution.dateQuality != null ? currentInstitution.dateQuality + '%' : '' }}
-    </div>
-    <div class="stat-label">Date Quality</div>
-  </div>
-  </div>
-
-  <!-- Content Tabs -->
-  <div class="content-tabs">
-  <div class="tab-nav">
-    <button
-        v-for="tab in availableTabs"
-        :key="tab.key"
-        class="tab-button"
-        :class="{ active: activeTab === tab.key }"
-        @click="activeTab = tab.key"
-    >
-      {{ tab.label }}
-    </button>
-  </div>
-
-  <!-- Overview Tab -->
-  <div v-if="activeTab === 'overview'" class="tab-content">
-    <div class="overview-grid">
-      <!-- Institution Information -->
-      <div class="info-section">
-        <h3>Institution Information</h3>
-        <div class="info-grid">
-          <div class="info-item">
-            <span class="dc-field">institutionCode:</span>
-            <span>{{ currentInstitution.institutionCode }}</span>
-          </div>
-          <div v-if="currentInstitution.ownerInstitutionCode" class="info-item">
-            <span class="dc-field">ownerInstitutionCode:</span>
-            <span>{{ currentInstitution.ownerInstitutionCode }}</span>
-          </div>
-          <div v-if="currentInstitution.institutionType" class="info-item">
-            <span class="dc-field">institutionType:</span>
-            <span>{{ currentInstitution.institutionType }}</span>
-          </div>
-          <div v-if="currentInstitution.country" class="info-item">
-            <span class="dc-field">country:</span>
-            <span>{{ currentInstitution.country }}</span>
-          </div>
-          <div v-if="currentInstitution.stateProvince" class="info-item">
-            <span class="dc-field">stateProvince:</span>
-            <span>{{ currentInstitution.stateProvince }}</span>
-          </div>
-          <div v-if="currentInstitution.locality" class="info-item">
-            <span class="dc-field">locality:</span>
-            <span>{{ currentInstitution.locality }}</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Collection Information -->
-      <div class="info-section">
-        <h3>Collection Information</h3>
-        <div class="collection-codes-section">
-          <div class="collection-codes-label">
-            <span class="dc-field">collectionCode</span> values:
-          </div>
-          <div class="collection-codes-list">
-                    <span
-                        v-for="code in currentInstitution.collectionCodes"
-                        :key="code"
-                        class="collection-code"
-                    >
-                      {{ code }}
-                    </span>
-          </div>
-        </div>
-
-        <div class="info-grid" style="margin-top: 20px;">
-          <div class="info-item">
-            <span class="label">First Record:</span>
-            <span>{{ formatDate(currentInstitution.firstRecord) }}</span>
-          </div>
-          <div class="info-item">
-            <span class="label">Latest Record:</span>
-            <span>{{ formatDate(currentInstitution.latestRecord) }}</span>
-          </div>
-          <div class="info-item">
-            <span class="label">Data Quality Score:</span>
-            <span class="quality-score" :class="getQualityClass(currentInstitution.overallQuality)">
-                      {{ currentInstitution.overallQuality || 0 }}%
-                    </span>
-          </div>
-          <div class="info-item">
-            <span class="label">Last Updated:</span>
-            <span>{{ formatDate(currentInstitution.lastUpdated) }}</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Contact Information -->
-      <div v-if="currentInstitution.contactInfo" class="info-section">
-        <h3>Contact Information</h3>
-        <div class="contact-info">
-          <div v-if="currentInstitution.contactInfo.website" class="contact-item">
-            <span class="icon">🌐</span>
-            <a :href="currentInstitution.contactInfo.website" target="_blank" rel="noopener">
-              {{ currentInstitution.contactInfo.website }}
-            </a>
-          </div>
-          <div v-if="currentInstitution.contactInfo.email" class="contact-item">
-            <span class="icon">📧</span>
-            <a :href="`mailto:${currentInstitution.contactInfo.email}`">
-              {{ currentInstitution.contactInfo.email }}
-            </a>
-          </div>
-          <div v-if="currentInstitution.contactInfo.phone" class="contact-item">
-            <span class="icon">📞</span>
-            <span>{{ currentInstitution.contactInfo.phone }}</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Data Quality Metrics -->
-      <div class="info-section">
-        <h3>Data Quality Metrics</h3>
-        <div class="quality-metrics">
-          <div class="quality-metric">
-            <div class="metric-label">Geographic Coordinates</div>
-            <div class="metric-bar">
-              <div class="metric-fill" :style="{ width: `${currentInstitution.geoReferencingQuality}%` }"></div>
+        <div class="institution-title">
+          <div class="institution-logo">{{ currentInstitution.institutionCode }}</div>
+          <div class="institution-title-text">
+            <h1 class="institution-name">{{ currentInstitution.officialName || currentInstitution.institutionName }}</h1>
+            <div v-if="currentInstitution.alternateName" class="institution-alternate">
+              {{ currentInstitution.alternateName }}
             </div>
-            <div class="metric-value">{{ currentInstitution.geoReferencingQuality }}%</div>
           </div>
-          <div class="quality-metric">
-            <div class="metric-label">Date Information</div>
-            <div class="metric-bar">
-              <div class="metric-fill" :style="{ width: `${currentInstitution.dateQuality}%` }"></div>
-            </div>
-            <div class="metric-value">{{ currentInstitution.dateQuality }}%</div>
+        </div>
+
+        <div class="darwin-core-fields">
+          <div class="dc-field-group">
+            <div class="dc-label">institutionCode</div>
+            <div class="dc-value">{{ currentInstitution.institutionCode }}</div>
           </div>
-          <div class="quality-metric">
-            <div class="metric-label">Taxonomic Identification</div>
-            <div class="metric-bar">
-              <div class="metric-fill" :style="{ width: `${currentInstitution.taxonomicQuality}%` }"></div>
-            </div>
-            <div class="metric-value">{{ currentInstitution.taxonomicQuality }}%</div>
+          <div v-if="currentInstitution.ownerInstitutionCode" class="dc-field-group">
+            <div class="dc-label">ownerInstitutionCode</div>
+            <div class="dc-value">{{ currentInstitution.ownerInstitutionCode }}</div>
+          </div>
+          <div class="dc-field-group">
+            <div class="dc-label">Location</div>
+            <div class="dc-value">{{ formatLocation(currentInstitution) }}</div>
+          </div>
+          <div v-if="currentInstitution.source" class="dc-field-group">
+            <div class="dc-label">Data Source</div>
+            <div class="dc-value">{{ currentInstitution.source }}</div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- Species Tab -->
-  <div v-if="activeTab === 'species'" class="tab-content">
-    <div class="species-section">
-      <div class="species-header">
-        <h3>Species from this Institution</h3>
-        <div class="species-controls">
-          <input
-              type="text"
-              placeholder="Search species..."
-              v-model="speciesSearch"
-              class="search-input"
-          />
-          <select v-model="speciesSort" class="sort-select">
-            <option value="records_desc">Most Records</option>
-            <option value="name_asc">Name (A-Z)</option>
-            <option value="family_asc">Family (A-Z)</option>
-            <option value="recent_desc">Recently Added</option>
+      <!-- Navigation Menu -->
+      <nav class="nav-menu">
+        <ul>
+          <li><a @click.prevent="scrollToSection('overview')">Overview</a></li>
+          <li><a @click.prevent="scrollToSection('species')">Species</a></li>
+          <li><a @click.prevent="scrollToSection('distribution')">Geographic Distribution</a></li>
+        </ul>
+      </nav>
+
+      <!-- Overview Section -->
+      <section id="overview" class="section">
+        <h2 class="section-title">Institution Overview</h2>
+
+        <!-- Statistics Cards - matching TaxonPage style -->
+        <div class="overview-stats-grid">
+          <div class="overview-stat-card">
+            <div class="stat-content">
+              <div class="stat-number" :class="{ 'skeleton-text': currentInstitution.recordCount == null }">
+                {{ currentInstitution.recordCount != null ? formatNumber(currentInstitution.recordCount) : '' }}
+              </div>
+              <div class="stat-label">Total Records</div>
+              <div class="stat-context">Preserved specimens</div>
+            </div>
+          </div>
+          <div class="overview-stat-card">
+            <div class="stat-content">
+              <div class="stat-number" :class="{ 'skeleton-text': currentInstitution.speciesCount == null }">
+                {{ currentInstitution.speciesCount != null ? formatNumber(currentInstitution.speciesCount) : '' }}
+              </div>
+              <div class="stat-label">Species</div>
+              <div class="stat-context">Taxonomic diversity</div>
+            </div>
+          </div>
+          <div class="overview-stat-card">
+            <div class="stat-content">
+              <div class="stat-number" :class="{ 'skeleton-text': currentInstitution.familiesCount == null }">
+                {{ currentInstitution.familiesCount != null ? formatNumber(currentInstitution.familiesCount) : '' }}
+              </div>
+              <div class="stat-label">Families</div>
+              <div class="stat-context">Family coverage</div>
+            </div>
+          </div>
+          <div class="overview-stat-card">
+            <div class="stat-content">
+              <div class="stat-number" :class="{ 'skeleton-text': currentInstitution.countriesCount == null }">
+                {{ currentInstitution.countriesCount != null ? formatNumber(currentInstitution.countriesCount) : '' }}
+              </div>
+              <div class="stat-label">Countries</div>
+              <div class="stat-context">Geographic coverage</div>
+            </div>
+          </div>
+          <div class="overview-stat-card">
+            <div class="stat-content">
+              <div class="stat-number" :class="{ 'skeleton-text': currentInstitution.geoReferencingQuality == null }">
+                {{ currentInstitution.geoReferencingQuality != null ? currentInstitution.geoReferencingQuality + '%' : '' }}
+              </div>
+              <div class="stat-label">Georeferenced</div>
+              <div class="stat-context">With coordinates</div>
+            </div>
+          </div>
+          <div class="overview-stat-card">
+            <div class="stat-content">
+              <div class="stat-number" :class="{ 'skeleton-text': currentInstitution.dateQuality == null }">
+                {{ currentInstitution.dateQuality != null ? currentInstitution.dateQuality + '%' : '' }}
+              </div>
+              <div class="stat-label">Date Quality</div>
+              <div class="stat-context">With collection date</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Overview Content -->
+        <div class="overview-main-content">
+          <!-- Left: Institution Details -->
+          <div class="overview-left">
+            <!-- Contact & Links -->
+            <div class="info-card">
+              <h3>Contact Information</h3>
+              <div class="contact-list">
+                <div v-if="currentInstitution.website" class="contact-row">
+                  <span class="contact-label">Website</span>
+                  <a :href="currentInstitution.website" target="_blank" rel="noopener">{{ currentInstitution.website }}</a>
+                </div>
+                <div v-if="currentInstitution.email" class="contact-row">
+                  <span class="contact-label">Email</span>
+                  <a :href="`mailto:${currentInstitution.email}`">{{ currentInstitution.email }}</a>
+                </div>
+                <div v-if="currentInstitution.phone" class="contact-row">
+                  <span class="contact-label">Phone</span>
+                  <span>{{ currentInstitution.phone }}</span>
+                </div>
+                <div v-if="currentInstitution.address" class="contact-row">
+                  <span class="contact-label">Address</span>
+                  <span>{{ currentInstitution.address }}</span>
+                </div>
+              </div>
+
+              <!-- Social Media -->
+              <div v-if="currentInstitution.twitter || currentInstitution.facebook || currentInstitution.instagram" class="social-media">
+                <div class="social-label">Social Media</div>
+                <div class="social-links">
+                  <a v-if="currentInstitution.twitter" :href="`https://twitter.com/${currentInstitution.twitter.replace('@', '')}`" target="_blank" class="social-link twitter" title="Twitter">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                  </a>
+                  <a v-if="currentInstitution.facebook" :href="`https://facebook.com/${currentInstitution.facebook.replace('@', '')}`" target="_blank" class="social-link facebook" title="Facebook">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                  </a>
+                  <a v-if="currentInstitution.instagram" :href="`https://instagram.com/${currentInstitution.instagram.replace('@', '')}`" target="_blank" class="social-link instagram" title="Instagram">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                  </a>
+                </div>
+              </div>
+
+              <!-- External Data Sources -->
+              <div v-if="externalDataUrls.length > 0" class="external-data">
+                <div class="external-label">Data Sources</div>
+                <div class="external-links-list">
+                  <a v-for="(url, index) in externalDataUrls" :key="index" :href="url.href" target="_blank" rel="noopener" class="external-link-item">
+                    {{ url.label }}
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Collection Information -->
+            <div class="info-card" v-if="currentInstitution.preparationType || currentInstitution.environment || currentInstitution.specimensAmount">
+              <h3>Collection Information</h3>
+              <div class="info-list">
+                <div v-if="currentInstitution.specimensAmount" class="info-row">
+                  <span class="info-label">Total Specimens:</span>
+                  <span class="info-value">{{ formatNumber(currentInstitution.specimensAmount) }}</span>
+                </div>
+                <div v-if="currentInstitution.establishTime" class="info-row">
+                  <span class="info-label">Established:</span>
+                  <span class="info-value">{{ currentInstitution.establishTime }}</span>
+                </div>
+                <div v-if="currentInstitution.preparationType" class="info-row">
+                  <span class="info-label">Preparation Types:</span>
+                  <span class="info-value">{{ formatArrayField(currentInstitution.preparationType) }}</span>
+                </div>
+                <div v-if="currentInstitution.environment" class="info-row">
+                  <span class="info-label">Environments:</span>
+                  <span class="info-value">{{ formatArrayField(currentInstitution.environment) }}</span>
+                </div>
+                <div v-if="currentInstitution.geneticResources" class="info-row">
+                  <span class="info-label">Genetic Resources:</span>
+                  <span class="info-value">{{ formatArrayField(currentInstitution.geneticResources) }}</span>
+                </div>
+                <div v-if="currentInstitution.primaryTypeLots !== null && currentInstitution.primaryTypeLots !== undefined" class="info-row">
+                  <span class="info-label">Primary Type Lots:</span>
+                  <span class="info-value">{{ currentInstitution.primaryTypeLots ? 'Yes' : 'No' }}</span>
+                </div>
+                <div v-if="currentInstitution.secondaryTypeLots !== null && currentInstitution.secondaryTypeLots !== undefined" class="info-row">
+                  <span class="info-label">Secondary Type Lots:</span>
+                  <span class="info-value">{{ currentInstitution.secondaryTypeLots ? 'Yes' : 'No' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Staff Contacts -->
+          <div class="overview-right">
+            <div v-if="currentInstitution.contacts && currentInstitution.contacts.length > 0" class="info-card">
+              <h3>Staff Contacts</h3>
+              <div class="contacts-list">
+                <div v-for="(contact, index) in currentInstitution.contacts" :key="index" class="contact-card">
+                  <div class="contact-name">{{ contact.firstName }} {{ contact.lastName }}</div>
+                  <div v-if="contact.title || contact.contactType" class="contact-title">
+                    {{ contact.title || contact.contactType }}
+                  </div>
+                  <div v-if="contact.email" class="contact-email">
+                    <a :href="`mailto:${contact.email}`">{{ contact.email }}</a>
+                  </div>
+                  <div v-if="contact.phone" class="contact-phone">{{ contact.phone }}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Data Quality -->
+            <div class="info-card">
+              <h3>Data Quality Metrics</h3>
+              <div class="quality-metrics">
+                <div class="quality-metric">
+                  <div class="metric-label">Geographic Coordinates</div>
+                  <div class="metric-bar">
+                    <div class="metric-fill" :style="{ width: `${currentInstitution.geoReferencingQuality || 0}%` }"></div>
+                  </div>
+                  <div class="metric-value">{{ currentInstitution.geoReferencingQuality || 0 }}%</div>
+                </div>
+                <div class="quality-metric">
+                  <div class="metric-label">Date Information</div>
+                  <div class="metric-bar">
+                    <div class="metric-fill" :style="{ width: `${currentInstitution.dateQuality || 0}%` }"></div>
+                  </div>
+                  <div class="metric-value">{{ currentInstitution.dateQuality || 0 }}%</div>
+                </div>
+                <div class="quality-metric">
+                  <div class="metric-label">Taxonomic Identification</div>
+                  <div class="metric-bar">
+                    <div class="metric-fill" :style="{ width: `${currentInstitution.taxonomicQuality || 0}%` }"></div>
+                  </div>
+                  <div class="metric-value">{{ currentInstitution.taxonomicQuality || 0 }}%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Species Section -->
+      <section id="species" class="section">
+        <h2 class="section-title">Species from this Institution</h2>
+
+        <div class="section-controls">
+          <input type="text" placeholder="Filter species by name..." v-model="speciesSearch" class="filter-input" style="flex: 1;">
+          <select v-model="speciesSort" class="filter-select">
+            <option value="records_desc">Sort by Record Count</option>
+            <option value="name_asc">Sort by Name (A-Z)</option>
+            <option value="family_asc">Sort by Family</option>
           </select>
         </div>
-      </div>
 
-      <div v-if="loadingSpecies" class="loading-species">
-        Loading species data...
-      </div>
-
-      <div v-else class="species-grid">
-        <div
-            v-for="species in filteredSpecies"
-            :key="species.scientificName"
-            class="species-card"
-            @click="navigateToSpecies(species.scientificName)"
-        >
-          <div class="species-header">
-            <h4 class="species-name">{{ species.scientificName }}</h4>
-            <!-- <span v-if="species.vernacularName" class="species-common">{{ species.vernacularName }}</span> -->
-          </div>
-          <div class="species-meta">
-            <span class="species-family">{{ species.family }}</span>
-            <span class="species-authority">{{ species.authority }}</span>
-          </div>
-          <div class="species-stats">
-            <div class="species-stat">
-              <span class="stat-value">{{ formatNumber(species.recordCount) }}</span>
-              <span class="stat-label">records</span>
-            </div>
-            <div class="species-stat">
-              <span class="stat-value">{{ formatNumber(species.countriesCount) }}</span>
-              <span class="stat-label">countries</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Species Pagination -->
-      <div v-if="speciesPagination.total > speciesPagination.perPage" class="pagination">
-        <button
-            class="pagination-btn"
-            :disabled="speciesPagination.page === 1"
-            @click="changeSpeciesPage(speciesPagination.page - 1)"
-        >
-          « Previous
-        </button>
-
-        <span class="pagination-info">
-                  Page {{ speciesPagination.page }} of {{ Math.ceil(speciesPagination.total / speciesPagination.perPage) }}
-                </span>
-
-        <button
-            class="pagination-btn"
-            :disabled="speciesPagination.page >= Math.ceil(speciesPagination.total / speciesPagination.perPage)"
-            @click="changeSpeciesPage(speciesPagination.page + 1)"
-        >
-          Next »
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Records Tab -->
-  <div v-if="activeTab === 'records'" class="tab-content">
-    <RecordsTable
-        :institution-code="institutionCode"
-        :show-search="true"
-        :show-export="true"
-    />
-  </div>
-
-<!-- Geography Tab -->
-<div v-if="activeTab === 'geography'" class="tab-content">
-  <div class="geography-section">
-    <h3>Geographic Coverage</h3>
-
-    <InstitutionRecordsMap
-        :institution-code="institutionCode"
-        :records="institutionRecords"
-        :loading="loadingRecords"
-        @record-clicked="handleRecordClick"
-    />
-
-    <!-- Countries Summary -->
-    <div v-if="geographyData.countries" class="countries-summary">
-      <h4>Countries with Records</h4>
-      <div class="countries-grid">
-        <div
-            v-for="country in geographyData.countries"
-            :key="country.code"
-            class="country-item"
-        >
-          <div class="country-header">
-            <div class="country-name">{{ country.name }}</div>
-            <div class="country-count">{{ formatNumber(country.recordCount) }}</div>
-          </div>
-          <div class="country-stats">
-            <span>{{ formatNumber(country.speciesCount) }} species</span>
-            <span>{{ formatNumber(country.familiesCount) }} families</span>
-          </div>
-          <div class="country-quality">
-            Quality: {{ country.dataQuality }}%
+        <div v-if="loadingSpecies" class="loading-children">Loading species data...</div>
+        <div v-else class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Scientific Name</th>
+                <th>Family</th>
+                <th>Records</th>
+                <th>Countries</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(sp, index) in species" :key="sp.scientificName" class="table-row" @click="navigateToSpecies(sp.scientificName)">
+                <td>{{ (speciesPagination.page - 1) * speciesPagination.perPage + index + 1 }}</td>
+                <td><span class="species-name">{{ sp.scientificName }}</span></td>
+                <td>{{ sp.family }}</td>
+                <td>
+                  <div class="records-bar-container">
+                    <div class="records-bar" :style="{ width: getSpeciesRecordsPercentage(sp.recordCount) + '%' }"></div>
+                    <div class="records-text">{{ formatNumber(sp.recordCount) }}</div>
+                  </div>
+                </td>
+                <td>{{ sp.countriesCount || 0 }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <div v-if="species.length === 0" class="no-data">
+            No species data available
           </div>
         </div>
-      </div>
+
+        <!-- Species Pagination -->
+        <div v-if="speciesPagination.total > speciesPagination.perPage" class="pagination">
+          <div class="pagination-info">
+            Showing {{ (speciesPagination.page - 1) * speciesPagination.perPage + 1 }}-{{ Math.min(speciesPagination.page * speciesPagination.perPage, speciesPagination.total) }}
+            of {{ formatNumber(speciesPagination.total) }} species
+          </div>
+          <div class="pagination-controls">
+            <button class="pagination-btn" :disabled="speciesPagination.page === 1" @click="changeSpeciesPage(speciesPagination.page - 1)">
+              Previous
+            </button>
+            <span class="pagination-current">Page {{ speciesPagination.page }} of {{ speciesPagination.pages }}</span>
+            <button class="pagination-btn" :disabled="speciesPagination.page >= speciesPagination.pages" @click="changeSpeciesPage(speciesPagination.page + 1)">
+              Next
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Geographic Distribution Section -->
+      <section id="distribution" class="section">
+        <h2 class="section-title">Geographic Distribution</h2>
+
+        <div class="full-width-map-container">
+          <div v-if="loadingMapData" class="skeleton-block" style="height: 400px"></div>
+          <CompactHeatMap
+              v-else
+              :data="mapPoints"
+              :height="400"
+              mode="heatmap"
+              @bounds-changed="onMapBoundsChanged"
+          />
+        </div>
+      </section>
     </div>
   </div>
-</div>
-
-<!--&lt;!&ndash; Collaboration Tab &ndash;&gt;-->
-<!--<div v-if="activeTab === 'collaboration'" class="tab-content">-->
-<!--  <div class="collaboration-section">-->
-<!--    <h3>Institutional Collaborations</h3>-->
-
-<!--    <div class="collaboration-placeholder">-->
-<!--      <p>Collaboration network visualization coming soon...</p>-->
-<!--    </div>-->
-
-<!--    <div v-if="collaborationData.partners" class="partners-list">-->
-<!--      <h4>Collaboration Partners</h4>-->
-<!--      <div class="partners-grid">-->
-<!--        <div-->
-<!--            v-for="partner in collaborationData.partners"-->
-<!--            :key="partner.institutionCode"-->
-<!--            class="partner-item"-->
-<!--            @click="navigateToInstitution(partner.institutionCode)"-->
-<!--        >-->
-<!--          <div class="partner-logo">{{ partner.institutionCode }}</div>-->
-<!--          <div class="partner-info">-->
-<!--            <div class="partner-name">{{ partner.institutionName }}</div>-->
-<!--            <div class="partner-stats">-->
-<!--              {{ formatNumber(partner.sharedSpecies) }} shared species-->
-<!--            </div>-->
-<!--          </div>-->
-<!--        </div>-->
-<!--      </div>-->
-<!--    </div>-->
-<!--  </div>-->
-<!--</div>-->
-</div>
-</div>
-</div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { debounce } from 'lodash-es'
 import { useInstitutions } from '@/composables/useInstitutions.js'
-import RecordsTable from '@/components/Browse/RecordsTable.vue'
-
-import InstitutionRecordsMap from '@/components/Browse/InstitutionRecordsMap.vue'
-
-// 添加记录相关的响应式数据
-const institutionRecords = ref([])
-const loadingRecords = ref(false)
+import { institutionsApi } from '@/api/institutions.js'
+import CompactHeatMap from '@/components/charts/CompactHeatMap.vue'
 
 // Props
 const props = defineProps({
@@ -424,103 +369,96 @@ const {
   loading,
   error,
   currentInstitution,
-  fetchInstitutionDetail,
-  fetchInstitutionRecords
+  fetchInstitutionDetailV2
 } = useInstitutions()
 
 // Local state
-const activeTab = ref('overview')
 const loadingSpecies = ref(false)
+const loadingMapData = ref(false)
 const species = ref([])
 const speciesSearch = ref('')
 const speciesSort = ref('records_desc')
-const speciesPagination = ref({
+const mapPoints = ref([])
+const mapAbortController = ref(null)
+
+// Species pagination
+const speciesPagination = reactive({
   page: 1,
-  perPage: 20,
-  total: 0
+  perPage: 25,
+  total: 0,
+  pages: 0
 })
-const geographyData = ref({})
-const collaborationData = ref({})
 
-// Computed properties
-const availableTabs = computed(() => [
-  { key: 'overview', label: 'Overview' },
-  { key: 'species', label: 'Species' },
-  { key: 'records', label: 'Records' },
-  { key: 'geography', label: 'Geography' },
-  // { key: 'collaboration', label: 'Collaboration' }
-])
+// Computed
+const maxSpeciesRecords = computed(() => {
+  return Math.max(...species.value.map(s => s.recordCount || 0), 1)
+})
 
-const filteredSpecies = computed(() => {
-  let filtered = species.value
+// Parse external data URLs from concatenated string
+const externalDataUrls = computed(() => {
+  if (!currentInstitution.value) return []
 
-  // Apply search filter
-  if (speciesSearch.value) {
-    const search = speciesSearch.value.toLowerCase()
-    filtered = filtered.filter(sp =>
-        sp.scientificName.toLowerCase().includes(search) ||
-        (sp.vernacularName && sp.vernacularName.toLowerCase().includes(search)) ||
-        sp.family.toLowerCase().includes(search)
-    )
+  const urls = []
+  const dataUrl = currentInstitution.value.dataUrl
+  const gbifLink = currentInstitution.value.gbifLink
+
+  // Parse dataUrl - may contain multiple URLs separated by ; or ,
+  if (dataUrl && typeof dataUrl === 'string') {
+    const urlParts = dataUrl.split(/[;,]/).map(u => u.trim()).filter(u => u.startsWith('http'))
+    urlParts.forEach(url => {
+      urls.push({
+        href: url,
+        label: getUrlLabel(url)
+      })
+    })
   }
 
-  // Apply sorting
-  filtered.sort((a, b) => {
-    switch (speciesSort.value) {
-      case 'name_asc':
-        return a.scientificName.localeCompare(b.scientificName)
-      case 'family_asc':
-        return a.family.localeCompare(b.family)
-      case 'records_desc':
-        return (b.recordCount || 0) - (a.recordCount || 0)
-      case 'recent_desc':
-        return new Date(b.lastRecord || 0) - new Date(a.lastRecord || 0)
-      default:
-        return 0
+  // Add gbifLink if not already included
+  if (gbifLink && typeof gbifLink === 'string' && gbifLink.startsWith('http')) {
+    const alreadyHasGbif = urls.some(u => u.href.includes('gbif.org'))
+    if (!alreadyHasGbif) {
+      urls.push({
+        href: gbifLink,
+        label: 'GBIF'
+      })
     }
-  })
+  }
 
-  return filtered
+  return urls
 })
 
-// Methods
-const loadInstitutionRecords = async () => {
-  loadingRecords.value = true
+// Get label from URL
+const getUrlLabel = (url) => {
+  if (url.includes('gbif.org')) return 'GBIF'
+  if (url.includes('idigbio.org')) return 'iDigBio'
+  if (url.includes('vertnet.org')) return 'VertNet'
+  if (url.includes('fishnet2.net')) return 'FishNet 2'
+  if (url.includes('arctos.database')) return 'Arctos'
   try {
-    const response = await fetchInstitutionRecords(props.institutionCode, {
-      per_page: 1000, // 获取更多记录用于地图显示
-      // 只获取有地理坐标的记录
-      georeferenced_only: true
-    })
-
-    // 过滤出有有效坐标的记录
-    institutionRecords.value = response.filter(record =>
-        record.decimalLatitude &&
-        record.decimalLongitude &&
-        !isNaN(parseFloat(record.decimalLatitude)) &&
-        !isNaN(parseFloat(record.decimalLongitude))
-    )
-
-    console.log('Loaded georeferenced records:', institutionRecords.value.length)
-  } catch (err) {
-    console.error('Failed to load institution records:', err)
-    institutionRecords.value = []
-  } finally {
-    loadingRecords.value = false
+    const hostname = new URL(url).hostname.replace('www.', '')
+    return hostname
+  } catch {
+    return 'Link'
   }
 }
 
+// Methods
 const loadInstitutionData = async () => {
+  // Reset state before loading new data
+  currentInstitution.value = null
+  species.value = []
+  mapPoints.value = []
+  speciesPagination.page = 1
+  speciesPagination.total = 0
+  speciesPagination.pages = 0
+
   try {
-    await fetchInstitutionDetail(props.institutionCode)
+    await fetchInstitutionDetailV2(props.institutionCode)
 
     if (currentInstitution.value) {
-      await Promise.all([
-        loadSpeciesData(),
-        loadGeographyData(),
-        loadCollaborationData(),
-        loadInstitutionRecords()
-      ])
+      // Load species and map data in parallel
+      loadSpeciesData()
+      loadMapPoints({ zoom: 2 })
     }
   } catch (err) {
     console.error('Failed to load institution data:', err)
@@ -530,92 +468,70 @@ const loadInstitutionData = async () => {
 const loadSpeciesData = async () => {
   loadingSpecies.value = true
   try {
-    // Mock species data
-    species.value = generateMockSpecies()
-    speciesPagination.value.total = species.value.length
+    const response = await institutionsApi.getInstitutionSpecies(props.institutionCode, {
+      page: speciesPagination.page,
+      per_page: speciesPagination.perPage,
+      search: speciesSearch.value || undefined,
+      sort_by: speciesSort.value
+    })
+    species.value = response.data || []
+    speciesPagination.total = response.total || 0
+    speciesPagination.pages = response.pages || Math.ceil(speciesPagination.total / speciesPagination.perPage)
   } catch (err) {
     console.error('Failed to load species data:', err)
+    species.value = []
   } finally {
     loadingSpecies.value = false
   }
 }
 
-const loadGeographyData = async () => {
+// Load map points using the map-points API (same as TaxonPage)
+const loadMapPoints = async (params = {}) => {
+  // Cancel any pending request
+  if (mapAbortController.value) {
+    mapAbortController.value.abort()
+  }
+  mapAbortController.value = new AbortController()
+
+  loadingMapData.value = true
   try {
-    // Mock geography data
-    geographyData.value = {
-      countries: [
-        {
-          code: 'US',
-          name: 'United States',
-          recordCount: 8450,
-          speciesCount: 124,
-          familiesCount: 45,
-          dataQuality: 94
-        },
-        {
-          code: 'CA',
-          name: 'Canada',
-          recordCount: 3210,
-          speciesCount: 87,
-          familiesCount: 32,
-          dataQuality: 91
-        },
-        {
-          code: 'MX',
-          name: 'Mexico',
-          recordCount: 1890,
-          speciesCount: 56,
-          familiesCount: 28,
-          dataQuality: 89
-        }
-      ]
-    }
+    const response = await institutionsApi.getInstitutionMapPoints(
+      props.institutionCode,
+      params,
+      { signal: mapAbortController.value.signal }
+    )
+
+    // Response format: { points: [[lat, lng, weight], ...], total: N }
+    mapPoints.value = response.points || []
+    console.log('Map points loaded:', mapPoints.value.length)
   } catch (err) {
-    console.error('Failed to load geography data:', err)
+    if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED') {
+      console.log('Map points request cancelled')
+      return
+    }
+    console.error('Failed to load map points:', err)
+    mapPoints.value = []
+  } finally {
+    loadingMapData.value = false
   }
 }
 
-const loadCollaborationData = async () => {
-  try {
-    // Mock collaboration data
-    collaborationData.value = {
-      partners: [
-        {
-          institutionCode: 'AMNH',
-          institutionName: 'American Museum of Natural History',
-          sharedSpecies: 234
-        },
-        {
-          institutionCode: 'CAS',
-          institutionName: 'California Academy of Sciences',
-          sharedSpecies: 189
-        },
-        {
-          institutionCode: 'FLMNH',
-          institutionName: 'Florida Museum of Natural History',
-          sharedSpecies: 156
-        }
-      ]
-    }
-  } catch (err) {
-    console.error('Failed to load collaboration data:', err)
+// Map bounds changed handler (debounced)
+const onMapBoundsChanged = debounce(({ bounds, zoom }) => {
+  loadMapPoints({
+    south: bounds.south.toFixed(4),
+    north: bounds.north.toFixed(4),
+    west: bounds.west.toFixed(4),
+    east: bounds.east.toFixed(4),
+    zoom: zoom || 2
+  })
+}, 500)
+
+const changeSpeciesPage = (page) => {
+  if (page >= 1 && page <= speciesPagination.pages) {
+    speciesPagination.page = page
+    loadSpeciesData()
   }
-}
-
-const generateMockSpecies = () => {
-  const families = ['Cyprinidae', 'Percidae', 'Salmonidae', 'Centrarchidae', 'Ictaluridae']
-  const count = Math.floor(Math.random() * 30) + 10
-
-  return Array.from({ length: count }, (_, i) => ({
-    scientificName: `Species example ${i + 1}`,
-    vernacularName: i % 3 === 0 ? `Common Name ${i + 1}` : null,
-    family: families[Math.floor(Math.random() * families.length)],
-    authority: 'Linnaeus, 1758',
-    recordCount: Math.floor(Math.random() * 1000) + 50,
-    countriesCount: Math.floor(Math.random() * 15) + 1,
-    lastRecord: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString()
-  }))
 }
 
 const navigateToSpecies = (scientificName) => {
@@ -625,87 +541,92 @@ const navigateToSpecies = (scientificName) => {
   })
 }
 
-const navigateToInstitution = (institutionCode) => {
-  router.push({
-    name: 'InstitutionDetail',
-    params: { institutionCode }
-  })
+const scrollToSection = (sectionId) => {
+  const element = document.getElementById(sectionId)
+  if (element) {
+    element.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    })
+  }
 }
 
-const changeSpeciesPage = (page) => {
-  speciesPagination.value.page = page
-  // In real implementation, this would reload data
+const getSpeciesRecordsPercentage = (recordCount) => {
+  return maxSpeciesRecords.value > 0 ? (recordCount / maxSpeciesRecords.value) * 100 : 0
 }
 
 // Utility functions
 const formatNumber = (num) => {
-  if (!num) return '0'
+  if (num === null || num === undefined) return '-'
+  if (num === 0) return '0'
   return num.toLocaleString()
-}
-
-const formatDate = (date) => {
-  if (!date) return '—'
-  return new Date(date).toLocaleDateString()
 }
 
 const formatLocation = (institution) => {
   const parts = []
-  if (institution.locality) parts.push(institution.locality)
-  if (institution.stateProvince) parts.push(institution.stateProvince)
+  if (institution.city) parts.push(institution.city)
+  if (institution.state) parts.push(institution.state)
   if (institution.country) parts.push(institution.country)
   return parts.join(', ') || 'Location not specified'
 }
 
-const getQualityClass = (percentage) => {
-  if (percentage >= 90) return 'excellent'
-  if (percentage >= 80) return 'good'
-  return 'fair'
-}
-
-// Action methods
-const exportInstitutionData = () => {
-  console.log(`Exporting data for institution ${props.institutionCode}`)
-}
-
-const viewRecords = () => {
-  activeTab.value = 'records'
-}
-
-const contactInstitution = () => {
-  console.log(`Opening contact form for ${props.institutionCode}`)
+const formatArrayField = (value) => {
+  if (!value) return ''
+  if (typeof value === 'string' && value.startsWith('[')) {
+    try {
+      const arr = JSON.parse(value.replace(/'/g, '"'))
+      return arr.join(', ')
+    } catch {
+      return value.replace(/[\[\]']/g, '')
+    }
+  }
+  if (Array.isArray(value)) {
+    return value.join(', ')
+  }
+  return value
 }
 
 // Lifecycle
 onMounted(() => {
-  console.log('Component mounted, initial state:', {
-    loading: loading.value,
-    error: error.value,
-    institution: currentInstitution.value
-  })
   loadInstitutionData()
 })
 
 // Watch for route changes
 watch(() => props.institutionCode, () => {
+  speciesPagination.page = 1
   loadInstitutionData()
 }, { immediate: false })
 
-watch([loading, error, currentInstitution], ([newLoading, newError, newInstitution]) => {
-  console.log('State changed:', {
-    loading: newLoading,
-    error: newError,
-    institution: newInstitution,
-    hasInstitution: !!newInstitution
-  })
-}, { immediate: true })
+// Watch for sort changes
+watch(speciesSort, () => {
+  speciesPagination.page = 1
+  loadSpeciesData()
+})
+
+// Watch for search changes (debounced)
+let searchTimeout = null
+watch(speciesSearch, () => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    speciesPagination.page = 1
+    loadSpeciesData()
+  }, 300)
+})
 </script>
 
 <style scoped>
 .institution-page {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  color: #333;
+  background-color: #f5f5f5;
+}
+
+.container {
   max-width: 1400px;
   margin: 0 auto;
   padding: 20px;
-  background-color: #f5f5f5;
 }
 
 /* Loading and Error States */
@@ -715,6 +636,8 @@ watch([loading, error, currentInstitution], ([newLoading, newError, newInstituti
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  max-width: 600px;
+  margin: 40px auto;
 }
 
 .loading-spinner {
@@ -742,23 +665,36 @@ watch([loading, error, currentInstitution], ([newLoading, newError, newInstituti
   margin-top: 10px;
 }
 
+/* Breadcrumb */
+.breadcrumb {
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: #666;
+}
+
+.breadcrumb a {
+  color: #3498db;
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
 /* Institution Header */
 .institution-header {
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  padding: 30px;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  padding: 25px;
   margin-bottom: 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
 }
 
-.institution-main-info {
+.institution-title {
   display: flex;
   align-items: flex-start;
   gap: 20px;
-  flex: 1;
+  margin-bottom: 20px;
 }
 
 .institution-logo {
@@ -771,265 +707,375 @@ watch([loading, error, currentInstitution], ([newLoading, newError, newInstituti
   justify-content: center;
   font-weight: bold;
   color: white;
-  font-size: 16px;
+  font-size: 18px;
   flex-shrink: 0;
 }
 
-.institution-details {
+.institution-title-text {
   flex: 1;
 }
 
 .institution-name {
-  margin: 0 0 15px 0;
   font-size: 32px;
   font-weight: bold;
+  margin: 0 0 8px 0;
   color: #2c3e50;
-  line-height: 1.2;
 }
 
-.institution-codes {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
-}
-
-.code-tag {
-  background: #e8f4fd;
-  color: #0288d1;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: bold;
-}
-
-.institution-location {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 8px;
-  color: #666;
+.institution-alternate {
   font-size: 16px;
-}
-
-.institution-type {
   color: #666;
-  font-size: 14px;
+  font-style: italic;
 }
 
-.institution-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-left: 30px;
-}
-
-.action-button {
-  display: flex;
-  align-items: center;
-  padding: 10px 16px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
-
-.action-button.primary {
-  background: #3498db;
-  color: white;
-}
-
-.action-button.secondary {
-  background: #ecf0f1;
-  color: #2c3e50;
-}
-
-.action-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.action-button .icon {
-  margin-right: 6px;
-}
-
-/* Statistics Overview */
-.stats-overview {
+.darwin-core-fields {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 15px;
-  margin-bottom: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
 }
 
-.stat-card {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  padding: 20px;
-  text-align: center;
+.dc-field-group {
+  min-width: 150px;
 }
 
-.stat-number {
-  font-size: 28px;
+.dc-label {
   font-weight: bold;
-  color: #3498db;
-  margin-bottom: 5px;
-}
-
-.stat-label {
-  font-size: 12px;
   color: #666;
+  margin-bottom: 5px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-/* Content Tabs */
-.content-tabs {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  overflow: hidden;
+.dc-value {
+  font-size: 15px;
+  line-height: 1.4;
+  color: #2c3e50;
 }
 
-.tab-nav {
+/* Navigation menu */
+.nav-menu {
+  background: white;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  margin-bottom: 20px;
+  padding: 0;
+  position: sticky;
+  top: 20px;
+  z-index: 100;
+}
+
+.nav-menu ul {
   display: flex;
-  border-bottom: 1px solid #eee;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.nav-menu li {
+  flex: 1;
+}
+
+.nav-menu a {
+  display: block;
+  padding: 15px 20px;
+  text-decoration: none;
+  color: #666;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+  text-align: center;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.nav-menu a:hover {
+  color: #3498db;
+  border-bottom-color: #3498db;
   background: #f8f9fa;
 }
 
-.tab-button {
-  flex: 1;
-  padding: 15px 20px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  color: #666;
-  transition: all 0.2s;
-}
-
-.tab-button.active {
+/* Section styles */
+.section {
   background: white;
-  color: #3498db;
-  border-bottom: 2px solid #3498db;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  padding: 25px;
+  margin-bottom: 20px;
+  scroll-margin-top: 100px;
 }
 
-.tab-button:hover:not(.active) {
-  background: #e9ecef;
-}
-
-.tab-content {
-  padding: 30px;
-}
-
-/* Overview Tab */
-.overview-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: 30px;
-}
-
-.info-section h3 {
+.section-title {
+  font-size: 20px;
+  font-weight: bold;
   margin: 0 0 20px 0;
-  font-size: 18px;
   color: #2c3e50;
   border-bottom: 2px solid #3498db;
-  padding-bottom: 8px;
+  padding-bottom: 10px;
 }
 
-.info-grid {
+/* Overview Stats Grid - matching TaxonPage */
+.overview-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.overview-stat-card {
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 20px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.overview-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-number {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 4px;
+  color: #2c3e50;
+}
+
+.stat-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #666;
+}
+
+.stat-context {
+  font-size: 11px;
+  color: #999;
+  margin-top: 4px;
+}
+
+/* Overview Main Content */
+.overview-main-content {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 15px;
+  gap: 24px;
 }
 
-.info-item {
+.overview-left, .overview-right {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 20px;
 }
 
-.info-item a {
-  color: #3498db;
-  text-decoration: none;
-}
-
-.info-item a:hover {
-  text-decoration: underline;
-}
-
-.dc-field {
-  font-family: 'Courier New', monospace;
-  background: #f8f9fa;
-  padding: 2px 4px;
-  border-radius: 3px;
-  font-size: 11px;
-  color: #666;
-  font-weight: normal;
-}
-
-.label {
-  font-weight: 500;
-  color: #666;
-}
-
-.quality-score {
-  font-weight: bold;
-}
-
-.quality-score.excellent { color: #27ae60; }
-.quality-score.good { color: #f39c12; }
-.quality-score.fair { color: #e74c3c; }
-
-/* Collection Codes */
-.collection-codes-section {
-  margin-bottom: 20px;
-}
-
-.collection-codes-label {
-  margin-bottom: 8px;
-  font-size: 14px;
-  color: #666;
-}
-
-.collection-codes-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.collection-code {
+/* Info Card */
+.info-card {
   background: #f8f9fa;
   border: 1px solid #e9ecef;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  color: #666;
+  border-radius: 8px;
+  padding: 20px;
 }
 
-/* Contact Information */
-.contact-info {
+.info-card h3 {
+  margin: 0 0 15px 0;
+  font-size: 16px;
+  color: #2c3e50;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 10px;
+}
+
+/* Contact List */
+.contact-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.contact-item {
+.contact-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.contact-label {
+  font-weight: 600;
+  color: #666;
+  min-width: 70px;
+}
+
+.contact-row a {
+  color: #3498db;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.contact-row a:hover {
+  text-decoration: underline;
+}
+
+/* Social Media */
+.social-media {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.social-label {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.social-links {
+  display: flex;
+  gap: 12px;
+}
+
+.social-link {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.social-link.twitter {
+  background: #1da1f2;
+  color: white;
+}
+
+.social-link.facebook {
+  background: #1877f2;
+  color: white;
+}
+
+.social-link.instagram {
+  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+  color: white;
+}
+
+.social-link:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* External Data Links */
+.external-data {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.external-label {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.external-links-list {
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
-.contact-item a {
+.external-link-item {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  background: #f5f5f5;
+  color: #333;
+  text-decoration: none;
+  border-radius: 4px;
+  font-size: 13px;
+  transition: all 0.2s;
+  border: 1px solid #e0e0e0;
+}
+
+.external-link-item:hover {
+  background: #e8f5e9;
+  border-color: #4caf50;
+  color: #2e7d32;
+}
+
+/* Info List */
+.info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  padding: 5px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  color: #666;
+}
+
+.info-value {
+  color: #2c3e50;
+  font-weight: 500;
+  text-align: right;
+}
+
+/* Contacts List */
+.contacts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.contact-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.contact-name {
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 4px;
+}
+
+.contact-title {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 6px;
+}
+
+.contact-email a {
   color: #3498db;
+  font-size: 13px;
   text-decoration: none;
 }
 
-.contact-item a:hover {
+.contact-email a:hover {
   text-decoration: underline;
+}
+
+.contact-phone {
+  font-size: 13px;
+  color: #666;
+  margin-top: 4px;
 }
 
 /* Quality Metrics */
@@ -1042,12 +1088,12 @@ watch([loading, error, currentInstitution], ([newLoading, newError, newInstituti
 .quality-metric {
   display: grid;
   grid-template-columns: 1fr 2fr auto;
-  gap: 15px;
+  gap: 12px;
   align-items: center;
 }
 
 .metric-label {
-  font-size: 14px;
+  font-size: 13px;
   color: #666;
 }
 
@@ -1068,269 +1114,139 @@ watch([loading, error, currentInstitution], ([newLoading, newError, newInstituti
   font-weight: bold;
   color: #3498db;
   font-size: 14px;
+  min-width: 45px;
+  text-align: right;
 }
 
-/* Species Tab */
-.species-section h3 {
-  margin: 0 0 20px 0;
-  font-size: 18px;
-  color: #2c3e50;
-}
-
-.species-header {
+/* Section Controls */
+.section-controls {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 25px;
-  flex-wrap: wrap;
   gap: 15px;
-}
-
-.species-controls {
-  display: flex;
-  gap: 10px;
+  margin-bottom: 20px;
   align-items: center;
 }
 
-.search-input, .sort-select {
+.filter-input {
   padding: 8px 12px;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 14px;
 }
 
-.search-input {
-  width: 200px;
+.filter-select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  background: white;
 }
 
-.loading-species {
+.loading-children {
   text-align: center;
   padding: 40px;
   color: #666;
 }
 
-.species-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
+/* Table Container */
+.table-container {
+  overflow-x: auto;
 }
 
-.species-card {
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  padding: 20px;
-  cursor: pointer;
-  transition: all 0.2s;
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.data-table th {
   background: #f8f9fa;
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #555;
+  border-bottom: 2px solid #e9ecef;
+  position: sticky;
+  top: 0;
 }
 
-.species-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+.data-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e9ecef;
+  vertical-align: middle;
 }
 
-.species-header {
-  margin-bottom: 10px;
+.table-row {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.table-row:hover {
+  background-color: #f8f9fa;
 }
 
 .species-name {
-  margin: 0 0 5px 0;
-  font-size: 16px;
-  font-weight: bold;
-  color: #2c3e50;
   font-style: italic;
-}
-
-.species-common {
-  font-size: 14px;
-  color: #666;
-  font-style: normal;
-}
-
-.species-meta {
-  margin-bottom: 15px;
-  font-size: 13px;
-  color: #666;
-}
-
-.species-family {
   font-weight: 500;
-  margin-right: 8px;
+  color: #2c3e50;
 }
 
-.species-authority {
-  font-style: italic;
+.records-bar-container {
+  position: relative;
+  width: 120px;
+  height: 20px;
+  background: #e9ecef;
+  border-radius: 10px;
+  overflow: hidden;
 }
 
-.species-stats {
-  display: flex;
-  gap: 20px;
+.records-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #3498db, #2ecc71);
+  border-radius: 10px;
+  transition: width 0.3s ease;
 }
 
-.species-stat {
+.records-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 11px;
+  font-weight: 600;
+  color: #333;
+}
+
+.no-data {
   text-align: center;
-}
-
-.species-stat .stat-value {
-  display: block;
-  font-weight: bold;
-  color: #3498db;
-  font-size: 16px;
-}
-
-.species-stat .stat-label {
-  font-size: 12px;
-  color: #666;
-}
-
-/* Geography Tab */
-.geography-section h3 {
-  margin: 0 0 25px 0;
-  font-size: 18px;
-  color: #2c3e50;
-}
-
-.map-placeholder, .collaboration-placeholder {
-  background: #f8f9fa;
-  border: 2px dashed #ddd;
-  border-radius: 8px;
-  padding: 60px;
-  text-align: center;
-  color: #666;
-  margin-bottom: 30px;
-}
-
-.countries-summary h4 {
-  margin: 0 0 15px 0;
-  color: #2c3e50;
-}
-
-.countries-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 15px;
-}
-
-.country-item {
-  background: #f8f9fa;
-  border-radius: 8px;
-  padding: 20px;
-  border: 1px solid #e9ecef;
-}
-
-.country-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.country-name {
-  font-weight: bold;
-  color: #2c3e50;
-  font-size: 16px;
-}
-
-.country-count {
-  background: #3498db;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: bold;
-}
-
-.country-stats {
-  margin-bottom: 8px;
-  font-size: 14px;
-  color: #666;
-}
-
-.country-stats span {
-  margin-right: 12px;
-}
-
-.country-quality {
-  font-size: 12px;
-  color: #666;
-}
-
-/* Collaboration Tab */
-.collaboration-section h3 {
-  margin: 0 0 25px 0;
-  font-size: 18px;
-  color: #2c3e50;
-}
-
-.partners-list h4 {
-  margin: 0 0 15px 0;
-  color: #2c3e50;
-}
-
-.partners-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 15px;
-}
-
-.partner-item {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  padding: 20px;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: 1px solid #e9ecef;
-}
-
-.partner-item:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.partner-logo {
-  width: 50px;
-  height: 50px;
-  background: #3498db;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  color: white;
-  font-size: 12px;
-  flex-shrink: 0;
-}
-
-.partner-info {
-  flex: 1;
-}
-
-.partner-name {
-  font-weight: bold;
-  color: #2c3e50;
-  margin-bottom: 5px;
-}
-
-.partner-stats {
-  font-size: 14px;
+  padding: 40px;
   color: #666;
 }
 
 /* Pagination */
 .pagination {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  gap: 15px;
-  margin-top: 30px;
+  padding: 15px 0;
+  margin-top: 15px;
+  border-top: 1px solid #e9ecef;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pagination-info {
+  color: #666;
+  font-size: 14px;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .pagination-btn {
-  padding: 8px 16px;
+  padding: 6px 12px;
   border: 1px solid #ddd;
   background: white;
   border-radius: 4px;
@@ -1350,91 +1266,19 @@ watch([loading, error, currentInstitution], ([newLoading, newError, newInstituti
   cursor: not-allowed;
 }
 
-.pagination-info {
+.pagination-current {
   font-size: 14px;
   color: #666;
 }
 
-/* Responsive Design */
-@media (max-width: 1024px) {
-  .institution-header {
-    flex-direction: column;
-    gap: 20px;
-  }
-
-  .institution-main-info {
-    flex-direction: column;
-    gap: 15px;
-  }
-
-  .institution-actions {
-    flex-direction: row;
-    margin-left: 0;
-  }
-
-  .overview-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .species-header, .countries-summary {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .species-controls {
-    justify-content: space-between;
-  }
-}
-
-@media (max-width: 768px) {
-  .institution-page {
-    padding: 15px;
-  }
-
-  .institution-name {
-    font-size: 24px;
-  }
-
-  .tab-nav {
-    flex-wrap: wrap;
-  }
-
-  .tab-content {
-    padding: 20px;
-  }
-
-  .stats-overview {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .info-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .species-grid, .countries-grid, .partners-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .species-controls {
-    flex-direction: column;
-  }
-
-  .search-input {
-    width: 100%;
-  }
-
-  .quality-metric {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-
-  .metric-bar {
-    order: 2;
-  }
-
-  .metric-value {
-    order: 3;
-  }
+/* Full width map container */
+.full-width-map-container {
+  width: 100%;
+  margin: 20px 0;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 /* Skeleton loading */
@@ -1451,5 +1295,81 @@ watch([loading, error, currentInstitution], ([newLoading, newError, newInstituti
   color: transparent !important;
   min-width: 60px;
   min-height: 1.2em;
+}
+
+.skeleton-block {
+  background: linear-gradient(90deg, #eee 25%, #e4e4e4 50%, #eee 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 8px;
+  width: 100%;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .overview-main-content {
+    grid-template-columns: 1fr;
+  }
+
+  .darwin-core-fields {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 15px;
+  }
+
+  .institution-title {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .institution-name {
+    font-size: 24px;
+  }
+
+  .nav-menu ul {
+    flex-wrap: wrap;
+  }
+
+  .nav-menu a {
+    padding: 12px 10px;
+    font-size: 13px;
+  }
+
+  .section {
+    padding: 20px;
+  }
+
+  .section-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .overview-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .quality-metric {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .records-bar-container {
+    width: 100px;
+  }
+}
+
+@media (max-width: 480px) {
+  .overview-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .darwin-core-fields {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

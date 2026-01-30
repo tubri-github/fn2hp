@@ -72,6 +72,53 @@ export function useInstitutions() {
         }))
     }
 
+    // 数据转换函数 (v2 - 包含详细信息)
+    const transformInstitutionDataV2 = (rawData) => {
+        return rawData.map(item => ({
+            institutionCode: item.institutionCode,
+            institutionName: item.institutionName || `${item.institutionCode} Institution`,
+            officialName: item.officialName,
+            alternateName: item.alternateName,
+            ownerInstitutionCode: item.ownerInstitutionCode,
+            country: item.country,
+            statsCountry: item.statsCountry,
+            region: item.region || 'Other',
+            institutionType: item.institutionType || 'research',
+            // Location details
+            address: item.address,
+            city: item.city,
+            state: item.state,
+            zip: item.zip,
+            latitude: item.latitude,
+            longitude: item.longitude,
+            // Contact info
+            phone: item.phone,
+            email: item.email,
+            website: item.website,
+            // Social media
+            twitter: item.twitter,
+            facebook: item.facebook,
+            instagram: item.instagram,
+            // Stats
+            recordCount: item.recordCount || 0,
+            speciesCount: item.speciesCount || 0,
+            familiesCount: item.familiesCount || 0,
+            countriesCount: item.countriesCount || 0,
+            geoReferencingQuality: item.geoReferencingQuality || 0,
+            dateQuality: item.dateQuality || 0,
+            taxonomicQuality: item.taxonomicQuality || 0,
+            overallQuality: item.overallQuality || 0,
+            // Collection info
+            environment: item.environment,
+            specimensAmount: item.specimensAmount,
+            dataUrl: item.dataUrl,
+            source: item.source,
+            lastUpdated: item.lastUpdated,
+            firstRecord: item.firstRecord,
+            latestRecord: item.latestRecord
+        }))
+    }
+
     // 获取所有机构
     const fetchInstitutions = async (params = {}) => {
         loading.value = true
@@ -102,7 +149,37 @@ export function useInstitutions() {
         }
     }
 
-    // 获取机构详情
+    // 获取所有机构 (v2 - 包含详细信息)
+    const fetchInstitutionsV2 = async (params = {}) => {
+        loading.value = true
+        error.value = null
+
+        try {
+            const response = await institutionsApi.getInstitutionsV2({
+                page: pagination.page,
+                per_page: pagination.perPage,
+                ...filters,
+                ...params
+            })
+
+            institutions.value = transformInstitutionDataV2(response.data || [])
+            pagination.total = response.total || institutions.value.length
+
+            console.log('Fetched institutions v2:', institutions.value.length)
+            return response.data
+        } catch (err) {
+            error.value = err.message || 'Failed to fetch institutions'
+            console.error('Error fetching institutions v2:', err)
+
+            institutions.value = []
+            pagination.total = 0
+            throw err
+        } finally {
+            loading.value = false
+        }
+    }
+
+    // 获取机构详情 (基础)
     const fetchInstitutionDetail = async (institutionCode) => {
         loading.value = true
         error.value = null
@@ -116,6 +193,27 @@ export function useInstitutions() {
         } catch (err) {
             error.value = err.message || 'Failed to fetch institution detail'
             console.error('Error fetching institution detail:', err)
+            currentInstitution.value = null
+            throw err
+        } finally {
+            loading.value = false
+        }
+    }
+
+    // 获取机构完整详情 (v2 - 包含联系信息、地址等)
+    const fetchInstitutionDetailV2 = async (institutionCode) => {
+        loading.value = true
+        error.value = null
+
+        try {
+            const response = await institutionsApi.getInstitutionDetailV2(institutionCode)
+            currentInstitution.value = response
+
+            console.log('Fetched institution detail v2:', currentInstitution.value)
+            return response
+        } catch (err) {
+            error.value = err.message || 'Failed to fetch institution detail'
+            console.error('Error fetching institution detail v2:', err)
             currentInstitution.value = null
             throw err
         } finally {
@@ -171,9 +269,26 @@ export function useInstitutions() {
             })
 
             console.log(`Institution ${institutionCode} species:`, response.data)
-            return response.data
+            return response
         } catch (err) {
             console.error('Error fetching institution species:', err)
+            throw err
+        }
+    }
+
+    // 获取机构记录（用于地图）
+    const fetchInstitutionRecordsV2 = async (institutionCode, params = {}) => {
+        try {
+            const response = await institutionsApi.getInstitutionRecordsV2(institutionCode, {
+                page: 1,
+                per_page: 1000,
+                ...params
+            })
+
+            console.log(`Institution ${institutionCode} records v2:`, response.data?.length || 0)
+            return response
+        } catch (err) {
+            console.error('Error fetching institution records v2:', err)
             throw err
         }
     }
@@ -310,10 +425,13 @@ export function useInstitutions() {
 
         // 方法
         fetchInstitutions,
+        fetchInstitutionsV2,
         fetchInstitutionDetail,
+        fetchInstitutionDetailV2,
         fetchInstitutionStats,
         fetchInstitutionSpecies,
         fetchInstitutionRecords,
+        fetchInstitutionRecordsV2,
         fetchInstitutionGeography,
         searchInstitutions,
         fetchCollaborationNetwork,

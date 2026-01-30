@@ -1,6 +1,6 @@
 <template>
   <header class="header">
-    <div class="logo"> <img src="@/assets/fn2logo.png" alt="FishNet2 Logo" /></div>
+    <div class="logo"> <img src="@/assets/fn2logo.png" alt="FishNet 2 Logo" /></div>
     <nav class="nav">
       <a href="/dist/" class="nav-link">HOME</a>
       <router-link to="/search" class="nav-link">SEARCH</router-link>
@@ -32,8 +32,8 @@
         </transition>
       </div>
 
-      <!-- Tools 下拉菜单 -->
-      <div class="dropdown-container nav-link"
+      <!-- Tools 下拉菜单 - 暂时禁用 -->
+      <div v-if="false" class="dropdown-container nav-link"
            @mouseenter="showToolsDropdown = true"
            @mouseleave="showToolsDropdown = false">
         <span class="nav-link-text">TOOLS</span>

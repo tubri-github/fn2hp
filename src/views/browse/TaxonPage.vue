@@ -25,15 +25,15 @@
         </template>
         <!-- Genus level: show genus name if viewing species -->
         <template v-if="taxonType === 'species'">
-          &gt; <router-link v-if="hierarchy.genus" :to="`/browse/genera/${hierarchy.genus}`">{{ hierarchy.genus }}</router-link>
+          &gt; <router-link v-if="hierarchy.genus" :to="`/browse/genera/${hierarchy.genus}`" class="italic-name">{{ hierarchy.genus }}</router-link>
         </template>
-        &gt; <strong>{{ taxonName }}</strong>
+        &gt; <strong :class="{ 'italic-name': taxonType === 'genus' || taxonType === 'species' }">{{ taxonName }}</strong>
       </div>
 
       <!-- Family Header with Darwin Core Fields -->
       <div class="family-header">
         <div class="family-title">
-          <h1 class="family-name" :class="{ 'italic-name': taxonType === 'species' }">{{ currentTaxon.scientificName || taxonName }}</h1>
+          <h1 class="family-name" :class="{ 'italic-name': taxonType === 'genus' || taxonType === 'species' }">{{ currentTaxon.scientificName || taxonName }}</h1>
           <span class="taxon-rank">{{ formatTaxonRank(taxonType) }}</span>
         </div>
 
@@ -56,7 +56,7 @@
           </div>
           <div class="dc-field-group">
             <div class="dc-label">scientificName</div>
-            <div class="dc-value" :class="{ 'italic-name': taxonType === 'species' }">{{ currentTaxon.scientificName || taxonName }}</div>
+            <div class="dc-value" :class="{ 'italic-name': taxonType === 'genus' || taxonType === 'species' }">{{ currentTaxon.scientificName || taxonName }}</div>
           </div>
           <!-- vernacularName 暂时隐藏
           <div class="dc-field-group">
@@ -117,7 +117,7 @@
           <li><a @click.prevent="scrollToSection('distribution')">Geographic Distribution</a></li>
           <li><a @click.prevent="scrollToSection('temporal')">Temporal Patterns</a></li>
           <li><a @click.prevent="scrollToSection('institutions')">Contributing Institutions</a></li>
-          <li><a @click.prevent="scrollToSection('fishair')">Fish-AIR Images</a></li>
+          <li><a @click.prevent="scrollToSection('fishair')">FishAIR Images</a></li>
         </ul>
       </nav>
 
@@ -249,35 +249,57 @@
           </select>
         </div>
 
-        <h3>Top Genera by Record Count</h3>
+        <h3>Genera in this Family</h3>
         <div v-if="loadingChildren" class="loading-children">Loading genera...</div>
-        <div v-else class="genera-grid">
-          <div v-for="genus in filteredChildren" :key="genus.name" class="genus-card" @click="navigateToChild(genus)">
-            <div class="genus-header">
-              <div class="genus-name">{{ genus.name }}</div>
-              <div class="genus-count">{{ formatNumber(genus.recordCount) }}</div>
-            </div>
-            <div class="genus-stats">
-              <span>{{ genus.speciesCount || 0 }} species</span>
-              <span>{{ genus.institutionsCount || 0 }} institutions</span>
-              <span>{{ genus.countriesCount || 0 }} countries</span>
-              <span>{{ genus.geoReferencingQuality || 0 }}% georeferenced</span>
-            </div>
-          </div>
+        <div v-else class="table-container">
+          <table class="genera-table">
+            <thead>
+              <tr>
+                <th>Genus</th>
+                <th>Records</th>
+                <th>Species</th>
+                <th>Institutions</th>
+                <th>Countries</th>
+                <th>Georeferenced</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="genus in children" :key="genus.name" class="table-row genus-row" @click="navigateToChild(genus)">
+                <td>
+                  <router-link
+                      :to="{ name: 'GenusDetail', params: { genusName: genus.name } }"
+                      class="genus-link"
+                      @click.stop
+                  >
+                    {{ genus.name }}
+                  </router-link>
+                </td>
+                <td>
+                  <div class="records-bar-container">
+                    <div class="records-bar" :style="{ width: getGenusRecordsPercentage(genus.recordCount) + '%' }"></div>
+                    <div class="records-text">{{ formatNumber(genus.recordCount) }}</div>
+                  </div>
+                </td>
+                <td>{{ genus.speciesCount || 0 }}</td>
+                <td>{{ genus.institutionsCount || 0 }}</td>
+                <td>{{ genus.countriesCount || 0 }}</td>
+                <td>
+                  <span class="quality-badge" :class="getQualityClass(genus.geoReferencingQuality || 0)">
+                    {{ (genus.geoReferencingQuality || 0).toFixed(1) }}%
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
-        <h3 style="margin-top: 30px;">Most Recorded Species</h3>
-        <div class="top-species-grid">
-          <div v-for="(species, index) in topSpecies" :key="species.name" class="species-rank-card" @click="navigateToSpecies(species)">
-            <div class="species-rank-header">
-              <div class="rank-number">{{ species.rank || index + 1 }}</div>
-              <div class="species-name-small">{{ species.name }}</div>
-              <div class="species-count-small">{{ formatNumber(species.recordCount) }}</div>
-            </div>
-            <div class="species-meta">
-              {{ species.institutionsCount || 0 }} institutions • {{ species.countriesCount || 0 }} countries
-            </div>
-          </div>
+        <!-- Genera Pagination -->
+        <div v-if="childrenTotalPages > 1" class="pagination">
+          <button @click="changeChildrenPage(1)" :disabled="childrenCurrentPage === 1" class="page-btn">First</button>
+          <button @click="changeChildrenPage(childrenCurrentPage - 1)" :disabled="childrenCurrentPage === 1" class="page-btn">Prev</button>
+          <span class="page-info">Page {{ childrenCurrentPage }} of {{ childrenTotalPages }} ({{ childrenTotal }} genera)</span>
+          <button @click="changeChildrenPage(childrenCurrentPage + 1)" :disabled="childrenCurrentPage >= childrenTotalPages" class="page-btn">Next</button>
+          <button @click="changeChildrenPage(childrenTotalPages)" :disabled="childrenCurrentPage >= childrenTotalPages" class="page-btn">Last</button>
         </div>
       </section>
 
@@ -294,17 +316,55 @@
         </div>
 
         <div v-if="loadingChildren" class="loading-children">Loading species...</div>
-        <div v-else class="top-species-grid">
-          <div v-for="(species, index) in filteredChildren" :key="species.name" class="species-rank-card" @click="navigateToChild(species)">
-            <div class="species-rank-header">
-              <div class="rank-number">{{ index + 1 }}</div>
-              <div class="species-name-small">{{ species.name }}</div>
-              <div class="species-count-small">{{ formatNumber(species.recordCount) }}</div>
-            </div>
-            <div class="species-meta">
-              {{ species.institutionsCount || 0 }} institutions • {{ species.countriesCount || 0 }} countries
-            </div>
-          </div>
+        <div v-else class="table-container">
+          <table class="species-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Species</th>
+                <th>Records</th>
+                <th>Institutions</th>
+                <th>Countries</th>
+                <th>Georeferenced</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(species, index) in children" :key="species.name" class="table-row species-row" @click="navigateToChild(species)">
+                <td class="rank-cell">{{ (childrenCurrentPage - 1) * childrenPerPage + index + 1 }}</td>
+                <td>
+                  <router-link
+                      :to="{ name: 'SpeciesDetail', params: { scientificName: encodeURIComponent(species.name) } }"
+                      class="species-link"
+                      @click.stop
+                  >
+                    {{ species.name }}
+                  </router-link>
+                </td>
+                <td>
+                  <div class="records-bar-container">
+                    <div class="records-bar" :style="{ width: getSpeciesRecordsPercentage(species.recordCount) + '%' }"></div>
+                    <div class="records-text">{{ formatNumber(species.recordCount) }}</div>
+                  </div>
+                </td>
+                <td>{{ species.institutionsCount || 0 }}</td>
+                <td>{{ species.countriesCount || 0 }}</td>
+                <td>
+                  <span class="quality-badge" :class="getQualityClass(species.geoReferencingQuality || 0)">
+                    {{ (species.geoReferencingQuality || 0).toFixed(1) }}%
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Species Pagination -->
+        <div v-if="childrenTotalPages > 1" class="pagination">
+          <button @click="changeChildrenPage(1)" :disabled="childrenCurrentPage === 1" class="page-btn">First</button>
+          <button @click="changeChildrenPage(childrenCurrentPage - 1)" :disabled="childrenCurrentPage === 1" class="page-btn">Prev</button>
+          <span class="page-info">Page {{ childrenCurrentPage }} of {{ childrenTotalPages }} ({{ childrenTotal }} species)</span>
+          <button @click="changeChildrenPage(childrenCurrentPage + 1)" :disabled="childrenCurrentPage >= childrenTotalPages" class="page-btn">Next</button>
+          <button @click="changeChildrenPage(childrenTotalPages)" :disabled="childrenCurrentPage >= childrenTotalPages" class="page-btn">Last</button>
         </div>
       </section>
 
@@ -500,9 +560,9 @@
 <!--        </div>-->
       </section>
 
-      <!-- Fish-AIR Images Section -->
+      <!-- FishAIR Images Section -->
       <section id="fishair" class="section">
-        <h2 class="section-title">Fish-AIR Images</h2>
+        <h2 class="section-title">FishAIR Images</h2>
         <FishImages 
           v-if="currentTaxon?.scientificName || taxonName" 
           :scientific-name="currentTaxon?.scientificName || taxonName"
@@ -565,6 +625,12 @@ const loadingChildren = ref(false)
 const children = ref([])
 const childrenSearch = ref('')
 const childrenSort = ref('records_desc')
+
+// Pagination state for genera and species tables (backend pagination)
+const childrenCurrentPage = ref(1)
+const childrenPerPage = 20
+const childrenTotal = ref(0)
+const childrenTotalPages = ref(0)
 
 // Coordinate records for map display
 const actualCoordinateRecords = ref([])
@@ -754,7 +820,7 @@ const filteredChildren = computed(() => {
     })
   }
 
-  return filtered.slice(0, 20) // Limit to 20 items for display
+  return filtered
 })
 
 const filteredInstitutions = computed(() => {
@@ -882,21 +948,33 @@ const loadTaxonData = async () => {
   }
 }
 
-const loadChildren = async () => {
+const loadChildren = async (page = 1) => {
   loadingChildren.value = true
   try {
     const response = await fetchTaxonChildren(props.taxonType, props.taxonName, {
-      page: 1,
-      per_page: 20,
+      page: page,
+      per_page: childrenPerPage,
       search: childrenSearch.value,
       sort_by: childrenSort.value
     })
-    children.value = response.data || []
+    // API 返回 PaginatedResponse
+    children.value = response?.data || []
+    childrenTotal.value = response?.total || 0
+    childrenTotalPages.value = response?.pages || Math.ceil(childrenTotal.value / childrenPerPage)
+    childrenCurrentPage.value = page
   } catch (err) {
     console.error('Failed to load children:', err)
     children.value = []
+    childrenTotal.value = 0
+    childrenTotalPages.value = 0
   } finally {
     loadingChildren.value = false
+  }
+}
+
+const changeChildrenPage = (page) => {
+  if (page >= 1 && page <= childrenTotalPages.value) {
+    loadChildren(page)
   }
 }
 
@@ -1299,16 +1377,34 @@ const getInstitutionRecordsPercentage = (recordCount) => {
   return maxRecords > 0 ? (recordCount / maxRecords) * 100 : 0
 }
 
-// Watch for changes and reload data
+// Genus table helper function
+const getGenusRecordsPercentage = (recordCount) => {
+  const maxRecords = Math.max(...children.value.map(g => g.recordCount || 0), 1)
+  return maxRecords > 0 ? (recordCount / maxRecords) * 100 : 0
+}
+
+// Species table helper function
+const getSpeciesRecordsPercentage = (recordCount) => {
+  const maxRecords = Math.max(...children.value.map(s => s.recordCount || 0), 1)
+  return maxRecords > 0 ? (recordCount / maxRecords) * 100 : 0
+}
+
+// Watch for changes and reload data (reset to page 1)
 watch(() => childrenSearch.value, () => {
   if (props.taxonType === 'family' || props.taxonType === 'genus') {
-    loadChildren()
+    loadChildren(1)
   }
 })
 
 watch(() => childrenSort.value, () => {
   if (props.taxonType === 'family' || props.taxonType === 'genus') {
-    loadChildren()
+    loadChildren(1)
+  }
+})
+
+watch(() => diversityFilter.value, () => {
+  if (props.taxonType === 'family') {
+    loadChildren(1)
   }
 })
 
@@ -2465,5 +2561,115 @@ watch(() => [props.taxonType, props.taxonName], () => {
 
 .skeleton-table-row .skeleton-text {
   height: 14px;
+}
+
+/* Genera and Species Table Styles */
+.genera-table,
+.species-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.genera-table th,
+.species-table th {
+  background: #f8f9fa;
+  padding: 15px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #555;
+  border-bottom: 2px solid #e9ecef;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.genera-table td,
+.species-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e9ecef;
+  vertical-align: middle;
+}
+
+.genus-row,
+.species-row {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.genus-row:hover,
+.species-row:hover {
+  background-color: #f8f9fa;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.genus-link,
+.species-link {
+  font-weight: 600;
+  font-style: italic;
+  color: #2c3e50;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.genus-link:hover,
+.species-link:hover {
+  color: #3498db;
+  text-decoration: underline;
+}
+
+.rank-cell {
+  font-weight: 600;
+  color: #3498db;
+  width: 50px;
+  text-align: center;
+}
+
+/* Pagination Styles */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 15px 0;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.page-btn {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.page-btn:hover:not(:disabled) {
+  background: #f8f9fa;
+  border-color: #3498db;
+  color: #3498db;
+}
+
+.page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-info {
+  font-size: 14px;
+  color: #666;
+  white-space: nowrap;
+}
+
+/* Table Container */
+.table-container {
+  overflow-x: auto;
+  background: white;
+  border-radius: 8px;
 }
 </style>

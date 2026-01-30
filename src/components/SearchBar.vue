@@ -12,7 +12,7 @@
 <!--      <span class="highlight">2</span>.0-->
     </p>
     <h2 class="search-title">Dive Into Fish Data</h2>
-<!--    <p class="intro-text.json">FishNet2: Access millions of fish specimens from collections worldwide</p>-->
+<!--    <p class="intro-text.json">FishNet 2: Access millions of fish specimens from collections worldwide</p>-->
     <div class="search-bar">
       <el-input
           v-model="searchQuery"

@@ -3,7 +3,7 @@
     <!-- Sidebar -->
     <div class="sidebar">
       <div class="sidebar-header">
-        <div class="logo">Fishnet2</div>
+        <div class="logo">FishNet 2</div>
         <div class="user-info">{{ reportData.Institution }}</div>
       </div>
       

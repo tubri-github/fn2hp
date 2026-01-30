@@ -521,7 +521,7 @@ export const exportChartToPDF = async (chartContainer, filename = 'chart', title
     // Add footer
     pdf.setFontSize(8);
     pdf.setTextColor(128);
-    pdf.text('FishNet2 - World Fish Occurrence Database', margin, pdfHeight - 5);
+    pdf.text('FishNet 2 - World Fish Occurrence Database', margin, pdfHeight - 5);
 
     // Save
     pdf.save(`${filename}.pdf`);

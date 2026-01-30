@@ -3,7 +3,7 @@
     <!-- About Section -->
     <section class="section about-section">
       <div class="text-content">
-        <h2 class="section-title">About FishNet2</h2>
+        <h2 class="section-title">About FishNet 2</h2>
         <div class="section-text">
           <p >
             The FishNet network is a collaborative effort among fish collections around the world to share and distribute data on specimen holdings. There is an open invitation for any institution with a fish collection to join.
@@ -82,7 +82,7 @@
           <div class="timeline-content">
             <h3 class="timeline-title">Research Highlight</h3>
             <p class="timeline-text">
-              Recent study utilizing FishNet2 data reveals new insights into freshwater fish distribution patterns.
+              Recent study utilizing FishNet 2 data reveals new insights into freshwater fish distribution patterns.
             </p>
           </div>
         </div>

@@ -1,7 +1,7 @@
 <template>
   <div class="fish-images">
     <div class="images-header">
-      <h3>Fish-AIR Images</h3>
+      <h3>FishAIR Images</h3>
       <div v-if="loading" class="loading-indicator">Loading images...</div>
       <div v-if="error" class="error-message">{{ error }}</div>
     </div>
@@ -64,22 +64,31 @@
       </div>
     </div>
 
-    <!-- 加载更多按钮 -->
-    <div v-if="hasMore && !loading && images.length > 0" class="load-more-container">
-      <button @click="loadMoreImages" class="load-more-btn">
-        Load More Images ({{ images.length }}/{{ totalImages }})
-      </button>
-    </div>
-
-    <!-- 查看所有图片按钮 -->
-    <div v-if="totalImages > 100" class="view-all-container">
-      <button @click="redirectToFishAIR" class="view-all-btn">
-        View All {{ totalImages }} Images in Fish-AIR →
-      </button>
+    <!-- 分页控制 -->
+    <div v-if="totalImages > 0 && !loading" class="pagination-container">
+      <div class="pagination">
+        <button
+          class="pagination-btn"
+          :disabled="currentPage === 1"
+          @click="goToPage(currentPage - 1)"
+        >
+          « Previous
+        </button>
+        <span class="pagination-info">
+          Page {{ currentPage }} of {{ totalPages }} ({{ totalImages }} images)
+        </span>
+        <button
+          class="pagination-btn"
+          :disabled="currentPage >= totalPages"
+          @click="goToPage(currentPage + 1)"
+        >
+          Next »
+        </button>
+      </div>
     </div>
 
     <!-- 无图片时的占位符 -->
-    <div v-else-if="!loading && !error" class="no-images">
+    <div v-if="images.length === 0 && !loading && !error" class="no-images">
       <div class="no-images-icon">🐠</div>
       <p>No images available for <em>{{ scientificName }}</em></p>
       <p class="no-images-hint">Images may be available through other sources</p>
@@ -198,7 +207,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, defineComponent, h } from 'vue'
+import { ref, computed, watch, onMounted, defineComponent, h } from 'vue'
 import { fishairApi } from '@/api/fishair.js'
 
 // Props
@@ -275,31 +284,7 @@ const TreeNode = defineComponent({
             }, expanded.value ? '▼' : '▶'),
             h('strong', { class: 'tree-node-type' }, formatImageType(node.dataset)),
             ' ',
-            h('a', {
-              class: 'tree-node-link',
-              href: `https://fishair.org/view/${node.ark_id}`,
-              target: '_blank',
-              rel: 'noopener noreferrer',
-              onClick: (e) => {
-                e.stopPropagation()
-              },
-              title: 'Open in FishAIR'
-            }, [
-              h('span', { class: 'tree-node-id' }, node.ark_id),
-              h('svg', {
-                class: 'link-icon',
-                viewBox: '0 0 20 20',
-                fill: 'currentColor',
-                xmlns: 'http://www.w3.org/2000/svg'
-              }, [
-                h('path', {
-                  d: 'M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z'
-                }),
-                h('path', {
-                  d: 'M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z'
-                })
-              ])
-            ])
+            h('span', { class: 'tree-node-id' }, node.ark_id)
           ]),
           // 第二行：缩略图
           h('div', { class: 'tree-node-thumbnail-wrapper' }, [
@@ -367,8 +352,7 @@ const loadFishImages = async (reset = true) => {
   try {
     const options = {
       page: currentPage.value,
-      per_page: 10,
-      limit: props.limit
+      per_page: perPage
     }
 
     if (selectedType.value !== 'all') {
@@ -398,18 +382,12 @@ const loadFishImages = async (reset = true) => {
         }
       })
 
-      if (reset) {
-        images.value = newImages
-      } else {
-        images.value = [...images.value, ...newImages]
-      }
-
+      images.value = newImages
       currentImages.value = images.value
       // total 从 stats 获取（loadImageStats 先执行），fallback 用当前数量
       if (!totalImages.value) {
         totalImages.value = newImages.length
       }
-      hasMore.value = images.value.length < totalImages.value
     } else {
       if (reset) images.value = []
     }
@@ -531,9 +509,17 @@ const selectImageType = (type) => {
   loadFishImages(true)
 }
 
-const loadMoreImages = () => {
-  currentPage.value++
-  loadFishImages(false)
+const perPage = 10
+
+const totalPages = computed(() => {
+  return Math.ceil(totalImages.value / perPage) || 1
+})
+
+const goToPage = (page) => {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page
+    loadFishImages(true)
+  }
 }
 
 const redirectToFishAIR = () => {
@@ -924,36 +910,55 @@ onMounted(async () => {
   color: #ffc107 !important;
 }
 
-.load-more-container, .view-all-container {
+.pagination-container, .view-all-container {
   text-align: center;
-  margin: 2rem 0;
+  margin: 1.5rem 0;
 }
 
-.load-more-btn, .view-all-btn {
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pagination-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: #3498db;
+  color: white;
+  border-color: #3498db;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  font-size: 14px;
+  color: #666;
+}
+
+.view-all-btn {
   padding: 0.875rem 2rem;
   border: none;
   border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.load-more-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.load-more-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-.view-all-btn {
   background: #718096;
   color: white;
-  font-size: 0.875rem;
 }
 
 .view-all-btn:hover {

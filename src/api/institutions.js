@@ -7,9 +7,19 @@ export const institutionsApi = {
         return api.get('/institutions', { params })
     },
 
-    // 获取特定机构详细信息
+    // 获取特定机构详细信息 (基础统计)
     getInstitutionDetail(institutionCode) {
         return api.get(`/institutions/${encodeURIComponent(institutionCode)}`)
+    },
+
+    // 获取机构完整详情 (包含联系信息、地址、社交媒体等)
+    getInstitutionDetailV2(institutionCode) {
+        return api.get(`/institutions/v2/${encodeURIComponent(institutionCode)}`)
+    },
+
+    // 获取所有机构列表 (v2 - 包含详细信息)
+    getInstitutionsV2(params = {}) {
+        return api.get('/institutions/v2', { params })
     },
 
     // 获取机构的记录统计
@@ -17,9 +27,19 @@ export const institutionsApi = {
         return api.get(`/institutions/${encodeURIComponent(institutionCode)}/stats`)
     },
 
-    // 获取机构的物种列表
+    // 获取机构的物种列表 (with record counts)
     getInstitutionSpecies(institutionCode, params = {}) {
         return api.get(`/institutions/${encodeURIComponent(institutionCode)}/species`, { params })
+    },
+
+    // 获取机构记录 (for map and table)
+    getInstitutionRecordsV2(institutionCode, params = {}) {
+        return api.get(`/records/institution/${encodeURIComponent(institutionCode)}`, { params })
+    },
+
+    // 获取机构地图点数据 (heatmap)
+    getInstitutionMapPoints(institutionCode, params = {}, config = {}) {
+        return api.get(`/institutions/${encodeURIComponent(institutionCode)}/map-points`, { params, ...config })
     },
 
     // 获取机构的记录列表 - 更新为使用新的详细端点

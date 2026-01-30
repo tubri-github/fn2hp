@@ -45,33 +45,29 @@
 
       <!-- 错误提示 -->
       <div v-if="mapError" class="map-error">
-        <p>⚠️ Map loading error: {{ mapError }}</p>
+        <p>Map loading error: {{ mapError }}</p>
         <button @click="retryMapInit" class="retry-btn">Retry</button>
       </div>
     </div>
 
     <div class="map-legend">
-      <div class="legend-title">Record Density</div>
+      <div class="legend-title">Records by Provider</div>
       <div class="legend-density">
         <div class="legend-item">
-          <div class="legend-dot density-very-high"></div>
-          <span>Very High</span>
+          <div class="legend-dot size-xl" style="background: #d32f2f;"></div>
+          <span>50,000+</span>
         </div>
         <div class="legend-item">
-          <div class="legend-dot density-high"></div>
-          <span>High</span>
+          <div class="legend-dot size-lg" style="background: #f57c00;"></div>
+          <span>10,000+</span>
         </div>
         <div class="legend-item">
-          <div class="legend-dot density-medium"></div>
-          <span>Medium</span>
+          <div class="legend-dot size-md" style="background: #2196f3;"></div>
+          <span>1,000+</span>
         </div>
         <div class="legend-item">
-          <div class="legend-dot density-low"></div>
-          <span>Low</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-dot density-very-low"></div>
-          <span>Very Low</span>
+          <div class="legend-dot size-sm" style="background: #4caf50;"></div>
+          <span>&lt;1,000</span>
         </div>
       </div>
     </div>
@@ -120,16 +116,8 @@ const currentFilter = ref('all')
 const selectedMapStyle = ref('cartodb-positron')
 const currentTileLayer = ref(null)
 const mapError = ref('')
-const showDebug = ref(true) // 开启调试模式
+const showDebug = ref(false)
 
-// 测试数据 - 如果没有真实数据就用这个
-const testData = [
-  { institutionCode: 'TEST1', institutionName: 'Test Institution 1', lat: 40.7128, lng: -74.0060, recordCount: 15000, country: 'USA' },
-  { institutionCode: 'TEST2', institutionName: 'Test Institution 2', lat: 51.5074, lng: -0.1278, recordCount: 8000, country: 'UK' },
-  { institutionCode: 'TEST3', institutionName: 'Test Institution 3', lat: 35.6762, lng: 139.6503, recordCount: 2500, country: 'Japan' },
-  { institutionCode: 'TEST4', institutionName: 'Test Institution 4', lat: -33.8688, lng: 151.2093, recordCount: 12000, country: 'Australia' },
-  { institutionCode: 'TEST5', institutionName: 'Test Institution 5', lat: 48.8566, lng: 2.3522, recordCount: 6500, country: 'France' }
-]
 
 // 稳定的地图瓦片配置
 const mapStyles = {
@@ -155,12 +143,8 @@ const mapStyles = {
 
 // Computed properties
 const filteredProviders = computed(() => {
-  // 优先使用mapData，如果没有则使用institutions或测试数据
-  const dataSource = props.mapData.length > 0
-      ? props.mapData
-      : (props.institutions.length > 0 ? props.institutions : testData)
-
-  return dataSource // 直接返回所有数据，不进行过滤
+  // Prefer mapData, fallback to institutions
+  return props.mapData.length > 0 ? props.mapData : props.institutions
 })
 
 const uniqueCountries = computed(() => {
@@ -267,55 +251,86 @@ const updateMarkers = () => {
       return
     }
 
-    console.log('Updating dense point markers, count:', filteredProviders.value.length)
+    console.log('Updating provider markers, count:', filteredProviders.value.length)
 
     // Clear existing markers
     markersLayer.value.clearLayers()
 
-    // Generate dense points from provider data
-    const densePoints = generateDensePoints(filteredProviders.value)
-    console.log('Generated dense points:', densePoints.length)
+    filteredProviders.value.forEach((provider, index) => {
+      const lat = provider.lat || provider.latitude
+      const lng = provider.lng || provider.longitude
+      const recordCount = provider.recordCount || provider.records || 0
 
-    densePoints.forEach((point, index) => {
-      const { lat, lng, density, recordCount, source } = point
-
-      console.log(`Creating marker ${index}:`, { lat, lng, density, recordCount, source }) // 调试日志
-
-      // 验证坐标
-      if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-        console.warn(`Invalid coordinates for marker ${index}:`, { lat, lng })
+      // Validate coordinates
+      if (!lat || !lng || isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
         return
       }
 
-      // Create tiny density-based dot
-      const densityColor = getDensityColor(density)
+      // Get marker size and color based on record count
+      const markerSize = getMarkerSize(recordCount)
+      const markerColor = getMarkerColor(recordCount)
+
+      // Create clean circular marker
       const icon = L.divIcon({
-        className: `density-dot`,
-        iconSize: [6, 6], // 增大到6x6px，更容易看见
-        iconAnchor: [3, 3],
-        html: `<div class="dense-dot-inner" style="background-color: ${densityColor}; opacity: ${getDensityOpacity(density)}; width: 6px; height: 6px; border-radius: 50%;"></div>`
+        className: 'provider-marker',
+        iconSize: [markerSize, markerSize],
+        iconAnchor: [markerSize / 2, markerSize / 2],
+        html: `<div class="provider-dot" style="
+          width: ${markerSize}px;
+          height: ${markerSize}px;
+          background-color: ${markerColor};
+          border: 2px solid white;
+          border-radius: 50%;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        "></div>`
       })
 
       // Create marker
-      const marker = L.marker([lat, lng], { icon })
+      const marker = L.marker([parseFloat(lat), parseFloat(lng)], { icon })
 
-      // Add tooltip for all markers (temporarily for debugging)
-      marker.bindTooltip(`${source}<br>${recordCount} records<br>Density: ${getDensityLevel(density)}`, {
+      // Add tooltip
+      const tooltipContent = `
+        <strong>${provider.institutionCode || 'Unknown'}</strong><br>
+        ${provider.institutionName || ''}<br>
+        ${provider.country || ''}<br>
+        ${formatNumber(recordCount)} records
+      `
+      marker.bindTooltip(tooltipContent, {
         permanent: false,
         direction: 'top',
-        className: 'dense-tooltip'
+        className: 'provider-tooltip'
+      })
+
+      // Add click handler
+      marker.on('click', () => {
+        emit('provider-clicked', provider.institutionCode)
       })
 
       markersLayer.value.addLayer(marker)
-      console.log(`Marker ${index} added successfully`) // 调试日志
     })
 
-    console.log('Dense markers update completed')
+    console.log('Provider markers update completed')
 
   } catch (error) {
-    console.error('Dense markers update error:', error)
-    mapError.value = 'Failed to update dense markers: ' + error.message
+    console.error('Provider markers update error:', error)
+    mapError.value = 'Failed to update markers: ' + error.message
   }
+}
+
+// Get marker size based on record count
+const getMarkerSize = (recordCount) => {
+  if (recordCount >= 50000) return 18
+  if (recordCount >= 10000) return 14
+  if (recordCount >= 1000) return 11
+  return 8
+}
+
+// Get marker color based on record count
+const getMarkerColor = (recordCount) => {
+  if (recordCount >= 50000) return '#d32f2f'  // Red - very large
+  if (recordCount >= 10000) return '#f57c00'  // Orange - large
+  if (recordCount >= 1000) return '#2196f3'   // Blue - medium
+  return '#4caf50'                             // Green - small
 }
 
 const createPopupContent = (provider) => {
@@ -332,75 +347,6 @@ const createPopupContent = (provider) => {
   `
 }
 
-// 生成密集点分布
-const generateDensePoints = (providers) => {
-  const densePoints = []
-  
-  console.log('generateDensePoints input:', providers) // 调试日志
-  
-  providers.forEach((provider, index) => {
-    console.log(`Processing provider ${index}:`, provider) // 调试日志
-    
-    const baseRecords = provider.recordCount || provider.records || 0
-    const lat = provider.lat || provider.latitude
-    const lng = provider.lng || provider.longitude
-    
-    console.log(`Provider ${index} - lat: ${lat}, lng: ${lng}, records: ${baseRecords}`) // 调试日志
-    
-    if (baseRecords === 0 || !lat || !lng) {
-      console.warn(`Skipping provider ${index} - missing data:`, { lat, lng, baseRecords })
-      return
-    }
-    
-    // 根据记录数量生成更多密集点
-    const numPoints = Math.min(Math.ceil(baseRecords / 100), 50) // 每100条记录1个点，最多50个点 (减少密度)
-    
-    console.log(`Generating ${numPoints} points for provider ${index}`)
-    
-    for (let i = 0; i < numPoints; i++) {
-      // 在原位置周围添加随机分布
-      const latOffset = (Math.random() - 0.5) * 1 // ±0.5度偏移 (减少散布)
-      const lngOffset = (Math.random() - 0.5) * 1
-      
-      // 计算局部密度 (基于记录数量)
-      const density = Math.min(baseRecords / 5000, 1) // 标准化到0-1，降低阈值
-      
-      densePoints.push({
-        lat: parseFloat(lat) + latOffset,
-        lng: parseFloat(lng) + lngOffset,
-        density: density,
-        recordCount: Math.ceil(baseRecords / numPoints),
-        source: provider.name || provider.institutionCode || provider.country
-      })
-    }
-  })
-  
-  console.log('Generated dense points total:', densePoints.length)
-  return densePoints
-}
-
-// 根据密度获取颜色 - 为浅色背景优化
-const getDensityColor = (density) => {
-  if (density > 0.8) return '#d32f2f' // 红色 (最高密度)
-  if (density > 0.6) return '#f57c00' // 橙色
-  if (density > 0.4) return '#ff9800' // 深橙
-  if (density > 0.2) return '#2196f3' // 蓝色
-  return '#4caf50' // 绿色 (最低密度)
-}
-
-// 根据密度获取透明度
-const getDensityOpacity = (density) => {
-  return 0.8 + (density * 0.2) // 0.8到1.0的透明度 (增加不透明度)
-}
-
-// 获取密度级别文本
-const getDensityLevel = (density) => {
-  if (density > 0.8) return 'Very High'
-  if (density > 0.6) return 'High'
-  if (density > 0.4) return 'Medium'  
-  if (density > 0.2) return 'Low'
-  return 'Very Low'
-}
 
 const formatNumber = (num, format = 'full') => {
   if (!num) return '0'
@@ -692,68 +638,63 @@ watch(() => [props.institutions, props.mapData], () => {
   flex-wrap: wrap;
 }
 
-.legend-dot.density-very-high {
+.legend-dot.size-xl {
+  width: 14px;
+  height: 14px;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.legend-dot.size-lg {
+  width: 12px;
+  height: 12px;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.legend-dot.size-md {
+  width: 10px;
+  height: 10px;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.legend-dot.size-sm {
   width: 8px;
   height: 8px;
-  background: #b71c1c;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 
-.legend-dot.density-high {
-  width: 8px;
-  height: 8px;
-  background: #d32f2f;
-}
-
-.legend-dot.density-medium {
-  width: 8px;
-  height: 8px;
-  background: #f57c00;
-}
-
-.legend-dot.density-low {
-  width: 8px;
-  height: 8px;
-  background: #fbc02d;
-}
-
-.legend-dot.density-very-low {
-  width: 8px;
-  height: 8px;
-  background: #388e3c;
-}
-
-/* 密集点样式 */
-:deep(.density-dot) {
-  border-radius: 50%;
-  border: none;
-  transition: opacity 0.2s ease;
-}
-
-.dense-dot-inner {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  border: none;
-  display: block;
-}
-
-:deep(.density-dot) {
+/* Provider marker styles */
+:deep(.provider-marker) {
   background: none !important;
   border: none !important;
 }
 
-:deep(.density-dot:hover) {
-  transform: scale(1.5);
+:deep(.provider-marker:hover .provider-dot) {
+  transform: scale(1.2);
 }
 
-/* 密集点tooltip样式 */
-:deep(.dense-tooltip) {
-  background: rgba(0, 0, 0, 0.8) !important;
-  color: white !important;
-  border: none !important;
-  border-radius: 4px !important;
-  font-size: 10px !important;
-  padding: 2px 6px !important;
+.provider-dot {
+  transition: transform 0.2s ease;
+  cursor: pointer;
+}
+
+/* Provider tooltip styles */
+:deep(.provider-tooltip) {
+  background: rgba(255, 255, 255, 0.95) !important;
+  color: #333 !important;
+  border: 1px solid #ddd !important;
+  border-radius: 6px !important;
+  font-size: 12px !important;
+  padding: 8px 12px !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.15) !important;
+}
+
+:deep(.provider-tooltip strong) {
+  color: #2c3e50;
+  font-size: 13px;
 }
 
 .dot-inner {

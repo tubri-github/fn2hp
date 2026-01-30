@@ -319,15 +319,17 @@
           « Previous
         </button>
 
-        <button
-            v-for="page in visiblePages"
-            :key="page"
-            class="pagination-btn"
-            :class="{ active: page === pagination.page }"
-            @click="changePage(page)"
-        >
-          {{ page }}
-        </button>
+        <template v-for="page in visiblePages" :key="page">
+          <span v-if="page === '...'" class="pagination-ellipsis">...</span>
+          <button
+              v-else
+              class="pagination-btn"
+              :class="{ active: page === pagination.page }"
+              @click="changePage(page)"
+          >
+            {{ page }}
+          </button>
+        </template>
 
         <button
             class="pagination-btn"
@@ -380,8 +382,9 @@ const searchFilters = ref({
 })
 const pagination = ref({
   page: 1,
-  perPage: 50,
-  total: 0
+  perPage: 20,
+  total: 0,
+  totalPages: 0
 })
 
 // 可用的分类选项
@@ -398,68 +401,12 @@ const topSpecies = computed(() => {
       .slice(0, 5)
 })
 
-const displayedSpecies = computed(() => {
-  let filtered = species.value
-
-  // 应用搜索过滤
-  if (searchFilters.value.name) {
-    const search = searchFilters.value.name.toLowerCase()
-    filtered = filtered.filter(s =>
-        s.scientificName.toLowerCase().includes(search) ||
-        (s.vernacularName && s.vernacularName.toLowerCase().includes(search))
-    )
-  }
-
-  // 应用其他过滤器
-  if (searchFilters.value.recordCount) {
-    filtered = filtered.filter(s => {
-      const count = s.recordCount || 0
-      switch (searchFilters.value.recordCount) {
-        case 'high': return count > 1000
-        case 'medium': return count >= 100 && count <= 1000
-        case 'low': return count < 100
-        default: return true
-      }
-    })
-  }
-
-  // 应用分类过滤器
-  if (taxonomyFilters.value.family) {
-    filtered = filtered.filter(s => s.family === taxonomyFilters.value.family)
-  }
-  if (taxonomyFilters.value.genus) {
-    filtered = filtered.filter(s => s.genus === taxonomyFilters.value.genus)
-  }
-
-  // 排序
-  filtered.sort((a, b) => {
-    switch (searchFilters.value.sortBy) {
-      case 'name_asc':
-        return a.scientificName.localeCompare(b.scientificName)
-      case 'records_desc':
-        return (b.recordCount || 0) - (a.recordCount || 0)
-      case 'recent_desc':
-        return new Date(b.lastRecord || 0) - new Date(a.lastRecord || 0)
-      case 'quality_desc':
-        return (b.geoReferencingQuality || 0) - (a.geoReferencingQuality || 0)
-      default:
-        return 0
-    }
-  })
-
-  // 分页
-  const start = (pagination.value.page - 1) * pagination.value.perPage
-  const end = start + pagination.value.perPage
-
-  pagination.value.total = filtered.length
-  return filtered.slice(start, end)
-})
+// 后端已经分页和过滤，直接使用 species
+const displayedSpecies = computed(() => species.value)
 
 const totalSpeciesCount = computed(() => pagination.value.total)
 
-const totalPages = computed(() => {
-  return Math.ceil(pagination.value.total / pagination.value.perPage)
-})
+const totalPages = computed(() => pagination.value.totalPages)
 
 const visiblePages = computed(() => {
   const current = pagination.value.page
@@ -487,11 +434,28 @@ const visiblePages = computed(() => {
 })
 
 // 方法
-const loadSpecies = async () => {
+const loadSpecies = async (page = 1, isInitialLoad = false) => {
   try {
-    await fetchSpecies()
-    extractTaxonomyOptions()
-    extractFamilyBreakdown()
+    const response = await fetchSpecies({
+      page: page,
+      per_page: pagination.value.perPage,
+      search: searchFilters.value.name || undefined,
+      family: taxonomyFilters.value.family || undefined,
+      genus: taxonomyFilters.value.genus || undefined,
+      record_count: searchFilters.value.recordCount || undefined,
+      data_quality: searchFilters.value.dataQuality || undefined,
+      sort_by: searchFilters.value.sortBy
+    })
+    // 更新分页信息
+    pagination.value.page = page
+    pagination.value.total = response?.total || 0
+    pagination.value.totalPages = response?.pages || Math.ceil(pagination.value.total / pagination.value.perPage)
+
+    // 只在首次加载时提取分类选项
+    if (isInitialLoad) {
+      extractTaxonomyOptions()
+      extractFamilyBreakdown()
+    }
   } catch (err) {
     console.error('Failed to load species:', err)
   }
@@ -597,25 +561,25 @@ const applyTaxonomyFilters = () => {
 }
 
 const applyFilters = () => {
-  pagination.value.page = 1
+  loadSpecies(1)
 }
 
 const debouncedSearch = debounce(() => {
-  applyFilters()
+  loadSpecies(1)
 }, 300)
 
 const performSearch = () => {
-  applyFilters()
+  loadSpecies(1)
 }
 
 const changePage = (page) => {
   if (page >= 1 && page <= totalPages.value) {
-    pagination.value.page = page
+    loadSpecies(page)
   }
 }
 
 const changePerPage = () => {
-  pagination.value.page = 1
+  loadSpecies(1)
 }
 
 // 工具函数
@@ -659,7 +623,7 @@ const generateChecklist = () => {
 
 // 生命周期
 onMounted(() => {
-  loadSpecies()
+  loadSpecies(1, true)  // 首次加载
   loadStats()
 })
 </script>
@@ -1205,6 +1169,11 @@ onMounted(() => {
 .pagination-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.pagination-ellipsis {
+  padding: 8px 12px;
+  color: #666;
 }
 
 .pagination-info {

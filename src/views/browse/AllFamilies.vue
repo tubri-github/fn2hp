@@ -3,7 +3,7 @@
     <!-- Page Header -->
     <div class="page-header">
       <h1 class="page-title">Browse All Fish Families</h1>
-      <p class="page-subtitle">Explore taxonomic diversity across all fish families in the Fishnet2 database</p>
+      <p class="page-subtitle">Explore taxonomic diversity across all fish families in the FishNet 2 database</p>
 
       <div class="global-stats" v-if="taxonomyStats">
         <div class="global-stat">
@@ -277,15 +277,17 @@
             « Previous
           </button>
 
-          <button
-              v-for="page in visiblePages"
-              :key="page"
-              class="pagination-btn"
-              :class="{ active: page === pagination.page }"
-              @click="changePage(page)"
-          >
-            {{ page }}
-          </button>
+          <template v-for="page in visiblePages" :key="page">
+            <span v-if="page === '...'" class="pagination-ellipsis">...</span>
+            <button
+                v-else
+                class="pagination-btn"
+                :class="{ active: page === pagination.page }"
+                @click="changePage(page)"
+            >
+              {{ page }}
+            </button>
+          </template>
 
           <button
               class="pagination-btn"
@@ -957,6 +959,11 @@ watch(() => filters.search, debouncedSearch)
 .pagination-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.pagination-ellipsis {
+  padding: 8px 12px;
+  color: #666;
 }
 
 .pagination-info {

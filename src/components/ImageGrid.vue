@@ -5,7 +5,7 @@
     <div class="carousel-container">
       <div class="carousel">
         <div class="carousel-content" :style="{ transform: `translateX(-${currentIndex * 100}%)` }">
-          <!-- 第一页：FishAir -->
+          <!-- 第一页：FishAIR -->
           <div class="project-slide">
             <div class="content-section">
               <!-- 图片固定大小布局 -->
@@ -21,16 +21,16 @@
 
               <!-- 中间文字 -->
               <div class="text-section">
-                <h3 class="project-title">FishAir</h3>
+                <h3 class="project-title">FishAIR</h3>
                 <p class="project-description">
-                  FishAir is a fish image dataset with built-in image quality management system.
+                  FishAIR is a fish image dataset with built-in image quality management system.
                 </p>
               </div>
 
               <!-- 按钮 -->
               <div class="button-container">
                 <button class="redirect-button" @click="goToHomepage('fishair')">
-                  Explore Fishair
+                  Explore FishAIR
                 </button>
               </div>
             </div>

@@ -163,7 +163,7 @@
                 <span class="table-institution-code">{{ institution.institutionCode }}</span>
               </td>
               <td>
-                <span class="table-institution-name">{{ institution.institutionName }}</span>
+                <span class="table-institution-name">{{ institution.officialName || institution.institutionName }}</span>
               </td>
               <td>{{ institution.country }}</td>
               <td>
@@ -207,13 +207,19 @@
                   <div class="institution-card-header">
                     <div class="institution-logo">{{ institution.institutionCode }}</div>
                     <div class="institution-info">
-                      <h3 class="institution-name">{{ institution.institutionName }}</h3>
+                      <h3 class="institution-name">{{ institution.officialName || institution.institutionName }}</h3>
+                      <div v-if="institution.alternateName" class="institution-alternate-name">
+                        {{ institution.alternateName }}
+                      </div>
                       <div class="institution-codes">
                         <span class="institution-code-tag">
                           <span class="dc-field">institutionCode:</span> {{ institution.institutionCode }}
                         </span>
                         <span v-if="institution.ownerInstitutionCode" class="institution-code-tag">
                           <span class="dc-field">ownerInstitutionCode:</span> {{ institution.ownerInstitutionCode }}
+                        </span>
+                        <span v-if="institution.source" class="institution-source-tag">
+                          {{ institution.source }}
                         </span>
                       </div>
                       <div class="institution-location">{{ formatLocation(institution) }}</div>
@@ -239,6 +245,19 @@
                     </div>
                   </div>
 
+                  <!-- Contact & Links -->
+                  <div v-if="institution.website || institution.email || institution.dataUrl" class="institution-contact-row">
+                    <a v-if="institution.website" :href="institution.website" target="_blank" class="contact-link website">
+                      Website
+                    </a>
+                    <a v-if="institution.email" :href="`mailto:${institution.email}`" class="contact-link email">
+                      {{ institution.email }}
+                    </a>
+                    <a v-if="institution.dataUrl" :href="institution.dataUrl" target="_blank" class="contact-link gbif">
+                      GBIF
+                    </a>
+                  </div>
+
                   <div class="institution-meta">
                     <span>Last updated: {{ formatDate(institution.lastUpdated) }}</span>
                     <div class="institution-quality">
@@ -257,32 +276,11 @@
                     </div>
                   </div>
 
-                  <div class="collection-codes" v-if="institution.collectionCodes">
-                    <div class="collection-codes-label">
-                      <span class="dc-field">collectionCode</span> values:
-                    </div>
-                    <div class="collection-code-list">
-                      <span
-                          v-for="code in institution.collectionCodes.slice(0, 6)"
-                          :key="code"
-                          class="collection-code"
-                      >
-                        {{ code }}
-                      </span>
-                      <span
-                          v-if="institution.collectionCodes.length > 6"
-                          class="collection-code more"
-                      >
-                        +{{ institution.collectionCodes.length - 6 }} more
-                      </span>
-                    </div>
-                  </div>
-
                   <div class="card-actions">
-                    <button class="card-action-btn primary" @click="navigateToInstitution(institution.institutionCode)">
+                    <button class="card-action-btn primary" @click.stop="navigateToInstitution(institution.institutionCode)">
                       View Details
                     </button>
-                    <button class="card-action-btn secondary" @click="downloadData(institution.institutionCode)">
+                    <button class="card-action-btn secondary" @click.stop="downloadData(institution.institutionCode)">
                       Download Data
                     </button>
                   </div>
@@ -346,7 +344,7 @@ const {
   error,
   institutions,
   institutionStats,
-  fetchInstitutions,
+  fetchInstitutionsV2,
   fetchInstitutionStats
 } = useInstitutions()
 
@@ -378,46 +376,34 @@ function transformInstitutionsForMap(apiData) {
 
 // 获取机构坐标的简单函数
 function getCoordinatesForInstitution(institution) {
-  // 如果API已经提供了坐标
-  if (institution.lat && institution.lng) {
+  // 优先使用API提供的坐标
+  if (institution.latitude && institution.longitude) {
     return {
-      lat: parseFloat(institution.lat),
-      lng: parseFloat(institution.lng)
+      lat: parseFloat(institution.latitude),
+      lng: parseFloat(institution.longitude)
     }
   }
 
-  // 根据常见机构代码获取坐标
-  const knownInstitutions = {
-    'CUMV': { lat: 42.4430, lng: -76.4730 }, // Cornell
-    'USNM': { lat: 38.8889, lng: -77.0258 }, // Smithsonian
-    'FMNH': { lat: 41.8781, lng: -87.6298 }, // Field Museum
-    'CAS': { lat: 37.7699, lng: -122.4667 }, // California Academy
-    'LACM': { lat: 34.0162, lng: -118.2890 }, // LA County Museum
-    'MCZ': { lat: 42.3783, lng: -71.1150 }, // Harvard
-    'UMMZ': { lat: 42.2808, lng: -83.7430 }, // Michigan
-    'ROM': { lat: 43.6677, lng: -79.3948 }, // Royal Ontario
-    'BMNH': { lat: 51.4966, lng: -0.1764 }, // British Museum
-    'MNHN': { lat: 48.8566, lng: 2.3522 }, // Paris Natural History
-    // 可以继续添加更多...
-  }
-
-  if (knownInstitutions[institution.institutionCode]) {
-    return knownInstitutions[institution.institutionCode]
-  }
-
-  // 根据国家代码获取默认坐标
+  // 根据国家代码获取默认坐标作为后备
   const countryCoords = {
-    'US': { lat: 39.8283, lng: -98.5795 },
-    'CA': { lat: 56.1304, lng: -106.3468 },
-    'GB': { lat: 55.3781, lng: -3.4360 },
-    'UK': { lat: 55.3781, lng: -3.4360 },
-    'AU': { lat: -25.2744, lng: 133.7751 },
-    'DE': { lat: 51.1657, lng: 10.4515 },
-    'FR': { lat: 46.2276, lng: 2.2137 },
-    'JP': { lat: 36.2048, lng: 138.2529 },
-    'BR': { lat: -14.2350, lng: -51.9253 },
-    'CN': { lat: 35.8617, lng: 104.1954 },
-    // 继续添加更多国家...
+    'United States': { lat: 39.8283, lng: -98.5795 },
+    'USA': { lat: 39.8283, lng: -98.5795 },
+    'Canada': { lat: 56.1304, lng: -106.3468 },
+    'United Kingdom': { lat: 55.3781, lng: -3.4360 },
+    'Australia': { lat: -25.2744, lng: 133.7751 },
+    'Germany': { lat: 51.1657, lng: 10.4515 },
+    'France': { lat: 46.2276, lng: 2.2137 },
+    'Japan': { lat: 36.2048, lng: 138.2529 },
+    'Brazil': { lat: -14.2350, lng: -51.9253 },
+    'China': { lat: 35.8617, lng: 104.1954 },
+    'Mexico': { lat: 23.6345, lng: -102.5528 },
+    'Taiwan': { lat: 23.6978, lng: 120.9605 },
+    'South Africa': { lat: -30.5595, lng: 22.9375 },
+    'India': { lat: 20.5937, lng: 78.9629 },
+    'Russia': { lat: 61.5240, lng: 105.3188 },
+    'Netherlands': { lat: 52.1326, lng: 5.2913 },
+    'Sweden': { lat: 60.1282, lng: 18.6435 },
+    'New Zealand': { lat: -40.9006, lng: 174.8860 }
   }
 
   return countryCoords[institution.country] || { lat: null, lng: null }
@@ -538,7 +524,8 @@ const visiblePages = computed(() => {
 // 方法
 const loadInstitutions = async () => {
   try {
-    await fetchInstitutions()
+    // Load all institutions (API limit is 200)
+    await fetchInstitutionsV2({ per_page: 200 })
   } catch (err) {
     console.error('Failed to load institutions:', err)
   }
@@ -554,7 +541,7 @@ const loadStats = async () => {
 
 const navigateToInstitution = (institutionCode) => {
   router.push({
-    name: 'InstitutionDetail',
+    name: 'ProviderDetail',
     params: { institutionCode }
   })
 }
@@ -608,8 +595,8 @@ const formatDate = (date) => {
 
 const formatLocation = (institution) => {
   const parts = []
-  if (institution.locality) parts.push(institution.locality)
-  if (institution.stateProvince) parts.push(institution.stateProvince)
+  if (institution.city) parts.push(institution.city)
+  if (institution.state) parts.push(institution.state)
   if (institution.country) parts.push(institution.country)
   return parts.join(', ') || 'Location not specified'
 }
@@ -820,6 +807,7 @@ watch(() => searchQuery.value, debouncedSearch)
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   padding: 25px;
+  overflow: hidden;
 }
 
 .institutions-header {
@@ -1025,10 +1013,75 @@ watch(() => searchQuery.value, debouncedSearch)
   font-weight: bold;
 }
 
+.institution-alternate-name {
+  font-size: 14px;
+  color: #666;
+  font-style: italic;
+  margin-bottom: 8px;
+}
+
+.institution-source-tag {
+  background: #f0f0f0;
+  color: #666;
+  padding: 4px 10px;
+  border-radius: 15px;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
 .institution-location {
   font-size: 14px;
   color: #666;
   margin-bottom: 20px;
+}
+
+/* Contact row */
+.institution-contact-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 15px;
+  padding: 12px 0;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+
+.contact-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 15px;
+  font-size: 13px;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.contact-link.website {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.contact-link.website:hover {
+  background: #bbdefb;
+}
+
+.contact-link.email {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.contact-link.email:hover {
+  background: #ffe0b2;
+}
+
+.contact-link.gbif {
+  background: #4e9a47;
+  color: white;
+}
+
+.contact-link.gbif:hover {
+  background: #3d7a38;
 }
 
 .institution-stats-row {
@@ -1144,8 +1197,9 @@ watch(() => searchQuery.value, debouncedSearch)
   justify-content: center;
   align-items: center;
   margin-top: 25px;
-  gap: 10px;
-  flex-wrap: wrap;
+  gap: 8px;
+  flex-wrap: nowrap;
+  overflow: hidden;
 }
 
 .pagination-btn {
@@ -1156,6 +1210,8 @@ watch(() => searchQuery.value, debouncedSearch)
   cursor: pointer;
   font-size: 14px;
   transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .pagination-btn:hover:not(:disabled),
@@ -1174,6 +1230,8 @@ watch(() => searchQuery.value, debouncedSearch)
   font-size: 14px;
   color: #666;
   margin-left: 15px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* 状态组件 */

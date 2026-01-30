@@ -35,7 +35,7 @@
 
     <!-- Copyright Section -->
     <div class="footer-section copyright-section">
-      <p>© 2017-2025 FishNet2. All rights reserved.</p>
+      <p>© 2017-2025 FishNet 2. All rights reserved.</p>
     </div>
   </footer>
 </template>

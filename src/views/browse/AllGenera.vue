@@ -3,7 +3,7 @@
     <!-- Page Header -->
     <div class="page-header">
       <h1 class="page-title">Browse All Fish Genera</h1>
-      <p class="page-subtitle">Explore taxonomic diversity across all fish genera in the Fishnet2 database</p>
+      <p class="page-subtitle">Explore taxonomic diversity across all fish genera in the FishNet 2 database</p>
 
       <div class="global-stats" v-if="taxonomyStats">
         <div class="global-stat">
@@ -43,26 +43,6 @@
           <span class="action-icon">🔍</span> Diversity Analysis
         </button>
       </div> -->
-    </div>
-
-    <!-- Top Genera Highlight -->
-    <div class="top-genera" v-if="topGenera.length">
-      <div class="stats-title">Most Recorded Genera</div>
-      <div class="top-genera-grid">
-        <div
-            v-for="(genus, index) in topGenera"
-            :key="genus.genus"
-            class="top-genus-item"
-            @click="navigateToGenus(genus.genus)"
-        >
-          <div class="top-genus-rank">{{ index + 1 }}</div>
-          <div class="top-genus-name">{{ genus.genus }}</div>
-          <div class="top-genus-stats">
-            {{ formatNumber(genus.recordCount) }} records<br>
-            {{ formatNumber(genus.speciesCount) }} species
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- Quick Stats -->
@@ -126,22 +106,6 @@
           <option value="name_asc">Sort by Name</option>
           <option value="family_asc">Sort by Family</option>
         </select>
-        <div class="view-toggle">
-          <button
-              class="view-btn"
-              :class="{ active: viewMode === 'cards' }"
-              @click="viewMode = 'cards'"
-          >
-            Cards
-          </button>
-          <button
-              class="view-btn"
-              :class="{ active: viewMode === 'table' }"
-              @click="viewMode = 'table'"
-          >
-            Table
-          </button>
-        </div>
       </div>
     </div>
 
@@ -166,119 +130,86 @@
         <button @click="loadGenera" class="retry-button">Retry</button>
       </div>
 
-      <!-- Card View -->
-      <div v-else-if="viewMode === 'cards'" class="genera-grid">
-        <div
-            v-for="genus in genera"
-            :key="genus.genus"
-            class="genus-card"
-            @click="navigateToGenus(genus.genus)"
-        >
-          <div class="genus-card-header">
-            <h3 class="genus-name">{{ genus.genus }}</h3>
-            <router-link
-                v-if="genus.family"
-                :to="{ name: 'FamilyDetail', params: { familyName: genus.family } }"
-                class="genus-family"
-                @click.stop
-            >
-              {{ genus.family }}
-            </router-link>
-            <span v-else class="genus-family">—</span>
-          </div>
-          <div class="genus-stats-row">
-            <div class="genus-stat">
-              <div class="genus-stat-number">{{ formatNumber(genus.speciesCount) }}</div>
-              <div class="genus-stat-label">Species</div>
-            </div>
-            <div class="genus-stat">
-              <div class="genus-stat-number">{{ formatNumber(genus.recordCount, 'short') }}</div>
-              <div class="genus-stat-label">Records</div>
-            </div>
-            <div class="genus-stat">
-              <div class="genus-stat-number">{{ formatNumber(genus.countriesCount) }}</div>
-              <div class="genus-stat-label">Countries</div>
-            </div>
-            <div class="genus-stat">
-              <div class="genus-stat-number">{{ formatNumber(genus.institutionsCount) }}</div>
-              <div class="genus-stat-label">Institutions</div>
-            </div>
-          </div>
-          <div class="genus-meta">
-            <span>{{ genus.order || '—' }}</span>
-            <div class="genus-quality">
+      <!-- Table View -->
+      <div v-else class="table-container">
+        <table class="genera-table">
+          <thead>
+          <tr>
+            <th>Genus</th>
+            <th>Family</th>
+            <th>Order</th>
+            <th>Species</th>
+            <th>Records</th>
+            <th>Countries</th>
+            <th>Institutions</th>
+            <th>Georeferenced</th>
+            <th>Date Quality</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr
+              v-for="genus in genera"
+              :key="genus.genus"
+              @click="navigateToGenus(genus.genus)"
+              class="table-row"
+          >
+            <td>
+              <router-link
+                  :to="{ name: 'GenusDetail', params: { genusName: genus.genus } }"
+                  class="table-genus-name genus-link"
+                  @click.stop
+              >
+                {{ genus.genus }}
+              </router-link>
+            </td>
+            <td>
+              <router-link
+                  v-if="genus.family"
+                  :to="{ name: 'FamilyDetail', params: { familyName: genus.family } }"
+                  class="family-link"
+                  @click.stop
+              >
+                {{ genus.family }}
+              </router-link>
+              <span v-else>—</span>
+            </td>
+            <td>
+              <span class="order-badge">{{ genus.order || '—' }}</span>
+            </td>
+            <td>{{ formatNumber(genus.speciesCount) }}</td>
+            <td>
+              <div class="records-bar-container">
+                <div
+                    class="records-bar"
+                    :style="{ width: getRecordsPercentage(genus.recordCount) + '%' }"
+                ></div>
+                <div class="records-text">
+                  {{ formatNumber(genus.recordCount, 'short') }}
+                </div>
+              </div>
+            </td>
+            <td>{{ formatNumber(genus.countriesCount) }}</td>
+            <td>{{ formatNumber(genus.institutionsCount) }}</td>
+            <td>
               <span
                   class="quality-badge"
                   :class="getQualityClass(genus.geoReferencingQuality)"
               >
-                Geo: {{ genus.geoReferencingQuality }}%
+                {{ genus.geoReferencingQuality }}%
               </span>
+            </td>
+            <td>
               <span
                   class="quality-badge"
                   :class="getQualityClass(genus.dateQuality)"
               >
-                Date: {{ genus.dateQuality }}%
+                {{ genus.dateQuality }}%
               </span>
-            </div>
-          </div>
-          <div class="genus-progress">
-            <div class="progress-label">Collection Completeness</div>
-            <div class="progress-bar">
-              <div
-                  class="progress-fill"
-                  :style="{ width: `${genus.collectionCompleteness}%` }"
-              ></div>
-            </div>
-          </div>
-        </div>
+            </td>
+          </tr>
+          </tbody>
+        </table>
       </div>
-
-      <!-- Table View -->
-      <table v-else class="genera-table">
-        <thead>
-        <tr>
-          <th>Genus</th>
-          <th>Family</th>
-          <th>Order</th>
-          <th>Species</th>
-          <th>Records</th>
-          <th>Countries</th>
-          <th>Institutions</th>
-          <th>Georeferenced</th>
-          <th>Date Quality</th>
-          <th>Last Updated</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr
-            v-for="genus in genera"
-            :key="genus.genus"
-            @click="navigateToGenus(genus.genus)"
-            class="clickable-row"
-        >
-          <td><span class="table-genus-name">{{ genus.genus }}</span></td>
-          <td>
-            <router-link
-                v-if="genus.family"
-                :to="{ name: 'FamilyDetail', params: { familyName: genus.family } }"
-                class="family-link"
-                @click.stop
-            >
-              {{ genus.family }}
-            </router-link>
-            <span v-else>—</span>
-          </td>
-          <td>{{ genus.order || '—' }}</td>
-          <td>{{ formatNumber(genus.speciesCount) }}</td>
-          <td>{{ formatNumber(genus.recordCount) }}</td>
-          <td>{{ formatNumber(genus.countriesCount) }}</td>
-          <td>{{ formatNumber(genus.institutionsCount) }}</td>
-          <td>{{ genus.geoReferencingQuality }}%</td>
-          <td>{{ genus.dateQuality }}%</td>
-          <td>{{ formatDate(genus.lastUpdated) }}</td>
-        </tr>
-        </tbody>
-      </table>
 
       <!-- Pagination -->
       <div class="pagination" v-if="pagination.total > pagination.perPage">
@@ -290,15 +221,17 @@
           « Previous
         </button>
 
-        <button
-            v-for="page in visiblePages"
-            :key="page"
-            class="pagination-btn"
-            :class="{ active: page === pagination.page }"
-            @click="changePage(page)"
-        >
-          {{ page }}
-        </button>
+        <template v-for="page in visiblePages" :key="page">
+          <span v-if="page === '...'" class="pagination-ellipsis">...</span>
+          <button
+              v-else
+              class="pagination-btn"
+              :class="{ active: page === pagination.page }"
+              @click="changePage(page)"
+          >
+            {{ page }}
+          </button>
+        </template>
 
         <button
             class="pagination-btn"
@@ -340,17 +273,9 @@ const {
 } = useTaxonomy()
 
 // 本地状态
-const viewMode = ref('table')
 const availableFamilies = ref([])
 
 // 计算属性
-const topGenera = computed(() => {
-  return genera.value
-      .slice()
-      .sort((a, b) => (b.recordCount || 0) - (a.recordCount || 0))
-      .slice(0, 5)
-})
-
 const totalPages = computed(() => {
   return Math.ceil(pagination.total / pagination.perPage)
 })
@@ -450,6 +375,11 @@ const getQualityClass = (percentage) => {
   return 'quality-fair'
 }
 
+const getRecordsPercentage = (recordCount) => {
+  const maxRecords = Math.max(...genera.value.map(g => g.recordCount || 0), 1)
+  return maxRecords > 0 ? (recordCount / maxRecords) * 100 : 0
+}
+
 // 操作按钮方法
 const exportGeneraSummary = () => {
   console.log('Exporting genera summary...')
@@ -520,7 +450,6 @@ watch(() => filters.search, debouncedSearch)
 }
 
 .global-stat-number {
-  font-family: 'Montserrat', sans-serif;
   font-size: 28px;
   font-weight: bold;
   color: #3498db;
@@ -528,7 +457,6 @@ watch(() => filters.search, debouncedSearch)
 }
 
 .global-stat-label {
-  font-family: 'Inter', sans-serif;
   font-size: 12px;
   color: #666;
   text-transform: uppercase;
@@ -651,15 +579,13 @@ watch(() => filters.search, debouncedSearch)
 }
 
 .stat-category-title {
-  font-family: 'Inter', sans-serif;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: bold;
   margin-bottom: 10px;
   color: #2c3e50;
 }
 
 .stat-category-value {
-  font-family: 'Montserrat', sans-serif;
   font-size: 28px;
   font-weight: bold;
   color: #3498db;
@@ -667,7 +593,6 @@ watch(() => filters.search, debouncedSearch)
 }
 
 .stat-category-desc {
-  font-family: 'Inter', sans-serif;
   font-size: 12px;
   color: #666;
 }
@@ -688,7 +613,6 @@ watch(() => filters.search, debouncedSearch)
 }
 
 .search-input, .filter-select {
-  font-family: 'Inter', sans-serif;
   padding: 10px 15px;
   border: 1px solid #ddd;
   border-radius: 6px;
@@ -816,7 +740,6 @@ watch(() => filters.search, debouncedSearch)
 }
 
 .genus-stat-number {
-  font-family: 'Montserrat', sans-serif;
   font-size: 18px;
   font-weight: bold;
   color: #3498db;
@@ -824,7 +747,6 @@ watch(() => filters.search, debouncedSearch)
 }
 
 .genus-stat-label {
-  font-family: 'Inter', sans-serif;
   font-size: 10px;
   color: #666;
   text-transform: uppercase;
@@ -890,35 +812,81 @@ watch(() => filters.search, debouncedSearch)
   transition: width 0.3s;
 }
 
+.table-container {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
 .genera-table {
   width: 100%;
   border-collapse: collapse;
-  font-family: 'Inter', sans-serif;
   font-size: 14px;
-}
-
-.genera-table th,
-.genera-table td {
-  border-bottom: 1px solid #eee;
-  padding: 12px;
-  text-align: left;
 }
 
 .genera-table th {
   background: #f8f9fa;
+  padding: 15px 12px;
+  text-align: left;
   font-weight: 600;
   color: #555;
+  border-bottom: 2px solid #e9ecef;
   position: sticky;
   top: 0;
+  z-index: 10;
 }
 
-.clickable-row {
+.genera-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e9ecef;
+  vertical-align: middle;
+}
+
+.table-row {
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
 }
 
-.clickable-row:hover {
+.table-row:hover {
   background-color: #f8f9fa;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.order-badge {
+  background: #e8f4fd;
+  color: #0288d1;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.records-bar-container {
+  position: relative;
+  width: 100px;
+  height: 20px;
+  background: #e9ecef;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.records-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #3498db, #2ecc71);
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+.records-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 10px;
+  font-weight: 600;
+  color: #333;
+  z-index: 2;
 }
 
 .table-genus-name {
@@ -933,6 +901,19 @@ watch(() => filters.search, debouncedSearch)
 }
 
 .family-link:hover {
+  text-decoration: underline;
+}
+
+.genus-link {
+  font-weight: bold;
+  color: #2c3e50;
+  font-style: italic;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.genus-link:hover {
+  color: #3498db;
   text-decoration: underline;
 }
 
@@ -952,6 +933,33 @@ watch(() => filters.search, debouncedSearch)
   margin-top: 25px;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.pagination-btn {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.pagination-btn:hover:not(:disabled),
+.pagination-btn.active {
+  background: #3498db;
+  color: white;
+  border-color: #3498db;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-ellipsis {
+  padding: 8px 12px;
+  color: #666;
 }
 
 .pagination-info {
