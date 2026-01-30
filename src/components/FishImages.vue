@@ -65,11 +65,11 @@
     </div>
 
     <!-- 分页控制 -->
-    <div v-if="totalPages > 1 && !loading" class="pagination-container">
+    <div v-if="totalPages > 1" class="pagination-container">
       <div class="pagination">
         <button
           class="pagination-btn"
-          :disabled="currentPage === 1"
+          :disabled="currentPage === 1 || loading"
           @click="goToPage(currentPage - 1)"
         >
           « Previous
@@ -81,6 +81,7 @@
             v-else
             class="pagination-btn"
             :class="{ active: page === currentPage }"
+            :disabled="loading"
             @click="goToPage(page)"
           >
             {{ page }}
@@ -89,7 +90,7 @@
 
         <button
           class="pagination-btn"
-          :disabled="currentPage >= totalPages"
+          :disabled="currentPage >= totalPages || loading"
           @click="goToPage(currentPage + 1)"
         >
           Next »
