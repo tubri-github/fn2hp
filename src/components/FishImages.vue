@@ -65,7 +65,7 @@
     </div>
 
     <!-- 分页控制 -->
-    <div v-if="totalImages > 0 && !loading" class="pagination-container">
+    <div v-if="totalPages > 1 && !loading" class="pagination-container">
       <div class="pagination">
         <button
           class="pagination-btn"
@@ -74,9 +74,19 @@
         >
           « Previous
         </button>
-        <span class="pagination-info">
-          Page {{ currentPage }} of {{ totalPages }} ({{ totalImages }} images)
-        </span>
+
+        <template v-for="page in visiblePages" :key="page">
+          <span v-if="page === '...'" class="pagination-ellipsis">...</span>
+          <button
+            v-else
+            class="pagination-btn"
+            :class="{ active: page === currentPage }"
+            @click="goToPage(page)"
+          >
+            {{ page }}
+          </button>
+        </template>
+
         <button
           class="pagination-btn"
           :disabled="currentPage >= totalPages"
@@ -84,6 +94,10 @@
         >
           Next »
         </button>
+
+        <div class="pagination-info">
+          {{ totalImages }} images total
+        </div>
       </div>
     </div>
 
@@ -515,10 +529,35 @@ const totalPages = computed(() => {
   return Math.ceil(totalImages.value / perPage) || 1
 })
 
+const visiblePages = computed(() => {
+  const current = currentPage.value
+  const total = totalPages.value
+  const delta = 2
+  const range = []
+
+  for (let i = Math.max(2, current - delta); i <= Math.min(total - 1, current + delta); i++) {
+    range.push(i)
+  }
+
+  if (current - delta > 2) {
+    range.unshift('...')
+  }
+  if (current + delta < total - 1) {
+    range.push('...')
+  }
+
+  range.unshift(1)
+  if (total > 1) {
+    range.push(total)
+  }
+
+  return range.filter((item, index, array) => array.indexOf(item) === index)
+})
+
 const goToPage = (page) => {
-  if (page >= 1 && page <= totalPages.value) {
+  if (typeof page === 'number' && page >= 1 && page <= totalPages.value) {
     currentPage.value = page
-    loadFishImages(true)
+    loadFishImages(false)  // false 表示不重置页码
   }
 }
 
@@ -932,7 +971,8 @@ onMounted(async () => {
   transition: all 0.2s;
 }
 
-.pagination-btn:hover:not(:disabled) {
+.pagination-btn:hover:not(:disabled),
+.pagination-btn.active {
   background: #3498db;
   color: white;
   border-color: #3498db;
@@ -943,9 +983,15 @@ onMounted(async () => {
   cursor: not-allowed;
 }
 
+.pagination-ellipsis {
+  padding: 0.5rem 0.75rem;
+  color: #666;
+}
+
 .pagination-info {
   font-size: 14px;
   color: #666;
+  margin-left: 15px;
 }
 
 .view-all-btn {
