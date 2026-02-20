@@ -874,21 +874,11 @@ export default {
           notes: notes
         }
 
-        const token = getUserToken()
-        const headers = {
-          'Content-Type': 'application/json'
-        }
-        
-        // Add Authorization header only if token exists
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`
-        }
-        
         await apiRequest('/flags/outlier', {
           method: 'POST',
           body: JSON.stringify(flagData),
-          headers: headers,
-          credentials: 'include' // Include cookies for session-based auth
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
         })
 
         successMessage.value = `Successfully marked sample point #${samplePointId} as ${getStatusText(flagType)}`
@@ -903,38 +893,6 @@ export default {
       } finally {
         loading.value = false
       }
-    }
-
-    // Get User Token from SSO system
-    const getUserToken = () => {
-      // Try different possible token storage locations used by SSO systems
-      const possibleTokenKeys = [
-        'access_token',
-        'authToken', 
-        'jwt_token',
-        'token',
-        'fn2_token',
-        'project_token'
-      ]
-      
-      // Check localStorage first
-      for (const key of possibleTokenKeys) {
-        const token = localStorage.getItem(key)
-        if (token && token !== 'null' && token !== 'undefined') {
-          return token
-        }
-      }
-      
-      // Check sessionStorage
-      for (const key of possibleTokenKeys) {
-        const token = sessionStorage.getItem(key)
-        if (token && token !== 'null' && token !== 'undefined') {
-          return token
-        }
-      }
-      
-      // If no token found, the request will likely fail and the user will need to re-authenticate
-      return null
     }
 
     // Highlight Rivers - Improved Version: Support multiple segments of rivers with same name

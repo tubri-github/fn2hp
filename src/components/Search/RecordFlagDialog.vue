@@ -72,7 +72,7 @@
 import { ref, computed } from 'vue'
 import { useAuth } from '@/utils/auth.js'
 
-const { token: authToken, isAuthenticated, redirectToLogin } = useAuth()
+const { isAuthenticated, redirectToLogin } = useAuth()
 
 const props = defineProps({
   visible: Boolean,
@@ -106,14 +106,10 @@ const submitFlag = async () => {
   submitSuccess.value = false
 
   try {
-    const headers = {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${authToken.value}`
-    }
-
     const response = await fetch(`${API_BASE_URL}/flags/record`, {
       method: 'POST',
-      headers,
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         es_document_id: props.record?.id?.toString() || null,
         catalog_number: props.record?.CatalogNumber?.toString() || null,

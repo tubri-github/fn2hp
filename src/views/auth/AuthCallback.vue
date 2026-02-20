@@ -49,7 +49,6 @@ export default {
     const processCallback = async () => {
       try {
         const urlParams = new URLSearchParams(window.location.search)
-        const code = urlParams.get('code')
         const state = urlParams.get('state')
         const errorParam = urlParams.get('error')
 
@@ -67,51 +66,39 @@ export default {
         // 清除保存的state
         localStorage.removeItem('auth_state')
 
-        if (!code) {
-          throw new Error('No authorization code received.')
-        }
-
-        // 使用授权码换取token
-        const params = new URLSearchParams({
-          code: code,
-          project: authClient.config.projectCode,
-          redirect_uri: `${window.location.origin}${import.meta.env.PROD ? '/dist' : ''}/gate/callback`
-        })
-        
-        const response = await fetch(`${authClient.config.authCenterUrl}${authClient.config.apiPrefix}/sso/exchange-token?${params.toString()}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        })
+        // 通过 SSO check-session 获取用户信息（cookie 已由 SSO 登录设置好）
+        const response = await fetch(
+          `${authClient.config.authCenterUrl}${authClient.config.apiPrefix}/sso/check-session?project=${authClient.config.projectCode}`,
+          { credentials: 'include' }
+        )
 
         const responseData = await response.json()
-        
-        if (!response.ok || !responseData.success) {
-          throw new Error(responseData.message || responseData.detail || 'Failed to exchange authorization code')
+
+        if (!response.ok || !responseData.success || !responseData.data?.has_project_access) {
+          throw new Error(responseData.message || 'Failed to verify session')
         }
 
-        const tokenData = responseData.data
-        
-        // 构造用户对象（后端返回的是平坦结构）
+        const data = responseData.data
+
+        // 构造用户对象
         const userData = {
-          user_id: tokenData.user_id,
-          username: tokenData.username,
-          email: tokenData.email,
-          display_name: tokenData.display_name,
-          is_superuser: tokenData.is_superuser,
-          permissions: tokenData.permissions || []
+          user_id: data.user_id,
+          username: data.username,
+          email: data.email,
+          display_name: data.display_name,
+          is_superuser: data.is_superuser || false,
+          permissions: data.permissions || []
         }
-        
-        // 保存token和用户信息
-        authClient.saveAuth(tokenData.access_token, userData)
-        
+
+        // 保存用户信息
+        authClient.saveAuth(userData)
+
         isProcessing.value = false
-        
+
         // 重定向到原来要访问的页面或首页
         const savedRedirectUrl = localStorage.getItem(authClient.config.storageKeys.redirectUrl)
         localStorage.removeItem(authClient.config.storageKeys.redirectUrl)
-        
+
         let redirectPath = '/'
         if (savedRedirectUrl) {
           try {
@@ -123,11 +110,11 @@ export default {
             redirectPath = savedRedirectUrl === '/dist/' ? '/' : savedRedirectUrl
           }
         }
-        
+
         setTimeout(() => {
           router.push(redirectPath)
         }, 1500)
-        
+
       } catch (err) {
         console.error('Authentication callback error:', err)
         error.value = err.message

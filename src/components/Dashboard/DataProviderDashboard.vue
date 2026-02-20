@@ -516,9 +516,6 @@
 import { ref, computed, onMounted, nextTick } from 'vue'
 import * as echarts from 'echarts'
 import reportData from '@/assets/institutionreport/dr346_report.json'
-import { useAuth } from '@/utils/auth.js'
-
-const { token: authToken } = useAuth()
 
 // Reactive data
 const activeMenu = ref('dashboard')
@@ -656,10 +653,10 @@ const closeFlagModal = () => {
 
 const loadFlagReplies = async (flagId) => {
   try {
-    const headers = { 'Content-Type': 'application/json' }
-    if (authToken.value) headers['Authorization'] = `Bearer ${authToken.value}`
-
-    const response = await fetch(`${ESPGSQL_API_URL}/flags/record/${flagId}/replies`, { headers })
+    const response = await fetch(`${ESPGSQL_API_URL}/flags/record/${flagId}/replies`, {
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' }
+    })
     if (!response.ok) return
 
     const data = await response.json()
@@ -687,13 +684,12 @@ const sendReply = async () => {
   if (selectedFlag.value.flagData) {
     try {
       const flagId = selectedFlag.value.flagData.id
-      const headers = { 'Content-Type': 'application/json' }
-      if (authToken.value) headers['Authorization'] = `Bearer ${authToken.value}`
 
       // Post the reply
       const response = await fetch(`${ESPGSQL_API_URL}/flags/record/${flagId}/replies`, {
         method: 'POST',
-        headers,
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: replyMessage.value })
       })
       if (!response.ok) {
@@ -738,13 +734,10 @@ const sendReply = async () => {
 // Load record flags from ESPgsql API
 const loadRecordFlags = async () => {
   try {
-    const headers = { 'Content-Type': 'application/json' }
-    if (authToken.value) headers['Authorization'] = `Bearer ${authToken.value}`
-
     const institutionCode = reportData['Institution Code']
     const response = await fetch(
       `${ESPGSQL_API_URL}/flags/record/provider?institution_code=${encodeURIComponent(institutionCode)}`,
-      { headers }
+      { credentials: 'include', headers: { 'Content-Type': 'application/json' } }
     )
 
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
