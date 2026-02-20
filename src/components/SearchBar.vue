@@ -29,15 +29,7 @@
       </el-input>
     </div>
     <div class="tags">
-      <el-tag
-          v-for="(tag, index) in tags"
-          :key="index"
-          class="custom-tag"
-          effect="plain"
-          @click="selectTag(tag)"
-      >
-        {{ tag }}
-      </el-tag>
+      <span v-for="(tag, index) in tags" :key="index" class="tag-hint">{{ tag }}</span>
     </div>
   </div>
 </template>
@@ -68,7 +60,7 @@ export default {
       }
     },
     selectTag(tag) {
-      console.log(`Selected tag: ${tag}`);
+      // placeholder
     },
   },
 };
@@ -116,18 +108,6 @@ export default {
   position: relative;
 }
 
-.search-bar::before {
-  content: "";
-  position: absolute;
-  left: -20px;
-  top: 50%;
-  width: 5px;
-  height: 40px;
-  background: linear-gradient(to bottom, #e67e22, #f39c12);
-  border-radius: 3px;
-  transform: translateY(-50%);
-}
-
 .search-input {
   width: 100%;
   border-width: 5px;
@@ -168,48 +148,17 @@ export default {
   margin-top: 30px;
 }
 
-.custom-tag {
+.tag-hint {
   font-family: 'Inter', sans-serif;
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 400;
-  padding: 10px 24px;
-  border-radius: 30px;
-  cursor: pointer;
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  color: #555;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  color: #999;
 }
 
-.custom-tag:nth-child(5n+1):hover {
-  background: rgba(44, 124, 185, 0.1);
-  color: #2c7cb9;
-  border-color: #2c7cb9;
-}
-
-.custom-tag:nth-child(5n+2):hover {
-  background: rgba(74, 166, 117, 0.1);
-  color: #4aa675;
-  border-color: #4aa675;
-}
-
-.custom-tag:nth-child(5n+3):hover {
-  background: rgba(230, 126, 34, 0.1);
-  color: #e67e22;
-  border-color: #e67e22;
-}
-
-.custom-tag:nth-child(5n+4):hover {
-  background: rgba(155, 89, 182, 0.1);
-  color: #9b59b6;
-  border-color: #9b59b6;
-}
-
-.custom-tag:nth-child(5n+5):hover {
-  background: rgba(231, 76, 60, 0.1);
-  color: #e74c3c;
-  border-color: #e74c3c;
+.tag-hint + .tag-hint::before {
+  content: "·";
+  margin-right: 15px;
+  color: #ccc;
 }
 
 /* 响应式设计 */

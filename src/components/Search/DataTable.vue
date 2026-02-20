@@ -97,6 +97,21 @@
         </template>
       </el-table-column>
 
+      <!-- Flag Column (always visible) -->
+      <el-table-column label="" width="50" fixed="left" class-name="flag-column">
+        <template #default="scope">
+          <el-tooltip
+            content="Flag this record"
+            placement="top"
+            :show-after="400"
+          >
+            <span class="flag-link" @click.stop="flagRecord(scope.row)">
+              <el-icon><Flag /></el-icon>
+            </span>
+          </el-tooltip>
+        </template>
+      </el-table-column>
+
       <!-- Dynamic Columns based on selection -->
       <template v-for="field in visibleFields" :key="field.prop">
         <el-table-column
@@ -147,7 +162,7 @@
 
 <script>
 import TimeLineDiffViewer from "@/components/Search/TimeLineDiffViewer.vue";
-import { Setting, Search } from "@element-plus/icons-vue";
+import { Setting, Search, Flag } from "@element-plus/icons-vue";
 
 // Default columns to show (recommended)
 const DEFAULT_COLUMNS = [
@@ -191,9 +206,10 @@ export default {
   components: {
     TimeLineDiffViewer,
     Setting,
-    Search
+    Search,
+    Flag
   },
-  emits: ["changePage", "row-click"],
+  emits: ["changePage", "row-click", "flag-record"],
   data() {
     return {
       dialogVisible: false,
@@ -313,6 +329,9 @@ export default {
     },
     onRowClick(row) {
       this.$emit("row-click", row);
+    },
+    flagRecord(row) {
+      this.$emit("flag-record", row);
     },
     // Check if field should be linkable
     isLinkableField(fieldProp) {
@@ -534,6 +553,19 @@ export default {
 
 .history-link:hover {
   color: #409eff;
+}
+
+.flag-link {
+  color: #909399;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+  transition: color 0.2s;
+}
+
+.flag-link:hover {
+  color: #e6a23c;
 }
 
 .field-link {

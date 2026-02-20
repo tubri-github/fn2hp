@@ -1580,12 +1580,10 @@ export default {
 
 .river-item.highlighted {
   background: #fff3cd;
-  border-left: 3px solid #ffc107;
 }
 
 .river-item.selected {
   background: #e7f3ff;
-  border-left: 3px solid #007bff;
 }
 
 .river-name {

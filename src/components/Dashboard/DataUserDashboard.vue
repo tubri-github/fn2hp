@@ -36,7 +36,7 @@
         </div>
         <ul class="notification-list">
           <li v-for="notification in notifications" :key="notification.id" class="notification-item">
-            <div class="notification-icon">📢</div>
+            <div class="notification-icon">&bull;</div>
             <div class="notification-content">
               <div class="notification-text">{{ notification.text }}</div>
               <div class="notification-time">{{ notification.time }}</div>
@@ -106,15 +106,14 @@
           </div>
           <div class="panel-content">
             <ul class="flags-list">
-              <li v-for="flag in userFlags" :key="flag.id" class="flag-item">
-                <div class="flag-icon">!</div>
+              <li v-for="flag in userFlags" :key="flag.id" class="flag-item" @click="openFlagDetail(flag)">
+                <div class="flag-icon">&bull;</div>
                 <div class="flag-content">
                   <div class="flag-title">{{ flag.title }}</div>
                   <div class="flag-details">{{ flag.type }} • {{ flag.date }} • <span :class="['status-badge', flag.status]">{{ flag.status }}</span></div>
                 </div>
                 <div class="flag-actions">
-                  <button class="flag-button resolve">View</button>
-                  <button class="flag-button dismiss">Edit</button>
+                  <button class="flag-button resolve" @click.stop="openFlagDetail(flag)">View</button>
                 </div>
               </li>
             </ul>
@@ -164,16 +163,183 @@
         </div>
       </div>
     </div>
+
+    <!-- Flag Detail Modal -->
+    <div v-if="showFlagModal" class="modal-backdrop" @click="closeFlagModal">
+      <div class="modal" @click.stop>
+        <div class="modal-close" @click="closeFlagModal">&times;</div>
+
+        <div class="issue-header">
+          <div>
+            <h1 class="issue-title">{{ selectedFlag?.title }}</h1>
+            <div class="issue-meta">
+              <div class="meta-item">
+                <span class="meta-label">Type:</span> {{ selectedFlag?.type }}
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Status:</span>
+                <span :class="['status-badge', selectedFlag?.status]">{{ selectedFlag?.status }}</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Created:</span> {{ selectedFlag?.date }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <div :class="['tab', { active: modalTab === 'details' }]" @click="modalTab = 'details'">Details</div>
+          <div :class="['tab', { active: modalTab === 'timeline' }]" @click="modalTab = 'timeline'">Timeline</div>
+          <div :class="['tab', { active: modalTab === 'reply' }]" @click="modalTab = 'reply'">Reply</div>
+        </div>
+
+        <div :class="['tab-content', { active: modalTab === 'details' }]">
+          <div class="record-info">
+            <h3 class="section-title">Issue Details</h3>
+            <p>{{ selectedFlag?.flagData?.message || selectedFlag?.description || 'No description' }}</p>
+            <div class="record-details" v-if="selectedFlag?.flagData">
+              <div class="detail-item" v-if="selectedFlag.flagData.scientific_name">
+                <span class="detail-label">Scientific Name</span>
+                <span class="detail-value">{{ selectedFlag.flagData.scientific_name }}</span>
+              </div>
+              <div class="detail-item" v-if="selectedFlag.flagData.catalog_number">
+                <span class="detail-label">Catalog Number</span>
+                <span class="detail-value">{{ selectedFlag.flagData.catalog_number }}</span>
+              </div>
+              <div class="detail-item" v-if="selectedFlag.flagData.institution_code">
+                <span class="detail-label">Institution</span>
+                <span class="detail-value">{{ selectedFlag.flagData.institution_code }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div :class="['tab-content', { active: modalTab === 'timeline' }]">
+          <div class="record-info">
+            <h3 class="section-title">Conversation</h3>
+            <div class="timeline-items">
+              <!-- Initial flag message -->
+              <div v-if="selectedFlag?.flagData" class="timeline-item">
+                <div class="timeline-header">
+                  <span class="timeline-author">{{ selectedFlag.flagData.username }} (You)</span>
+                  <span class="timeline-time">{{ new Date(selectedFlag.flagData.created_at).toLocaleString() }}</span>
+                </div>
+                <div class="timeline-content">{{ selectedFlag.flagData.message }}</div>
+              </div>
+              <!-- Replies -->
+              <div v-for="reply in flagReplies" :key="reply.id" class="timeline-item">
+                <div class="timeline-header">
+                  <span class="timeline-author">{{ reply.username }} ({{ reply.user_role === 'provider' ? 'Provider' : 'You' }})</span>
+                  <span class="timeline-time">{{ new Date(reply.created_at).toLocaleString() }}</span>
+                </div>
+                <div class="timeline-content">{{ reply.message }}</div>
+              </div>
+              <div v-if="flagReplies.length === 0 && !selectedFlag?.flagData?.provider_response" class="no-replies">
+                No replies yet.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div :class="['tab-content', { active: modalTab === 'reply' }]">
+          <div class="reply-form">
+            <h3 class="form-title">Add Reply</h3>
+            <div class="form-group">
+              <label class="form-label">Message</label>
+              <textarea v-model="replyMessage" class="form-control" rows="4" placeholder="Type your reply..."></textarea>
+            </div>
+            <div class="form-actions">
+              <div></div>
+              <div>
+                <button class="secondary-button" @click="closeFlagModal">Cancel</button>
+                <button class="button" @click="sendReply" :disabled="!replyMessage.trim()">Send Reply</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
 import * as echarts from 'echarts'
+import { useAuth } from '@/utils/auth.js'
+
+const { token: authToken } = useAuth()
 
 // Reactive data
 const activeMenu = ref('dashboard')
 const searchQuery = ref('')
+const showFlagModal = ref(false)
+const selectedFlag = ref(null)
+const modalTab = ref('details')
+const replyMessage = ref('')
+const flagReplies = ref([])
+
+const openFlagDetail = async (flag) => {
+  selectedFlag.value = flag
+  modalTab.value = 'details'
+  replyMessage.value = ''
+  flagReplies.value = []
+  showFlagModal.value = true
+
+  // Load replies if this is a record flag
+  if (flag.flagData) {
+    await loadFlagReplies(flag.flagData.id)
+  }
+}
+
+const closeFlagModal = () => {
+  showFlagModal.value = false
+  selectedFlag.value = null
+  replyMessage.value = ''
+  flagReplies.value = []
+}
+
+const loadFlagReplies = async (flagId) => {
+  try {
+    const headers = { 'Content-Type': 'application/json' }
+    if (authToken.value) headers['Authorization'] = `Bearer ${authToken.value}`
+
+    const response = await fetch(`${ESPGSQL_API_URL}/flags/record/${flagId}/replies`, { headers })
+    if (!response.ok) return
+
+    const data = await response.json()
+    flagReplies.value = data.replies || []
+  } catch (error) {
+    console.error('Failed to load replies:', error)
+  }
+}
+
+const sendReply = async () => {
+  if (!replyMessage.value.trim() || !selectedFlag.value?.flagData) return
+
+  try {
+    const flagId = selectedFlag.value.flagData.id
+    const headers = { 'Content-Type': 'application/json' }
+    if (authToken.value) headers['Authorization'] = `Bearer ${authToken.value}`
+
+    const response = await fetch(`${ESPGSQL_API_URL}/flags/record/${flagId}/replies`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ message: replyMessage.value })
+    })
+
+    if (!response.ok) {
+      console.error('Failed to send reply:', await response.text())
+      return
+    }
+
+    const newReply = await response.json()
+    flagReplies.value.push(newReply)
+    replyMessage.value = ''
+    modalTab.value = 'timeline'
+  } catch (error) {
+    console.error('Failed to send reply:', error)
+  }
+}
 
 // Chart ref
 const interestChart = ref(null)
@@ -225,32 +391,9 @@ const savedSearches = ref([
 ])
 
 const userFlags = ref([
-  {
-    id: 1,
-    title: 'Incorrect species identification',
-    type: 'Taxonomic',
-    date: '2024-01-10',
-    status: 'pending'
-  },
-  {
-    id: 2,
-    title: 'Wrong collection location',
-    type: 'Geographic',
-    date: '2024-01-08',
-    status: 'resolved'
-  },
-  {
-    id: 3,
-    title: 'Missing collection date',
-    type: 'Data Quality',
-    date: '2024-01-05',
-    status: 'pending'
-  }
 ])
 
-// Outlier flags data
-const outlierFlags = ref([])
-const API_BASE_URL = import.meta.env.VITE_FISHESOFLA_API_URL || 'http://localhost:8001'
+const ESPGSQL_API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 const recentActivity = ref([
   {
@@ -327,11 +470,11 @@ const runSavedSearch = (search) => {
 
 const getActivityIcon = (type) => {
   const icons = {
-    search: '🔍',
-    download: '⬇️',
-    flag: '🚩'
+    search: 'S',
+    download: 'D',
+    flag: 'F'
   }
-  return icons[type] || '📝'
+  return icons[type] || '-'
 }
 
 const initInterestChart = () => {
@@ -380,88 +523,44 @@ const initInterestChart = () => {
   })
 }
 
-// Outlier flag functions
-const loadUserOutlierFlags = async () => {
+// Load user's record flags from ESPgsql API
+const loadUserRecordFlags = async () => {
   try {
-    const token = getUserToken()
-    const headers = {
-      'Content-Type': 'application/json'
-    }
-    
-    // Add Authorization header only if token exists
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`
-    }
-    
-    const response = await fetch(`${API_BASE_URL}/flags/outlier`, {
-      headers: headers,
-      credentials: 'include' // Include cookies for session-based auth
-    })
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-    }
-    
-    const data = await response.json()
-    outlierFlags.value = data.flags || []
-    
-    // Convert outlier flags to user flag format and merge with existing flags
-    const outlierFlagsFormatted = outlierFlags.value.map(flag => ({
-      id: `outlier-${flag.id}`,
-      title: `${flag.flag_type === 'severe_outlier' ? 'Severe Outlier' : flag.flag_type.charAt(0).toUpperCase() + flag.flag_type.slice(1)} - ${flag.species_name}`,
-      type: `Outlier (${flag.analysis_type})`,
-      date: new Date(flag.created_at).toLocaleDateString(),
-      status: flag.status,
-      outlierData: flag // Store original outlier flag data
-    }))
-    
-    // Merge with existing flags, but only show recent outlier flags (limit to 3)
-    const recentOutlierFlags = outlierFlagsFormatted
-      .sort((a, b) => new Date(b.outlierData.created_at) - new Date(a.outlierData.created_at))
-      .slice(0, 3)
-    
-    // Update userFlags to include outlier flags
-    const originalFlags = userFlags.value.filter(flag => !flag.id.toString().startsWith('outlier-'))
-    userFlags.value = [...originalFlags, ...recentOutlierFlags]
-    
-  } catch (error) {
-    console.error('Failed to load user outlier flags:', error)
-  }
-}
+    const headers = { 'Content-Type': 'application/json' }
+    if (authToken.value) headers['Authorization'] = `Bearer ${authToken.value}`
 
-const getUserToken = () => {
-  // Try different possible token storage locations used by SSO systems
-  const possibleTokenKeys = [
-    'access_token',
-    'authToken', 
-    'jwt_token',
-    'token',
-    'fn2_token',
-    'project_token'
-  ]
-  
-  // Check localStorage first
-  for (const key of possibleTokenKeys) {
-    const token = localStorage.getItem(key)
-    if (token && token !== 'null' && token !== 'undefined') {
-      return token
-    }
+    const response = await fetch(`${ESPGSQL_API_URL}/flags/record/user`, {
+      headers
+    })
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+
+    const data = await response.json()
+
+    const recordFlagsFormatted = (data.flags || []).map(flag => ({
+      id: `record-${flag.id}`,
+      title: `${flag.scientific_name || flag.catalog_number || 'Record'} @ ${flag.institution_code}`,
+      type: 'Record Flag',
+      date: new Date(flag.created_at).toLocaleDateString(),
+      status: flag.status === 'open' ? 'pending' : flag.status,
+      providerResponse: flag.provider_response,
+      flagData: flag
+    }))
+
+    const nonRecordFlags = userFlags.value.filter(
+      f => !f.id.toString().startsWith('record-')
+    )
+    // Newest first
+    userFlags.value = [...recordFlagsFormatted, ...nonRecordFlags]
+
+  } catch (error) {
+    console.error('Failed to load user record flags:', error)
   }
-  
-  // Check sessionStorage
-  for (const key of possibleTokenKeys) {
-    const token = sessionStorage.getItem(key)
-    if (token && token !== 'null' && token !== 'undefined') {
-      return token
-    }
-  }
-  
-  return null
 }
 
 onMounted(() => {
   initInterestChart()
-  loadUserOutlierFlags()
+  loadUserRecordFlags()
 })
 </script>
 
@@ -953,11 +1052,230 @@ onMounted(() => {
 
 /* Charts */
 .chart-container {
-  border: 1px solid #eee;
   height: 200px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #f9f9f9;
+}
+
+/* Modal styles (matching Provider Dashboard) */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  border-radius: 5px;
+  width: 90%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  font-size: 24px;
+  color: #777;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.issue-header {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+  background-color: #f9f9f9;
+}
+
+.issue-title {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 0 0 10px 0;
+}
+
+.issue-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: #666;
+}
+
+.meta-label {
+  font-weight: bold;
+  margin-right: 5px;
+}
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid #eee;
+  background-color: #f5f5f5;
+}
+
+.tab {
+  padding: 12px 20px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.tab.active {
+  background-color: white;
+  border-bottom: 2px solid #3498db;
+}
+
+.tab-content {
+  padding: 20px;
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+.record-info {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin: 0 0 15px 0;
+}
+
+.record-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+
+.detail-label {
+  font-weight: bold;
+  color: #666;
+  font-size: 12px;
+  margin-bottom: 3px;
+}
+
+.detail-value {
+  font-size: 14px;
+}
+
+.timeline-items {
+  border-left: 2px solid #e0e0e0;
+  padding: 0 0 0 20px;
+  margin-left: 10px;
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 25px;
+}
+
+.timeline-item:before {
+  content: '';
+  position: absolute;
+  left: -26px;
+  top: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #3498db;
+  border: 2px solid white;
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.timeline-author {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.timeline-time {
+  font-size: 12px;
+  color: #777;
+}
+
+.timeline-content {
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 5px;
+  padding: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.no-replies {
+  color: #999;
+  font-style: italic;
+  font-size: 14px;
+  padding: 10px 0;
+}
+
+.reply-form {
+  padding: 20px;
+  border-top: 1px solid #eee;
+}
+
+.form-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin: 0 0 15px 0;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 </style>

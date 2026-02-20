@@ -637,7 +637,6 @@ onMounted(async () => {
   font-size: 0.875rem;
   padding: 0.75rem 1rem;
   background: #fff5f5;
-  border-left: 4px solid #e53e3e;
   border-radius: 4px;
 }
 
@@ -1307,7 +1306,6 @@ onMounted(async () => {
 .tree-children {
   margin-left: 1.5rem;
   margin-top: 0.375rem;
-  border-left: 2px solid #e2e8f0;
   padding-left: 0.75rem;
 }
 

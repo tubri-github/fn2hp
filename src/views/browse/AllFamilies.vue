@@ -737,7 +737,6 @@ watch(() => filters.search, debouncedSearch)
 
 .table-row.expanded {
   background-color: #e3f2fd;
-  border-left: 4px solid #2196F3;
 }
 
 .table-family-name {

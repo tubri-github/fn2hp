@@ -644,7 +644,6 @@ onMounted(() => {
   padding: 10px;
   background: #e8f4fd;
   border-radius: 6px;
-  border-left: 4px solid #3498db;
 }
 
 .highlight-period {

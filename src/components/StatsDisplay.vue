@@ -59,8 +59,8 @@ export default {
   data() {
     return {
       stats: [
-        { number: "7.46M", label: "OCCURRENCES" },
-        { number: "92", label: "COLLECTIONS" },
+        { number: "6.6M", label: "RECORDS" },
+        { number: "90", label: "PROVIDERS" },
         { number: "80+", label: "FIELDS" },
       ],
       regions: [

@@ -191,7 +191,7 @@
                 class="flag-item"
                 @click="openFlagModal(flag)"
               >
-                <div class="flag-icon">!</div>
+                <div class="flag-icon">&bull;</div>
                 <div class="flag-content">
                   <div class="flag-title">{{ flag.title }}</div>
                   <div class="flag-details">{{ flag.type }} • {{ flag.date }}</div>
@@ -297,7 +297,7 @@
           <div class="panel-content">
             <ul class="activity-list">
               <li v-for="activity in recentActivities" :key="activity.id" class="activity-item">
-                <div class="activity-icon">📊</div>
+                <div class="activity-icon">&bull;</div>
                 <div class="activity-content">
                   <div class="activity-title">{{ activity.title }}</div>
                   <div class="activity-time">{{ activity.time }}</div>
@@ -392,15 +392,34 @@
 
         <div :class="['tab-content', { active: modalTab === 'timeline' }]">
           <div class="record-info">
-            <h3 class="section-title">Activity Timeline</h3>
+            <h3 class="section-title">Conversation</h3>
             <div class="timeline-items">
-              <div v-for="event in selectedFlag?.timeline" :key="event.id" class="timeline-item">
+              <!-- Initial flag message (for record flags) -->
+              <div v-if="selectedFlag?.flagData" class="timeline-item">
                 <div class="timeline-header">
-                  <span class="timeline-author">{{ event.user }}</span>
-                  <span class="timeline-time">{{ event.date }}</span>
+                  <span class="timeline-author">{{ selectedFlag.flagData.username }} (User)</span>
+                  <span class="timeline-time">{{ new Date(selectedFlag.flagData.created_at).toLocaleString() }}</span>
                 </div>
-                <div class="timeline-content">{{ event.action }}</div>
+                <div class="timeline-content">{{ selectedFlag.flagData.message }}</div>
               </div>
+              <!-- Replies from conversation -->
+              <div v-for="reply in flagReplies" :key="reply.id" class="timeline-item">
+                <div class="timeline-header">
+                  <span class="timeline-author">{{ reply.username }} ({{ reply.user_role === 'provider' ? 'You' : 'User' }})</span>
+                  <span class="timeline-time">{{ new Date(reply.created_at).toLocaleString() }}</span>
+                </div>
+                <div class="timeline-content">{{ reply.message }}</div>
+              </div>
+              <!-- Fallback for non-record flags -->
+              <template v-if="!selectedFlag?.flagData">
+                <div v-for="event in selectedFlag?.timeline" :key="event.id" class="timeline-item">
+                  <div class="timeline-header">
+                    <span class="timeline-author">{{ event.user }}</span>
+                    <span class="timeline-time">{{ event.date }}</span>
+                  </div>
+                  <div class="timeline-content">{{ event.action }}</div>
+                </div>
+              </template>
             </div>
           </div>
         </div>
@@ -497,6 +516,9 @@
 import { ref, computed, onMounted, nextTick } from 'vue'
 import * as echarts from 'echarts'
 import reportData from '@/assets/institutionreport/dr346_report.json'
+import { useAuth } from '@/utils/auth.js'
+
+const { token: authToken } = useAuth()
 
 // Reactive data
 const activeMenu = ref('dashboard')
@@ -509,59 +531,16 @@ const selectedFlag = ref(null)
 const replyMessage = ref('')
 const newStatus = ref('in-progress')
 const showReportDetail = ref(false)
+const flagReplies = ref([])
 
 // Chart refs
 const analyticsChart = ref(null)
 const qualityChart = ref(null)
 
 // Data
-const recentFlags = ref([
-  {
-    id: 1,
-    title: 'Missing latitude/longitude data',
-    type: 'Geographic',
-    date: '2024-01-15',
-    status: 'pending',
-    description: 'Several records are missing geographic coordinates for proper mapping.',
-    affectedRecords: '1,247',
-    severity: 'High',
-    timeline: [
-      { id: 1, date: '2024-01-15', user: 'System', action: 'Automatically flagged missing coordinates in batch upload' },
-      { id: 2, date: '2024-01-16', user: 'Dr. Smith', action: 'Reviewed issue and contacted data source' }
-    ]
-  },
-  {
-    id: 2,
-    title: 'Taxonomy mismatch detected',
-    type: 'Taxonomic',
-    date: '2024-01-14',
-    status: 'in-progress',
-    description: 'Some species names don\'t match current taxonomic standards.',
-    affectedRecords: '324',
-    severity: 'Medium',
-    timeline: [
-      { id: 1, date: '2024-01-14', user: 'Dr. Johnson', action: 'Reported taxonomic inconsistencies' }
-    ]
-  },
-  {
-    id: 3,
-    title: 'Duplicate specimen records',
-    type: 'Data Quality',
-    date: '2024-01-13',
-    status: 'resolved',
-    description: 'Multiple records found for the same specimen.',
-    affectedRecords: '89',
-    severity: 'Low',
-    timeline: [
-      { id: 1, date: '2024-01-13', user: 'System', action: 'Detected potential duplicates' },
-      { id: 2, date: '2024-01-14', user: 'Admin', action: 'Merged duplicate records' }
-    ]
-  }
-])
+const recentFlags = ref([])
 
-// Outlier flags data
-const outlierFlags = ref([])
-const API_BASE_URL = 'http://localhost:8001'
+const ESPGSQL_API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 const recentMessages = ref([
   { id: 1, from: 'Dr. Sarah Johnson', text: 'Question about specimen ZSM-001234...', time: '2 hours ago' },
@@ -655,10 +634,16 @@ const getIssueSeverity = (count) => {
   return 'severity-low'
 }
 
-const openFlagModal = (flag) => {
+const openFlagModal = async (flag) => {
   selectedFlag.value = flag
   showFlagModal.value = true
   modalTab.value = 'details'
+  flagReplies.value = []
+
+  // Load replies for record flags
+  if (flag.flagData) {
+    await loadFlagReplies(flag.flagData.id)
+  }
 }
 
 const closeFlagModal = () => {
@@ -666,6 +651,22 @@ const closeFlagModal = () => {
   selectedFlag.value = null
   replyMessage.value = ''
   newStatus.value = 'in-progress'
+  flagReplies.value = []
+}
+
+const loadFlagReplies = async (flagId) => {
+  try {
+    const headers = { 'Content-Type': 'application/json' }
+    if (authToken.value) headers['Authorization'] = `Bearer ${authToken.value}`
+
+    const response = await fetch(`${ESPGSQL_API_URL}/flags/record/${flagId}/replies`, { headers })
+    if (!response.ok) return
+
+    const data = await response.json()
+    flagReplies.value = data.replies || []
+  } catch (error) {
+    console.error('Failed to load replies:', error)
+  }
 }
 
 const resolveFlag = (flagId) => {
@@ -679,110 +680,111 @@ const dismissFlag = (flagId) => {
   recentFlags.value = recentFlags.value.filter(f => f.id !== flagId)
 }
 
-const sendReply = () => {
-  if (replyMessage.value.trim() && selectedFlag.value) {
-    selectedFlag.value.timeline.push({
-      id: Date.now(),
-      date: new Date().toLocaleDateString(),
-      user: 'You',
-      action: replyMessage.value
-    })
-    if (newStatus.value === 'resolved') {
-      selectedFlag.value.status = 'resolved'
+const sendReply = async () => {
+  if (!replyMessage.value.trim() || !selectedFlag.value) return
+
+  // If this is a record flag, call the replies API
+  if (selectedFlag.value.flagData) {
+    try {
+      const flagId = selectedFlag.value.flagData.id
+      const headers = { 'Content-Type': 'application/json' }
+      if (authToken.value) headers['Authorization'] = `Bearer ${authToken.value}`
+
+      // Post the reply
+      const response = await fetch(`${ESPGSQL_API_URL}/flags/record/${flagId}/replies`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ message: replyMessage.value })
+      })
+      if (!response.ok) {
+        console.error('Failed to send reply:', await response.text())
+        return
+      }
+
+      const newReply = await response.json()
+      flagReplies.value.push(newReply)
+
+      // Update status if provider chose to resolve
+      if (newStatus.value === 'resolved') {
+        await fetch(`${ESPGSQL_API_URL}/flags/record/${flagId}/respond`, {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify({
+            response: replyMessage.value,
+            new_status: 'resolved'
+          })
+        })
+        selectedFlag.value.status = 'resolved'
+      }
+    } catch (error) {
+      console.error('Failed to send reply:', error)
+      return
     }
-    replyMessage.value = ''
-    modalTab.value = 'timeline'
   }
+
+  // Update local timeline
+  selectedFlag.value.timeline.push({
+    id: Date.now(),
+    date: new Date().toLocaleDateString(),
+    user: 'You',
+    action: replyMessage.value
+  })
+
+  replyMessage.value = ''
+  modalTab.value = 'timeline'
 }
 
 // Outlier flag functions
-const loadOutlierFlags = async () => {
+// Load record flags from ESPgsql API
+const loadRecordFlags = async () => {
   try {
-    const token = getUserToken()
-    const headers = {
-      'Content-Type': 'application/json'
-    }
-    
-    // Add Authorization header only if token exists
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`
-    }
-    
-    const response = await fetch(`${API_BASE_URL}/flags/outlier`, {
-      headers: headers,
-      credentials: 'include' // Include cookies for session-based auth
-    })
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-    }
-    
+    const headers = { 'Content-Type': 'application/json' }
+    if (authToken.value) headers['Authorization'] = `Bearer ${authToken.value}`
+
+    const institutionCode = reportData['Institution Code']
+    const response = await fetch(
+      `${ESPGSQL_API_URL}/flags/record/provider?institution_code=${encodeURIComponent(institutionCode)}`,
+      { headers }
+    )
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+
     const data = await response.json()
-    outlierFlags.value = data.flags || []
-    
-    // Convert outlier flags to standard flag format and merge with existing flags
-    const outlierFlagsFormatted = outlierFlags.value.map(flag => ({
-      id: `outlier-${flag.id}`,
-      title: `${flag.flag_type === 'severe_outlier' ? 'Severe Outlier' : flag.flag_type.charAt(0).toUpperCase() + flag.flag_type.slice(1)} - ${flag.species_name}`,
-      type: `Outlier Detection (${flag.analysis_type})`,
+
+    const recordFlagsFormatted = (data.flags || []).map(flag => ({
+      id: `record-${flag.id}`,
+      title: `Record Flag: ${flag.scientific_name || flag.catalog_number || 'Unknown'}`,
+      type: 'User Report',
       date: new Date(flag.created_at).toLocaleDateString(),
-      status: flag.status,
-      description: `Sample point #${flag.sample_point_id} flagged as ${flag.flag_type} during ${flag.analysis_type} analysis at ${flag.huc_level.toUpperCase()} level.`,
-      affectedRecords: '1',
-      severity: flag.flag_type === 'severe_outlier' ? 'High' : flag.flag_type === 'outlier' ? 'Medium' : 'Low',
-      outlierData: flag, // Store original outlier flag data
+      status: flag.status === 'open' ? 'pending' : flag.status,
+      description: flag.message,
+      affectedRecords: flag.catalog_number || flag.es_document_id || '-',
+      severity: 'Medium',
+      flagData: flag,
       timeline: [
-        { 
-          id: 1, 
-          date: new Date(flag.created_at).toLocaleDateString(), 
-          user: flag.username, 
-          action: `Marked as ${flag.flag_type}${flag.notes ? `: ${flag.notes}` : ''}` 
-        }
+        {
+          id: 1,
+          date: new Date(flag.created_at).toLocaleDateString(),
+          user: flag.username,
+          action: flag.message
+        },
+        ...(flag.provider_response ? [{
+          id: 2,
+          date: new Date(flag.responded_at).toLocaleDateString(),
+          user: flag.provider_username,
+          action: flag.provider_response
+        }] : [])
       ]
     }))
-    
-    // Merge with existing flags, but only show recent outlier flags (limit to 5)
-    const recentOutlierFlags = outlierFlagsFormatted
-      .sort((a, b) => new Date(b.outlierData.created_at) - new Date(a.outlierData.created_at))
-      .slice(0, 5)
-    
-    // Update recentFlags to include outlier flags
-    const originalFlags = recentFlags.value.filter(flag => !flag.id.toString().startsWith('outlier-'))
-    recentFlags.value = [...originalFlags, ...recentOutlierFlags]
-    
-  } catch (error) {
-    console.error('Failed to load outlier flags:', error)
-  }
-}
 
-const getUserToken = () => {
-  // Try different possible token storage locations used by SSO systems
-  const possibleTokenKeys = [
-    'access_token',
-    'authToken', 
-    'jwt_token',
-    'token',
-    'fn2_token',
-    'project_token'
-  ]
-  
-  // Check localStorage first
-  for (const key of possibleTokenKeys) {
-    const token = localStorage.getItem(key)
-    if (token && token !== 'null' && token !== 'undefined') {
-      return token
-    }
+    const nonRecordFlags = recentFlags.value.filter(
+      f => !f.id.toString().startsWith('record-')
+    )
+    recentFlags.value = [...nonRecordFlags, ...recordFlagsFormatted]
+
+  } catch (error) {
+    console.error('Failed to load record flags:', error)
   }
-  
-  // Check sessionStorage
-  for (const key of possibleTokenKeys) {
-    const token = sessionStorage.getItem(key)
-    if (token && token !== 'null' && token !== 'undefined') {
-      return token
-    }
-  }
-  
-  return null
 }
 
 const TUMMT_URL = import.meta.env.VITE_TUMMT_URL || 'http://localhost:9528'
@@ -852,7 +854,7 @@ const initCharts = () => {
 
 onMounted(() => {
   initCharts()
-  loadOutlierFlags()
+  loadRecordFlags()
 })
 </script>
 
@@ -1198,7 +1200,6 @@ onMounted(() => {
 
 /* Charts */
 .chart-container {
-  border: 1px solid #eee;
   height: 250px;
   display: flex;
   align-items: center;
@@ -1503,19 +1504,16 @@ onMounted(() => {
 
 .modal-header {
   background-color: #f8f9fa;
-  border-bottom: 1px solid #dee2e6;
 }
 
 .process-step {
   border-radius: 8px;
   padding: 12px;
-  border-left: 4px solid;
   margin-bottom: 10px;
 }
 
 .process-step.detection {
   background: #e8f5e9;
-  border-left-color: #4caf50;
 }
 
 .log-container {
@@ -1546,7 +1544,6 @@ onMounted(() => {
 .scrollable-table {
   max-height: 400px;
   overflow-y: auto;
-  border: 1px solid #dee2e6;
   border-radius: 5px;
 }
 
@@ -1572,8 +1569,6 @@ onMounted(() => {
 
 .error-card {
   background: #fff5f5;
-  border: 1px solid #fed7d7;
-  border-left: 4px solid #f56565;
   border-radius: 5px;
   padding: 15px;
   margin-bottom: 15px;
@@ -1698,7 +1693,6 @@ onMounted(() => {
 .mod-samples {
   margin-left: 8px;
   padding-left: 10px;
-  border-left: 2px solid #e0e0e0;
 }
 
 .mod-sample {
@@ -1765,7 +1759,6 @@ onMounted(() => {
 /* Report Panel */
 .report-panel {
   background: #f8fafe;
-  border: 1px solid #d6e4f0;
 }
 
 .report-panel-header {
@@ -1837,7 +1830,6 @@ onMounted(() => {
 
 .report-detail-section {
   margin-top: 16px;
-  border-top: 1px solid #eee;
   padding-top: 16px;
 }
 
@@ -1847,7 +1839,6 @@ onMounted(() => {
   color: #2c3e50;
   margin: 18px 0 8px 0;
   padding-bottom: 6px;
-  border-bottom: 1px solid #eee;
 }
 
 .report-detail-heading:first-child {

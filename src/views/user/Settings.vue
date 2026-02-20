@@ -447,7 +447,6 @@ export default {
 }
 
 .danger-zone {
-  border-left: 4px solid #dc3545;
 }
 
 .danger-zone h3 {

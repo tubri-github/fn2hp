@@ -15,6 +15,7 @@ import TimelineView from "@/components/Search/TimelineView.vue";
 import DiversityChart from "@/components/Search/DiversityChart.vue";
 import CustomChart from "@/components/Search/CustomChart.vue";
 import RecordDetailModal from "@/components/Search/RecordDetailModal.vue";
+import RecordFlagDialog from "@/components/Search/RecordFlagDialog.vue";
 import { exportToCSV, exportToXLSX, exportRecordsToGeoJSON, generateFilename, exportChartToSVG, exportChartToPDF, exportChartToPNG } from "@/utils/exportUtils.js";
 import { ArrowDown } from '@element-plus/icons-vue';
 
@@ -44,6 +45,8 @@ const activeView = ref("table");  // 'table' or 'analysis'
 const activeAnalysisTab = ref("map");  // 'map', 'timeline', 'diversity', 'custom'
 const showDetailModal = ref(false);
 const selectedRecord = ref(null);
+const showFlagDialog = ref(false);
+const flagRecord = ref(null);
 const mapViewRef = ref(null);
 const searchHistoryRef = ref(null);
 const searchBoxRef = ref(null);
@@ -123,6 +126,11 @@ const onNodeClick = (filter) => {
 const onRowClick = (row) => {
   selectedRecord.value = row;
   showDetailModal.value = true;
+};
+
+const onFlagRecord = (row) => {
+  flagRecord.value = row;
+  showFlagDialog.value = true;
 };
 
 
@@ -807,6 +815,7 @@ const handleChartExport = async (format) => {
                 :total="total"
                 @changePage="onPageChange"
                 @row-click="onRowClick"
+                @flag-record="onFlagRecord"
               />
             </div>
 
@@ -858,6 +867,12 @@ const handleChartExport = async (format) => {
     <RecordDetailModal
       v-model="showDetailModal"
       :record="selectedRecord"
+    />
+
+    <!-- Record Flag Dialog -->
+    <RecordFlagDialog
+      v-model:visible="showFlagDialog"
+      :record="flagRecord"
     />
   </div>
 </template>

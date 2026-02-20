@@ -95,7 +95,7 @@ export default {
   width: 90%;
   max-width: 1200px;
   padding: 30px;
-  background-color: rgba(255, 255, 255, 0.95);
+
   border-radius: 14px;
   /*box-shadow: 0 8px 25px rgba(0, 0, 0, 0.04);*/
   /*border: 1px solid rgba(0, 0, 0, 0.05);*/
