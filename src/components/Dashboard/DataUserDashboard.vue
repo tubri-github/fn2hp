@@ -389,7 +389,7 @@ const savedSearches = ref([
 const userFlags = ref([
 ])
 
-const ESPGSQL_API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const ESPGSQL_API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
 const recentActivity = ref([
   {

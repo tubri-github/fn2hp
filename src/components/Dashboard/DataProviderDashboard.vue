@@ -537,7 +537,7 @@ const qualityChart = ref(null)
 // Data
 const recentFlags = ref([])
 
-const ESPGSQL_API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const ESPGSQL_API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
 const recentMessages = ref([
   { id: 1, from: 'Dr. Sarah Johnson', text: 'Question about specimen ZSM-001234...', time: '2 hours ago' },
