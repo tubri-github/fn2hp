@@ -144,7 +144,7 @@
           </tr>
           </thead>
           <tbody>
-          <template v-for="institution in paginatedInstitutions" :key="institution.institutionCode">
+          <template v-for="institution in filteredInstitutions" :key="institution.institutionCode">
             <!-- Main Row -->
             <tr
                 class="table-row"
@@ -291,38 +291,8 @@
           </tbody>
         </table>
 
-        <!-- Pagination -->
-        <div class="pagination" v-if="totalPages > 1">
-          <button
-              class="pagination-btn"
-              :disabled="pagination.page === 1"
-              @click="changePage(pagination.page - 1)"
-          >
-            « Previous
-          </button>
-
-          <button
-              v-for="page in visiblePages"
-              :key="page"
-              class="pagination-btn"
-              :class="{ active: page === pagination.page }"
-              @click="changePage(page)"
-          >
-            {{ page }}
-          </button>
-
-          <button
-              class="pagination-btn"
-              :disabled="pagination.page === totalPages"
-              @click="changePage(pagination.page + 1)"
-          >
-            Next »
-          </button>
-
-          <div class="pagination-info">
-            Showing {{ (pagination.page - 1) * pagination.perPage + 1 }}-{{ Math.min(pagination.page * pagination.perPage, filteredInstitutions.length) }}
-            of {{ filteredInstitutions.length }} institutions
-          </div>
+        <div class="pagination-info" style="padding: 12px 0; text-align: right; color: #666; font-size: 14px;">
+          Showing {{ filteredInstitutions.length }} of {{ institutions.length }} institutions
         </div>
       </div>
     </div>

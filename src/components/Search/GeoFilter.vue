@@ -189,7 +189,8 @@ const initMap = async () => {
       center: props.mapCenter,
       zoom: props.mapZoom,
       zoomControl: true,
-      preferCanvas: true
+      preferCanvas: false,
+      tap: false
     })
 
     // Add tile layer
@@ -230,7 +231,8 @@ const initMap = async () => {
             fillColor: '#27ae60',
             fillOpacity: 0.2,
             weight: 2
-          }
+          },
+          showArea: false
         },
         circle: {
           shapeOptions: {
@@ -245,6 +247,14 @@ const initMap = async () => {
     })
 
     map.value.addControl(drawControl.value)
+
+    // Disable map drag/tap during rectangle/circle drawing so they don't conflict
+    map.value.on('draw:drawstart', () => {
+      map.value.dragging.disable()
+    })
+    map.value.on('draw:drawstop', () => {
+      map.value.dragging.enable()
+    })
 
     // Event handlers
     map.value.on(L.Draw.Event.CREATED, handleDrawCreated)
@@ -650,7 +660,7 @@ defineExpose({
 
 .geo-modal-body {
   flex: 1;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .map-wrapper {
@@ -779,27 +789,39 @@ defineExpose({
 }
 
 .geo-modal .leaflet-draw-toolbar a {
-  background-image: url('https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/images/spritesheet.png');
+  background-image: url('https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/images/spritesheet.png') !important;
   background-repeat: no-repeat;
+  background-size: 300px 30px;
+  width: 30px;
+  height: 30px;
 }
 
 .geo-modal .leaflet-draw-toolbar a.leaflet-draw-draw-polygon {
-  background-position: -2px -2px;
+  background-position: -31px -1px;
 }
 
 .geo-modal .leaflet-draw-toolbar a.leaflet-draw-draw-rectangle {
-  background-position: -32px -2px;
+  background-position: -61px -1px;
 }
 
 .geo-modal .leaflet-draw-toolbar a.leaflet-draw-draw-circle {
-  background-position: -62px -2px;
+  background-position: -91px -1px;
 }
 
 .geo-modal .leaflet-draw-toolbar a.leaflet-draw-edit-edit {
-  background-position: -152px -2px;
+  background-position: -151px -1px;
 }
 
 .geo-modal .leaflet-draw-toolbar a.leaflet-draw-edit-remove {
-  background-position: -182px -2px;
+  background-position: -181px -1px;
+}
+
+/* Ensure Leaflet Draw guide layers work properly in modal */
+.geo-modal .filter-map {
+  touch-action: none;
+}
+
+.geo-modal .leaflet-draw-guide-dash {
+  z-index: 500;
 }
 </style>

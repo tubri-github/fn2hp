@@ -1,17 +1,9 @@
 <template>
   <div class="search-container">
-    <p class="intro-text">
-      <span class="highlight">FishNet 2: </span>A World Fish Occurrence Database
-<!--      <span class="highlight">F</span>ind-->
-<!--      <span class="highlight">I</span>n our-->
-<!--      <span class="highlight">S</span>pecimens and-->
-<!--      <span class="highlight">H</span>abitats, a-->
-<!--      <span class="highlight">N</span>ew-->
-<!--      <span class="highlight">E</span>xploring-->
-<!--      <span class="highlight">T</span>ool-->
-<!--      <span class="highlight">2</span>.0-->
-    </p>
-    <h2 class="search-title">Dive Into Fish Data</h2>
+<!--    <p class="intro-text">-->
+<!--      <span class="highlight">FishNet 2: </span>A World Fish Occurrence Database-->
+<!--    </p>-->
+<!--    <h2 class="search-title">Dive Into Fish Data</h2>-->
 <!--    <p class="intro-text.json">FishNet 2: Access millions of fish specimens from collections worldwide</p>-->
     <div class="search-bar">
       <el-input
@@ -72,7 +64,7 @@ export default {
 
 .search-container {
   text-align: center;
-  margin: 180px auto;
+  margin: 30px auto;
   max-width: 1200px;
   padding: 0 20px;
 }

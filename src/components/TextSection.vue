@@ -1,25 +1,5 @@
 <template>
   <div class="content-wrapper">
-    <!-- About Section -->
-    <section class="section about-section">
-      <div class="text-content">
-        <h2 class="section-title">About FishNet 2</h2>
-        <div class="section-text">
-          <p >
-            The FishNet network is a collaborative effort among fish collections around the world to share and distribute data on specimen holdings. There is an open invitation for any institution with a fish collection to join.
-          </p>
-          <p>
-            The network was created in 1999 and initially relied upon a distributed query model based on the Z39.50 search/retrieval protocol. Over the years, FishNet has transitioned through a number of technological improvements. The modern search portal relies upon a core web service known as the Biological Object Search Service (BOSS) which is comprised of a series of software and database components that harvests data from providers, imports harvested data into a data cache and exposes the data cache via publicly accessible web based APIs. The architecture for FishNet 2 has been mirrored to provide similar search portals for reptile and amphibian data within HerpNET and bird data within ORNIS.
-          </p>
-        </div>
-
-      </div>
-      <div class="image-content">
-        <img src="@/assets/img.png" alt="Fish Specimen" class="section-image"/>
-        <span class="image-caption">Fish specimen collection</span>
-      </div>
-    </section>
-
     <!-- Key Features Section -->
     <section class="section features-section">
       <h2 class="section-title">Key Features</h2>
@@ -64,27 +44,52 @@
       </div>
     </section>
 
-    <!-- Updates Section -->
-    <section class="section updates-section">
-      <h2 class="section-title">Latest Updates</h2>
-      <div class="timeline">
-        <div class="timeline-item">
-          <div class="timeline-date">January 10, 2025</div>
-          <div class="timeline-content">
-            <h3 class="timeline-title">New Dataset Integration</h3>
-            <p class="timeline-text">
-              "Placeholder" collections have joined the network, adding over 100,000 specimens to our database.
-            </p>
-          </div>
+    <!-- Recent Platform Improvements -->
+    <section class="section improvements-section">
+      <h2 class="section-title improvements-title">Recent Platform Improvements</h2>
+      <div class="improvements-grid">
+        <div class="improvement-box">
+          <svg class="improvement-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/></svg>
+          <span>Polygon-based geographic search</span>
         </div>
-        <div class="timeline-item">
-          <div class="timeline-date">January 8, 2025</div>
-          <div class="timeline-content">
-            <h3 class="timeline-title">Research Highlight</h3>
-            <p class="timeline-text">
-              Recent study utilizing FishNet 2 data reveals new insights into freshwater fish distribution patterns.
-            </p>
-          </div>
+        <div class="improvement-box">
+          <svg class="improvement-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M2 12h20M12 2c3 3.5 3 16.5 0 20M12 2c-3 3.5-3 16.5 0 20"/></svg>
+          <span>Hydrologic Unit Code queries</span>
+        </div>
+        <div class="improvement-box">
+          <svg class="improvement-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+          <span>Improved search interface</span>
+        </div>
+        <div class="improvement-box">
+          <svg class="improvement-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 12h18M12 3v18"/></svg>
+          <span>Customizable mapping tools</span>
+        </div>
+        <div class="improvement-box">
+          <svg class="improvement-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8"/></svg>
+          <span>Object-level information pages</span>
+        </div>
+        <div class="improvement-box">
+          <svg class="improvement-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+          <span>Use tracking and reporting</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Who Uses FishNet 2 -->
+    <section class="section users-section">
+      <h2 class="section-title users-title">Who Uses FishNet 2</h2>
+      <div class="users-grid">
+        <div class="user-card">
+          <div class="user-card-label">Researchers</div>
+          <p>Analyze biodiversity patterns, species distributions, and ecological change using specimen data.</p>
+        </div>
+        <div class="user-card">
+          <div class="user-card-label">Collections</div>
+          <p>Increase discoverability of museum data and integrate with biodiversity data publishing networks.</p>
+        </div>
+        <div class="user-card">
+          <div class="user-card-label">Educators</div>
+          <p>Bring real biodiversity data into courses and student research projects.</p>
         </div>
       </div>
     </section>
@@ -111,38 +116,6 @@
   color: #3f8ba1;
   /*margin-bottom: 60px;*/
   letter-spacing: -0.5px;
-}
-
-/* About Section */
-.about-section {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 80px;
-  align-items: center;
-}
-
-.section-text {
-  font-size: 1.1rem;
-  line-height: 1.8;
-  color: #555;
-  font-weight: 300;
-}
-
-.image-content {
-  position: relative;
-}
-
-.section-image {
-  width: 100%;
-  border-radius: 4px;
-}
-
-.image-caption {
-  font-size: 1rem;
-  color: #578ecc;
-  margin-top: 10px;
-  display: block;
-  text-align: center;
 }
 
 /* Features Section */
@@ -179,56 +152,88 @@
   font-weight: 300;
 }
 
-/* Timeline Section */
-.timeline {
-  position: relative;
-  padding-left: 50px;
-}
-
-.timeline::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: #e2e8f0;
-}
-
-.timeline-item {
+/* Improvements Section */
+.improvements-title {
+  text-align: center;
   margin-bottom: 40px;
-  position: relative;
 }
 
-.timeline-item::before {
-  content: '';
-  position: absolute;
-  left: -54px;
-  top: 5px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #3b82f6;
+.improvements-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
 }
 
-.timeline-date {
-  font-size: 0.9rem;
-  color: #666;
-  margin-bottom: 8px;
+.improvement-box {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 24px;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
 
-.timeline-title {
-  font-size: 1.2rem;
+.improvement-box:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.improvement-icon {
+  flex-shrink: 0;
+  color: #3b82f6;
+}
+
+.improvement-box span {
+  font-size: 0.95rem;
   font-weight: 400;
-  color: #333;
+  color: #334155;
+  line-height: 1.4;
+}
+
+/* Who Uses Section */
+.users-title {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.users-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.user-card {
+  padding: 32px 28px;
+  background: linear-gradient(145deg, #fafafa 0%, #fff 100%);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04),
+              0 1px 2px rgba(0, 0, 0, 0.06);
+  transition: all 0.4s cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+
+.user-card:hover {
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+  transform: translateY(-4px);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.user-card-label {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #1e293b;
   margin-bottom: 10px;
 }
 
-.timeline-text {
-  font-size: 1rem;
+.user-card p {
+  font-size: 0.95rem;
   line-height: 1.6;
-  color: #555;
+  color: #6b7280;
   font-weight: 300;
+  margin: 0;
 }
 
 /* Responsive Design */
@@ -238,6 +243,14 @@
   }
 
   .features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .improvements-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .users-grid {
     grid-template-columns: 1fr;
   }
 

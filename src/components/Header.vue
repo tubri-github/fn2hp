@@ -3,9 +3,10 @@
     <div class="logo"> <img src="@/assets/fn2logo.png" alt="FishNet 2 Logo" /></div>
     <nav class="nav">
       <a href="/dist/" class="nav-link">HOME</a>
+      <router-link to="/about" class="nav-link">ABOUT</router-link>
       <router-link to="/search" class="nav-link">SEARCH</router-link>
-      <a href="#" class="nav-link">TEAM</a>
-      <a href="#" class="nav-link">ABOUT</a>
+      <router-link to="/teams" class="nav-link">TEAM</router-link>
+      <router-link to="/collaborations" class="nav-link">COLLABORATIONS</router-link>
 
       <!-- Browse 下拉菜单 - 修复了鼠标移动问题 -->
       <div class="dropdown-container nav-link"

@@ -1,0 +1,145 @@
+{
+    "species_name": "Pimephales vigilax",
+    "total_points": 2026,
+    "rivers_with_species": [
+        {
+            "river_name": "Red River",
+            "feature_type": "Stream",
+            "point_count": 745,
+            "avg_distance": 0.84,
+            "river_geometry": {
+                "type": "MultiLineString",
+                "coordinates":
+            },
+            "sample_points":
+        },
+        {
+            "river_name": "Bogue Lusa Creek",
+            "feature_type": "Stream",
+            "point_count": 498,
+            "avg_distance": 2.13,
+            "river_geometry": {
+                "type": "LineString",
+                "coordinates":
+            },
+            "sample_points":
+        },
+        {
+            "river_name": "Chatlin Lake Canal",
+            "feature_type": "Stream",
+            "point_count": 395,
+            "avg_distance": 3.23,
+            "river_geometry": {
+                "type": "MultiLineString",
+                "coordinates"
+            },
+            "sample_points":
+        },
+        {
+            "river_name": "Bayou Rapides",
+            "feature_type": "Stream",
+            "point_count": 192,
+            "avg_distance": 2.9,
+            "river_geometry": {
+                "type": "MultiLineString",
+                "coordinates":
+            },
+            "sample_points":
+        },
+        {
+            "river_name": "Pearl River Canal",
+            "feature_type": "Stream",
+            "point_count": 259,
+            "avg_distance": 1.11,
+            "river_geometry": {
+                "type": "MultiLineString",
+                "coordinates":
+            },
+            "sample_points":
+        },
+        {
+            "river_name": "Bayou Rigolette",
+            "feature_type": "Stream",
+            "point_count": 166,
+            "avg_distance": 2.36,
+            "river_geometry": {
+                "type": "LineString",
+                "coordinates":
+            },
+            "sample_points":
+        },
+        {
+            "river_name": "West Pearl River",
+            "feature_type": "Stream",
+            "point_count": 128,
+            "avg_distance": 1.16,
+            "river_geometry": {
+                "type": "MultiLineString",
+                "coordinates":
+            },
+            "sample_points":
+        },
+        {
+            "river_name": "West Bogue Chitto",
+            "feature_type": "Stream",
+            "point_count": 53,
+            "avg_distance": 2.75,
+            "river_geometry": {
+                "type": "MultiLineString",
+                "coordinates":
+            },
+            "sample_points":
+        },
+        {
+            "river_name": "Bogue Chitto",
+            "feature_type": "Stream",
+            "point_count": 73,
+            "avg_distance": 2.26,
+            "river_geometry": {
+                "type": "MultiLineString",
+                "coordinates":
+            },
+            "sample_points":
+        },
+    ],
+    "statistics": {
+        "species_name": "Pimephales vigilax",
+        "huc_level": "huc8",
+        "huc_codes_covered": [],
+        "huc_watersheds_count": 0,
+        "buffer_distance": 4.5,
+        "min_points_per_river": 10,
+        "rivers_analyzed": 23,
+        "total_points_near_rivers": 2865,
+        "total_species_points": 2026,
+        "points_outside_rivers": -839,
+        "river_coverage_percentage": 141.41,
+        "top_rivers": [
+            {
+                "name": "Red River",
+                "feature": "Stream",
+                "points": 745
+            },
+            {
+                "name": "Bogue Lusa Creek",
+                "feature": "Stream",
+                "points": 498
+            },
+            {
+                "name": "Chatlin Lake Canal",
+                "feature": "Stream",
+                "points": 395
+            },
+            {
+                "name": "Bayou Rapides",
+                "feature": "Stream",
+                "points": 192
+            },
+            {
+                "name": "Pearl River Canal",
+                "feature": "Stream",
+                "points": 259
+            }
+        ]
+    }
+}

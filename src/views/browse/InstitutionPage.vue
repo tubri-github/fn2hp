@@ -24,18 +24,23 @@
       </div>
 
       <!-- Institution Header -->
-      <div class="institution-header">
-        <div class="institution-title">
-          <div class="institution-logo">{{ currentInstitution.institutionCode }}</div>
-          <div class="institution-title-text">
-            <h1 class="institution-name">{{ currentInstitution.officialName || currentInstitution.institutionName }}</h1>
-            <div v-if="currentInstitution.alternateName" class="institution-alternate">
-              {{ currentInstitution.alternateName }}
+      <div class="institution-header" :class="{ 'has-hero': blurb && blurb.heroImage }">
+        <!-- Hero image background (faded right side) -->
+        <div v-if="blurb && blurb.heroImage" class="header-hero-bg">
+          <img :src="blurb.heroImage" :alt="currentInstitution.institutionCode" />
+        </div>
+        <div class="header-content">
+          <div class="institution-title">
+            <div class="institution-logo">{{ currentInstitution.institutionCode }}</div>
+            <div class="institution-title-text">
+              <h1 class="institution-name">{{ currentInstitution.officialName || currentInstitution.institutionName }}</h1>
+              <div v-if="currentInstitution.alternateName" class="institution-alternate">
+                {{ currentInstitution.alternateName }}
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="darwin-core-fields">
+          <div class="darwin-core-fields">
           <div class="dc-field-group">
             <div class="dc-label">institutionCode</div>
             <div class="dc-value">{{ currentInstitution.institutionCode }}</div>
@@ -54,18 +59,37 @@
           </div>
         </div>
       </div>
+      </div>
 
-      <!-- Navigation Menu -->
+      <!-- Tab Navigation -->
       <nav class="nav-menu">
         <ul>
-          <li><a @click.prevent="scrollToSection('overview')">Overview</a></li>
-          <li><a @click.prevent="scrollToSection('species')">Species</a></li>
-          <li><a @click.prevent="scrollToSection('distribution')">Geographic Distribution</a></li>
+          <li v-if="blurb && blurb.paragraphs"><a :class="{ active: activeTab === 'about' }" @click.prevent="activeTab = 'about'">About</a></li>
+          <li><a :class="{ active: activeTab === 'overview' }" @click.prevent="activeTab = 'overview'">Overview</a></li>
+          <li><a :class="{ active: activeTab === 'species' }" @click.prevent="activeTab = 'species'">Species</a></li>
+          <li><a :class="{ active: activeTab === 'distribution' }" @click.prevent="activeTab = 'distribution'">Geographic Distribution</a></li>
         </ul>
       </nav>
 
+      <!-- About Section (Blurb Text) -->
+      <section v-if="activeTab === 'about' && blurb && blurb.paragraphs" class="section">
+        <h2 class="section-title">About This Institution</h2>
+        <div class="institution-blurb">
+          <p v-for="(para, idx) in blurbParagraphs" :key="idx" class="blurb-paragraph">
+            {{ para }}
+          </p>
+        </div>
+        <!-- Inline images from original documents -->
+        <div v-if="blurb.images && blurb.images.length" class="blurb-images">
+          <div v-for="(img, idx) in blurb.images" :key="idx" class="blurb-image-item">
+            <img :src="img" :alt="`${currentInstitution.institutionCode} collection image ${idx + 1}`" class="blurb-image" />
+            <span v-if="blurbImageCaptions[idx]" class="blurb-image-caption">{{ blurbImageCaptions[idx] }}</span>
+          </div>
+        </div>
+      </section>
+
       <!-- Overview Section -->
-      <section id="overview" class="section">
+      <section v-if="activeTab === 'overview'" class="section">
         <h2 class="section-title">Institution Overview</h2>
 
         <!-- Statistics Cards - matching TaxonPage style -->
@@ -260,12 +284,18 @@
                 </div>
               </div>
             </div>
+
+            <!-- Location Mini Map -->
+            <div v-if="institutionCoords" class="info-card location-mini-card">
+              <h3>Location</h3>
+              <div ref="locationMapEl" class="location-mini-map"></div>
+            </div>
           </div>
         </div>
       </section>
 
       <!-- Species Section -->
-      <section id="species" class="section">
+      <section v-if="activeTab === 'species'" class="section">
         <h2 class="section-title">Species from this Institution</h2>
 
         <div class="section-controls">
@@ -328,7 +358,7 @@
       </section>
 
       <!-- Geographic Distribution Section -->
-      <section id="distribution" class="section">
+      <section v-if="activeTab === 'distribution'" class="section">
         <h2 class="section-title">Geographic Distribution</h2>
 
         <div class="full-width-map-container">
@@ -347,12 +377,14 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { debounce } from 'lodash-es'
 import { useInstitutions } from '@/composables/useInstitutions.js'
 import { institutionsApi } from '@/api/institutions.js'
 import CompactHeatMap from '@/components/charts/CompactHeatMap.vue'
+import L from 'leaflet'
+import { getInstitutionBlurb } from '@/data/institutionBlurbs.js'
 
 // Props
 const props = defineProps({
@@ -373,6 +405,7 @@ const {
 } = useInstitutions()
 
 // Local state
+const activeTab = ref('overview')
 const loadingSpecies = ref(false)
 const loadingMapData = ref(false)
 const species = ref([])
@@ -380,6 +413,8 @@ const speciesSearch = ref('')
 const speciesSort = ref('records_desc')
 const mapPoints = ref([])
 const mapAbortController = ref(null)
+const locationMapEl = ref(null)
+let locationMap = null
 
 // Species pagination
 const speciesPagination = reactive({
@@ -387,6 +422,32 @@ const speciesPagination = reactive({
   perPage: 25,
   total: 0,
   pages: 0
+})
+
+// Institution blurb data
+const blurb = computed(() => getInstitutionBlurb(props.institutionCode))
+
+// Filter out image attribution lines from blurb paragraphs
+const blurbParagraphs = computed(() => {
+  if (!blurb.value || !blurb.value.paragraphs) return []
+  return blurb.value.paragraphs.filter(p => !p.startsWith('Image:'))
+})
+
+// Extract image captions from "Image:" lines
+const blurbImageCaptions = computed(() => {
+  if (!blurb.value || !blurb.value.paragraphs) return []
+  return blurb.value.paragraphs
+    .filter(p => p.startsWith('Image:'))
+    .map(p => p.replace(/^Image:\s*/, ''))
+})
+
+// Institution coordinates for location map
+const institutionCoords = computed(() => {
+  if (!currentInstitution.value) return null
+  const lat = parseFloat(currentInstitution.value.latitude)
+  const lng = parseFloat(currentInstitution.value.longitude)
+  if (isNaN(lat) || isNaN(lng)) return null
+  return { lat, lng }
 })
 
 // Computed
@@ -456,9 +517,18 @@ const loadInstitutionData = async () => {
     await fetchInstitutionDetailV2(props.institutionCode)
 
     if (currentInstitution.value) {
+      // Set default tab - show About if blurb exists
+      const blurbData = getInstitutionBlurb(props.institutionCode)
+      activeTab.value = blurbData && blurbData.paragraphs ? 'about' : 'overview'
+
       // Load species and map data in parallel
       loadSpeciesData()
       loadMapPoints({ zoom: 2 })
+
+      // Init location map if overview is the default tab
+      if (activeTab.value === 'overview' && institutionCoords.value) {
+        nextTick(() => initLocationMap())
+      }
     }
   } catch (err) {
     console.error('Failed to load institution data:', err)
@@ -541,16 +611,6 @@ const navigateToSpecies = (scientificName) => {
   })
 }
 
-const scrollToSection = (sectionId) => {
-  const element = document.getElementById(sectionId)
-  if (element) {
-    element.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start'
-    })
-  }
-}
-
 const getSpeciesRecordsPercentage = (recordCount) => {
   return maxSpeciesRecords.value > 0 ? (recordCount / maxSpeciesRecords.value) * 100 : 0
 }
@@ -586,9 +646,49 @@ const formatArrayField = (value) => {
   return value
 }
 
+// Location map
+const initLocationMap = () => {
+  if (locationMap) {
+    locationMap.remove()
+    locationMap = null
+  }
+  if (!locationMapEl.value || !institutionCoords.value) return
+
+  const { lat, lng } = institutionCoords.value
+  locationMap = L.map(locationMapEl.value, {
+    center: [lat, lng],
+    zoom: 5,
+    scrollWheelZoom: false,
+    attributionControl: false
+  })
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(locationMap)
+  L.circleMarker([lat, lng], {
+    radius: 8,
+    fillColor: '#3498db',
+    color: '#fff',
+    weight: 2,
+    fillOpacity: 0.9
+  }).addTo(locationMap)
+}
+
+watch(activeTab, (tab) => {
+  if (tab === 'overview' && institutionCoords.value) {
+    nextTick(() => initLocationMap())
+  }
+})
+
 // Lifecycle
 onMounted(() => {
   loadInstitutionData()
+})
+
+onUnmounted(() => {
+  if (locationMap) {
+    locationMap.remove()
+    locationMap = null
+  }
 })
 
 // Watch for route changes
@@ -686,8 +786,46 @@ watch(speciesSearch, () => {
   background: white;
   border-radius: 5px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-  padding: 25px;
   margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.institution-header:not(.has-hero) {
+  padding: 25px;
+}
+
+.institution-header:not(.has-hero) .header-content {
+  position: relative;
+}
+
+/* Hero image background */
+.header-hero-bg {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 55%;
+  height: 100%;
+  z-index: 0;
+}
+
+.header-hero-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.35;
+  mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 20%, rgba(0,0,0,0.8) 60%, rgba(0,0,0,1) 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 20%, rgba(0,0,0,0.8) 60%, rgba(0,0,0,1) 100%);
+}
+
+.header-content {
+  position: relative;
+  z-index: 1;
+  padding: 25px;
+}
+
+.has-hero .header-content {
+  min-height: 160px;
 }
 
 .institution-title {
@@ -795,6 +933,12 @@ watch(speciesSearch, () => {
   background: #f8f9fa;
 }
 
+.nav-menu a.active {
+  color: #3498db;
+  border-bottom-color: #3498db;
+  font-weight: 600;
+}
+
 /* Section styles */
 .section {
   background: white;
@@ -860,6 +1004,63 @@ watch(speciesSearch, () => {
   font-size: 11px;
   color: #999;
   margin-top: 4px;
+}
+
+/* Institution Blurb */
+.institution-blurb {
+  margin-bottom: 30px;
+  padding: 20px 24px;
+  background: #f8fafe;
+  border-radius: 8px;
+}
+
+.blurb-paragraph {
+  font-size: 14.5px;
+  line-height: 1.8;
+  color: #444;
+  margin: 0 0 14px 0;
+}
+
+.blurb-paragraph:last-child {
+  margin-bottom: 0;
+}
+
+/* Blurb inline images */
+.blurb-images {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 20px;
+  margin-top: 24px;
+}
+
+.blurb-image-item {
+  text-align: center;
+}
+
+.blurb-image {
+  width: 100%;
+  max-width: 600px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.blurb-image-caption {
+  display: block;
+  margin-top: 8px;
+  font-size: 13px;
+  color: #888;
+  font-style: italic;
+}
+
+/* Location Mini Map */
+.location-mini-card {
+  padding-bottom: 12px;
+}
+
+.location-mini-map {
+  height: 180px;
+  border-radius: 6px;
+  overflow: hidden;
 }
 
 /* Overview Main Content */
@@ -1319,6 +1520,21 @@ watch(speciesSearch, () => {
 @media (max-width: 768px) {
   .container {
     padding: 15px;
+  }
+
+  .header-hero-bg {
+    width: 100%;
+    height: 120px;
+    position: relative;
+  }
+
+  .header-hero-bg img {
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 100%);
+  }
+
+  .has-hero .header-content {
+    min-height: auto;
   }
 
   .institution-title {

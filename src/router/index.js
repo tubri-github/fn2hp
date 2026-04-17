@@ -111,6 +111,36 @@ const routes = [
             description: 'Detailed information about data provider'
         }
     },
+    // About Page
+    {
+        path: '/about',
+        name: 'About',
+        component: () => import('@/views/about/AboutPage.vue'),
+        meta: {
+            title: 'About FishNet',
+            description: 'About the FishNet portal'
+        }
+    },
+    // Teams Page
+    {
+        path: '/teams',
+        name: 'Teams',
+        component: () => import('@/views/about/TeamsPage.vue'),
+        meta: {
+            title: 'Teams',
+            description: 'FishNet 2 project teams and members'
+        }
+    },
+    // Collaborations Page
+    {
+        path: '/collaborations',
+        name: 'Collaborations',
+        component: () => import('@/views/about/CollaborationsPage.vue'),
+        meta: {
+            title: 'Collaborations',
+            description: 'FishNet 2 collaborations and partner networks'
+        }
+    },
     // Dashboard Routes - 需要登录认证
     {
         path: '/dashboard',

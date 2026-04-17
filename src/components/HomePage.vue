@@ -1,11 +1,28 @@
 <template>
   <div class="home-page">
     <div class="hero-section">
+      <div class="hero-intro">
+        <div class="hero-intro-content">
+          <div class="hero-text">
+            <h1 class="hero-title">Discover fish biodiversity data with FishNet!</h1>
+            <p class="hero-desc">
+              FishNet 2 is a biodiversity data platform providing access to fish specimen records from research
+              collections worldwide. The system supports research, collections management, biodiversity informatics,
+              and education through modern search tools and spatial discovery capabilities.
+            </p>
+          </div>
+          <div class="hero-image">
+            <img src="@/assets/img.png" alt="Fish Specimen" />
+            <span class="hero-image-caption">Fish specimen collection</span>
+          </div>
+        </div>
+      </div>
       <SearchBar />
       <StatsDisplay />
     </div>
     <div class="content-section">
       <TextSection />
+      <InstitutionCarousel />
       <ImageGrid />
     </div>
   </div>
@@ -17,6 +34,7 @@ import StatsDisplay from "../components/StatsDisplay.vue";
 import MapDisplay from "../components/MapDisplay.vue";
 import ImageGrid from "../components/ImageGrid.vue";
 import TextSection from "@/components/TextSection.vue";
+import InstitutionCarousel from "@/components/InstitutionCarousel.vue";
 
 export default {
   components: {
@@ -25,6 +43,7 @@ export default {
     StatsDisplay,
     MapDisplay,
     ImageGrid,
+    InstitutionCarousel,
   },
 };
 </script>
@@ -39,7 +58,7 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 40px;
+  gap: 20px;
   position: relative;
   overflow-x: hidden;
   min-height: 100vh;
@@ -61,15 +80,69 @@ export default {
 .hero-section {
   position: relative;
   width: 100%;
-  min-height: 50vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   padding-top: 40px;
+  padding-bottom: 20px;
   overflow: hidden;
 }
 
+.hero-intro {
+  position: relative;
+  z-index: 1;
+  width: 90%;
+  max-width: 1200px;
+  margin-bottom: 20px;
+}
+
+.hero-intro-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+}
+
+.hero-text {
+  text-align: left;
+}
+
+.hero-title {
+  font-family: 'Montserrat', 'Inter', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0 0 16px 0;
+  letter-spacing: -0.5px;
+}
+
+.hero-desc {
+  font-size: 1.05rem;
+  line-height: 1.8;
+  color: #555;
+  font-weight: 300;
+  margin: 0;
+}
+
+.hero-image {
+  text-align: center;
+}
+
+.hero-image img {
+  width: 100%;
+  border-radius: 4px;
+}
+
+.hero-image-caption {
+  font-size: 0.9rem;
+  color: #999;
+  margin-top: 10px;
+  display: block;
+}
+
+/* Background fish image hidden — replaced by hero photo */
+/*
 .hero-section::after {
   content: "";
   position: absolute;
@@ -84,6 +157,7 @@ export default {
   pointer-events: none;
   z-index: 0;
 }
+*/
 
 @keyframes float {
   0% { transform: translateY(0px) rotate(0deg); }
@@ -111,10 +185,17 @@ export default {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .hero-section::after {
-    width: 400px;
-    height: 400px;
-    top: -40px;
+  .hero-intro-content {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+
+  .hero-text {
+    text-align: center;
+  }
+
+  .hero-title {
+    font-size: 1.6rem;
   }
 
   .content-section {

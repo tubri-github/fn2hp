@@ -16,6 +16,7 @@ import DiversityChart from "@/components/Search/DiversityChart.vue";
 import CustomChart from "@/components/Search/CustomChart.vue";
 import RecordDetailModal from "@/components/Search/RecordDetailModal.vue";
 import RecordFlagDialog from "@/components/Search/RecordFlagDialog.vue";
+import SearchGuide from "@/components/Search/SearchGuide.vue";
 import { exportToCSV, exportToXLSX, exportRecordsToGeoJSON, generateFilename, exportChartToSVG, exportChartToPDF, exportChartToPNG } from "@/utils/exportUtils.js";
 import { ArrowDown } from '@element-plus/icons-vue';
 
@@ -55,17 +56,20 @@ const timelineViewRef = ref(null);
 const diversityChartRef = ref(null);
 const customChartRef = ref(null);
 
+// Search guide dialog
+const showGuide = ref(false);
+
 // Search state: 'initial' | 'loading' | 'results' | 'empty'
 const searchState = ref("initial");
 const isLoading = ref(false);
 
 // Quick search suggestions
 const quickSearches = [
-  { label: "Salmonidae", term: "Salmonidae" },
   { label: "Cyprinidae", term: "Cyprinidae" },
-  { label: "Cichlidae", term: "Cichlidae" },
-  { label: "USA specimens", term: "USA" },
-  { label: "Amazon fish", term: "Amazon" },
+  { label: "Notropis", term: "Notropis" },
+  { label: "Notropis rubellus", term: "Notropis rubellus" },
+  { label: "TU", term: "TU" },
+  { label: "USA", term: "USA" }
 ];
 
 const hasSearched = computed(() => searchState.value !== "initial");
@@ -653,6 +657,8 @@ const handleChartExport = async (format) => {
         <div class="search-options">
           <AdvancedSearch ref="advancedSearchRef" @search="onAdvancedSearch" />
           <span class="options-divider"></span>
+          <button class="guide-btn" @click="showGuide = true" title="Search Guide">?</button>
+          <span class="options-divider"></span>
           <GeoFilter
             :initial-filter="geoFilter"
             :default-collapsed="true"
@@ -678,6 +684,9 @@ const handleChartExport = async (format) => {
           </button>
         </div>
       </div>
+
+      <!-- Inline Search Guide (fills the page on initial load) -->
+      <SearchGuide mode="inline" />
     </div>
 
     <!-- Stats Panel (shown after search) -->
@@ -874,6 +883,9 @@ const handleChartExport = async (format) => {
       v-model:visible="showFlagDialog"
       :record="flagRecord"
     />
+
+    <!-- Search Guide Dialog -->
+    <SearchGuide v-model="showGuide" />
   </div>
 </template>
 
@@ -913,6 +925,28 @@ const handleChartExport = async (format) => {
   height: 16px;
   background: #e0e0e0;
   margin: 0 4px;
+}
+
+.guide-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid #ccc;
+  background: white;
+  color: #888;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.guide-btn:hover {
+  border-color: #3498db;
+  color: #3498db;
+  background: #f0f7ff;
 }
 
 .main-content {
@@ -1085,6 +1119,24 @@ const handleChartExport = async (format) => {
   border-color: #3498db;
   color: #3498db;
   background: #f0f7ff;
+}
+
+.guide-link {
+  text-align: center;
+  margin-top: 0;
+}
+
+.guide-link a {
+  color: #999;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.guide-link a:hover {
+  color: #3498db;
+  text-decoration: underline;
 }
 
 /* Loading State */
