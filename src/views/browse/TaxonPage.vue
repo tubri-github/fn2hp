@@ -570,7 +570,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { debounce } from 'lodash-es'
 import { useTaxonomy } from '@/composables/useTaxonomy.js'
@@ -1422,6 +1422,10 @@ watch(() => temporalData.value, () => {
 // Lifecycle
 onMounted(() => {
   loadTaxonData()
+})
+
+onUnmounted(() => {
+  mapPointsAbortController.value?.abort()
 })
 
 // Watch for route changes
