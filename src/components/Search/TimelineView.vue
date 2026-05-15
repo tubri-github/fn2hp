@@ -1,7 +1,10 @@
 <template>
   <div class="timeline-section">
     <div class="section-header">
-      <h3 class="section-title">Temporal Distribution</h3>
+      <div class="title-block">
+        <h3 class="section-title">Temporal Distribution</h3>
+        <p class="data-basis" v-if="basisText">{{ basisText }}</p>
+      </div>
       <div class="section-controls">
         <span class="year-count-hint">({{ chartData.length }} years)</span>
         <select v-model="selectedRange" class="filter-select">
@@ -149,6 +152,13 @@ const props = defineProps({
   data: {
     type: Array,
     default: () => []
+  },
+  // Total records returned by the search query — lets us show what fraction
+  // of the search this chart actually represents (records with a parseable
+  // YearCollected; older / undated records get dropped).
+  searchTotal: {
+    type: Number,
+    default: 0
   }
 });
 
@@ -290,9 +300,23 @@ const totalRecords = computed(() => {
   return chartData.value.reduce((sum, d) => sum + d.count, 0);
 });
 
+// "Based on X records (Y% of total search)" — clarifies that this chart
+// only counts records that have a usable YearCollected.
+const basisText = computed(() => {
+  const local = totalRecords.value;
+  const search = props.searchTotal;
+  if (!search || !local) return '';
+  const pct = ((local / search) * 100).toFixed(local / search >= 0.995 ? 0 : 1);
+  return `Based on ${formatLong(local)} records with a year (${pct}% of ${formatLong(search)} total)`;
+});
+
 const formatNumber = (num) => {
   if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
   return Math.round(num).toString();
+};
+
+const formatLong = (num) => {
+  return Math.round(num).toLocaleString('en-US');
 };
 
 const showTooltip = (event, point) => {
@@ -328,6 +352,19 @@ const hideTooltip = () => {
   font-weight: 600;
   color: #2c3e50;
   margin: 0;
+}
+
+.title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.data-basis {
+  font-size: 11px;
+  color: #888;
+  margin: 0;
+  font-style: italic;
 }
 
 .section-controls {

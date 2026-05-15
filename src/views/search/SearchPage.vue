@@ -198,10 +198,15 @@ const fetchTableData = async () => {
     }
 
     if (hits && hits.length > 0) {
-      tableFields.value = Object.keys(hits[0]).map((key) => ({
-        prop: key,
-        label: key.replace(/([A-Z])/g, " $1").trim(),
-      }));
+      // Hide higher-rank taxonomy fields — source data is dirty (sometimes
+      // contains JSON fragments). Reintroduce once upstream is cleaned up.
+      const HIDDEN_FIELDS = new Set(['Order','Class', 'Phylum', 'Kingdom']);
+      tableFields.value = Object.keys(hits[0])
+        .filter((key) => !HIDDEN_FIELDS.has(key))
+        .map((key) => ({
+          prop: key,
+          label: key.replace(/([A-Z])/g, " $1").trim(),
+        }));
       searchState.value = "results";
     } else {
       tableFields.value = [];
@@ -847,17 +852,17 @@ const handleChartExport = async (format) => {
               <div class="analysis-content">
                 <!-- Map View -->
                 <div v-show="activeAnalysisTab === 'map'">
-                  <MapView ref="mapViewRef" :points="mapPoints" />
+                  <MapView ref="mapViewRef" :points="mapPoints" :search-total="total" />
                 </div>
 
                 <!-- Timeline View -->
                 <div v-show="activeAnalysisTab === 'timeline'">
-                  <TimelineView ref="timelineViewRef" :data="timelineData" />
+                  <TimelineView ref="timelineViewRef" :data="timelineData" :search-total="total" />
                 </div>
 
                 <!-- Diversity View -->
                 <div v-show="activeAnalysisTab === 'diversity'">
-                  <DiversityChart ref="diversityChartRef" title="Family Distribution" :data="chartDiversityData" />
+                  <DiversityChart ref="diversityChartRef" title="Family Distribution" :data="chartDiversityData" :search-total="total" />
                 </div>
 
                 <!-- Custom Chart View -->

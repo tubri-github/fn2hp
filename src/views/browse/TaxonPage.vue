@@ -163,15 +163,7 @@
               <div class="stat-context">Contributing collections</div>
             </div>
           </div>
-          <div class="overview-stat-card">
-            <div class="stat-content">
-              <div class="stat-number" :class="{ 'skeleton-text': currentTaxon.countriesCount == null }">
-                {{ currentTaxon.countriesCount != null ? formatNumber(currentTaxon.countriesCount) : '' }}
-              </div>
-              <div class="stat-label">Countries</div>
-              <div class="stat-context">Global distribution</div>
-            </div>
-          </div>
+          <!-- Countries box removed: per-taxon countriesCount is inaccurate. -->
           <div class="overview-stat-card">
             <div class="stat-content">
               <div class="stat-number" :class="{ 'skeleton-text': currentTaxon.geoReferencingQuality == null }">
@@ -259,7 +251,8 @@
                 <th>Records</th>
                 <th>Species</th>
                 <th>Institutions</th>
-                <th>Countries</th>
+                <!-- Countries column hidden: per-genus countriesCount is inaccurate. See DATA_QUALITY_TODO.md -->
+                <th v-if="false">Countries</th>
                 <th>Georeferenced</th>
               </tr>
             </thead>
@@ -282,7 +275,7 @@
                 </td>
                 <td>{{ genus.speciesCount || 0 }}</td>
                 <td>{{ genus.institutionsCount || 0 }}</td>
-                <td>{{ genus.countriesCount || 0 }}</td>
+                <td v-if="false">{{ genus.countriesCount || 0 }}</td>
                 <td>
                   <span class="quality-badge" :class="getQualityClass(genus.geoReferencingQuality || 0)">
                     {{ (genus.geoReferencingQuality || 0).toFixed(1) }}%
@@ -324,7 +317,8 @@
                 <th>Species</th>
                 <th>Records</th>
                 <th>Institutions</th>
-                <th>Countries</th>
+                <!-- Countries column hidden: per-species countriesCount is inaccurate. See DATA_QUALITY_TODO.md -->
+                <th v-if="false">Countries</th>
                 <th>Georeferenced</th>
               </tr>
             </thead>
@@ -347,7 +341,7 @@
                   </div>
                 </td>
                 <td>{{ species.institutionsCount || 0 }}</td>
-                <td>{{ species.countriesCount || 0 }}</td>
+                <td v-if="false">{{ species.countriesCount || 0 }}</td>
                 <td>
                   <span class="quality-badge" :class="getQualityClass(species.geoReferencingQuality || 0)">
                     {{ (species.geoReferencingQuality || 0).toFixed(1) }}%
@@ -459,7 +453,8 @@
                 <th>Institution Name</th>
                 <th>Records</th>
                 <th>Species</th>
-                <th>Countries</th>
+                <!-- Countries column hidden: per-institution countriesCount is inaccurate. See DATA_QUALITY_TODO.md -->
+                <th v-if="false">Countries</th>
                 <th>Georeferenced</th>
                 <th>Latest Record</th>
               </tr>
@@ -487,7 +482,7 @@
                   </div>
                 </td>
                 <td>{{ formatNumber(institution.speciesCount || 0) }}</td>
-                <td>{{ formatNumber(institution.countriesCount || 0) }}</td>
+                <td v-if="false">{{ formatNumber(institution.countriesCount || 0) }}</td>
                 <td>
                   <span
                       class="quality-badge"

@@ -111,6 +111,27 @@ const routes = [
             description: 'Detailed information about data provider'
         }
     },
+    {
+        path: '/browse/countries',
+        name: 'AllCountries',
+        component: () => import('@/views/browse/AllCountries.vue'),
+        meta: {
+            title: 'Browse Countries',
+            description: 'Explore fish records by country'
+        }
+    },
+    {
+        path: '/browse/countries/:countryCode',
+        name: 'CountryDetail',
+        component: () => import('@/views/browse/CountryDetail.vue'),
+        props: route => ({
+            countryCode: route.params.countryCode
+        }),
+        meta: {
+            title: 'Country Details',
+            description: 'Fish record details for a country'
+        }
+    },
     // About Page
     {
         path: '/about',

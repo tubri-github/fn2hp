@@ -1,7 +1,10 @@
 <template>
   <div class="diversity-section">
     <div class="section-header">
-      <h3 class="section-title">{{ title }}</h3>
+      <div class="title-block">
+        <h3 class="section-title">{{ title }}</h3>
+        <p class="data-basis" v-if="basisText">{{ basisText }}</p>
+      </div>
       <div class="section-controls">
         <select v-model="chartType" class="filter-select">
           <option value="bar">Bar Chart</option>
@@ -141,6 +144,13 @@ const props = defineProps({
   linkType: {
     type: String,
     default: 'families' // 'families', 'genera', 'species', 'institutions'
+  },
+  // Total records returned by the search query — lets us show what fraction
+  // of the search this chart actually represents (records covered by the
+  // top-N family/genus buckets returned by the aggregation).
+  searchTotal: {
+    type: Number,
+    default: 0
   }
 });
 
@@ -176,6 +186,17 @@ const maxCount = computed(() => {
 
 const totalCount = computed(() => {
   return displayData.value.reduce((sum, d) => sum + d.doc_count, 0);
+});
+
+// "Based on top-N families covering X records (Y% of total search)" —
+// reminds users that the chart only shows the top buckets returned by
+// the aggregation, not every family in the search.
+const basisText = computed(() => {
+  const local = totalCount.value;
+  const search = props.searchTotal;
+  if (!search || !local) return '';
+  const pct = ((local / search) * 100).toFixed(local / search >= 0.995 ? 0 : 1);
+  return `Top ${displayData.value.length} categories covering ${local.toLocaleString('en-US')} records (${pct}% of ${search.toLocaleString('en-US')} total)`;
 });
 
 // Generate link to fn2hp
@@ -308,6 +329,19 @@ const getPercent = (count) => {
   font-weight: 600;
   color: #2c3e50;
   margin: 0;
+}
+
+.title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.data-basis {
+  font-size: 11px;
+  color: #888;
+  margin: 0;
+  font-style: italic;
 }
 
 .section-controls {

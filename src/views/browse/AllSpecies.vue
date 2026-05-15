@@ -3,7 +3,11 @@
     <!-- Page Header -->
     <div class="page-header">
       <h1 class="page-title">Browse All Fish Species</h1>
-      <p class="page-subtitle">Explore 28,567 fish species using taxonomic hierarchy and advanced search based on Darwin Core fields</p>
+      <p class="page-subtitle">
+        Explore
+        <template v-if="taxonomyStats?.totalSpecies">{{ formatNumber(taxonomyStats.totalSpecies) }}</template>
+        fish species using taxonomic hierarchy and advanced search based on Darwin Core fields
+      </p>
 
       <div class="global-stats" v-if="taxonomyStats">
         <div class="global-stat">
@@ -243,7 +247,8 @@
           <!-- <th>Vernacular Name</th> -->
           <th>Family</th>
           <th>Records</th>
-          <th>Countries</th>
+          <!-- Countries column hidden: per-species countriesCount is inaccurate. See DATA_QUALITY_TODO.md -->
+          <th v-if="false">Countries</th>
           <th>Institutions</th>
           <th>Data Quality</th>
           <th>Last Record</th>
@@ -269,7 +274,7 @@
             </router-link>
           </td>
           <td><span class="record-count">{{ formatNumber(species.recordCount) }}</span></td>
-          <td>{{ formatNumber(species.countriesCount) }}</td>
+          <td v-if="false">{{ formatNumber(species.countriesCount) }}</td>
           <td>{{ formatNumber(species.institutionsCount) }}</td>
           <td>
             <div class="quality-indicator">
@@ -304,7 +309,8 @@
           </div>
           <div class="species-item-meta">
             {{ species.authority }} • {{ species.family }}<br>
-            {{ formatNumber(species.countriesCount) }} countries • {{ formatNumber(species.institutionsCount) }} institutions • Last: {{ formatDate(species.lastRecord) }}
+            <!-- 'X countries' fragment hidden: per-species countriesCount is inaccurate. See DATA_QUALITY_TODO.md -->
+            {{ formatNumber(species.institutionsCount) }} institutions • Last: {{ formatDate(species.lastRecord) }}
           </div>
         </div>
       </div>

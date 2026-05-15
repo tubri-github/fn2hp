@@ -230,46 +230,7 @@
         </div>
       </el-collapse-item>
 
-      <!-- Collection Code Filter -->
-      <el-collapse-item name="collectionCode" class="filter-section">
-        <template #title>
-          <div class="section-header">
-            <span class="section-title">Collection Code</span>
-            <span v-if="selectedFilters.collectionCode.length" class="filter-count">
-              ({{ selectedFilters.collectionCode.length }})
-            </span>
-          </div>
-        </template>
-        <div class="filter-content">
-          <el-input
-            v-model="searchTexts.collectionCode"
-            placeholder="Search collections..."
-            size="small"
-            clearable
-            class="filter-search"
-          />
-          <el-checkbox-group
-            v-model="selectedFilters.collectionCode"
-            class="checkbox-group"
-            @change="onFilterChange"
-          >
-            <el-checkbox
-              v-for="item in filteredOptions('collectionCode', aggregations.Occurrence?.CollectionCode)"
-              :key="item.key"
-              :label="item.key"
-              class="filter-checkbox"
-            >
-              <span class="checkbox-label">{{ item.key }}</span>
-              <span class="checkbox-count">({{ item.doc_count }})</span>
-            </el-checkbox>
-          </el-checkbox-group>
-          <div v-if="hasMoreItems('collectionCode', aggregations.Occurrence?.CollectionCode)" class="show-more">
-            <button @click="toggleShowMore('collectionCode')">
-              {{ showMore.collectionCode ? 'Show Less' : 'Show More' }}
-            </button>
-          </div>
-        </div>
-      </el-collapse-item>
+      <!-- Collection Code filter removed: not meaningful as a search facet. -->
     </el-collapse>
   </div>
 </template>
@@ -298,8 +259,7 @@ const searchTexts = ref({
   family: '',
   institution: '',
   country: '',
-  stateProvince: '',
-  collectionCode: ''
+  stateProvince: ''
 });
 
 // Show more state
@@ -307,8 +267,7 @@ const showMore = ref({
   family: false,
   institution: false,
   country: false,
-  stateProvince: false,
-  collectionCode: false
+  stateProvince: false
 });
 
 const DEFAULT_VISIBLE_COUNT = 5;
@@ -319,7 +278,6 @@ const selectedFilters = ref({
   institutionCode: [],
   country: [],
   stateProvince: [],
-  collectionCode: [],
   yearRange: [props.yearBounds.min, props.yearBounds.max]
 });
 
@@ -346,7 +304,6 @@ const hasActiveFilters = computed(() => {
          selectedFilters.value.institutionCode.length > 0 ||
          selectedFilters.value.country.length > 0 ||
          selectedFilters.value.stateProvince.length > 0 ||
-         selectedFilters.value.collectionCode.length > 0 ||
          isYearRangeActive.value;
 });
 
@@ -366,10 +323,6 @@ const activeFilterTags = computed(() => {
   selectedFilters.value.stateProvince.forEach(s => {
     tags.push({ key: `state-${s}`, label: s, type: 'stateProvince', value: s });
   });
-  selectedFilters.value.collectionCode.forEach(c => {
-    tags.push({ key: `coll-${c}`, label: c, type: 'collectionCode', value: c });
-  });
-
   if (isYearRangeActive.value) {
     tags.push({
       key: 'year-range',
@@ -438,7 +391,6 @@ const clearAllFilters = () => {
     institutionCode: [],
     country: [],
     stateProvince: [],
-    collectionCode: [],
     yearRange: [props.yearBounds.min, props.yearBounds.max]
   };
   onFilterChange();
@@ -451,7 +403,6 @@ const onFilterChange = () => {
     InstitutionCode: selectedFilters.value.institutionCode,
     Country: selectedFilters.value.country,
     StateProvince: selectedFilters.value.stateProvince,
-    CollectionCode: selectedFilters.value.collectionCode,
     YearRange: isYearRangeActive.value ? selectedFilters.value.yearRange : null
   };
 

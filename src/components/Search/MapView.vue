@@ -1,7 +1,10 @@
 <template>
   <div class="map-section">
     <div class="section-header">
-      <h3 class="section-title">Geographic Distribution</h3>
+      <div class="title-block">
+        <h3 class="section-title">Geographic Distribution</h3>
+        <p class="data-basis" v-if="basisText">{{ basisText }}</p>
+      </div>
       <div class="section-controls">
         <select v-model="selectedBaseMap" class="filter-select" @change="changeBaseMap">
           <option value="google-roadmap">Google Roadmap</option>
@@ -57,6 +60,13 @@ const props = defineProps({
   points: {
     type: Array,
     default: () => []
+  },
+  // Total records returned by the search query — lets us show what fraction
+  // of the search the heatmap actually represents (records with valid
+  // coordinates falling into the top-N geohash cells).
+  searchTotal: {
+    type: Number,
+    default: 0
   }
 });
 
@@ -64,9 +74,32 @@ const mapContainer = ref(null);
 const selectedBaseMap = ref('google-roadmap');
 
 let map = null;
-let markersLayer = null;
+let markersLayer = null;   // L.heatLayer instance
 let baseMapLayer = null;
 let L = null;
+
+// Lazily load the leaflet.heat plugin (same source CompactHeatMap uses).
+// Resolves once L.heatLayer is available on the global L.
+const loadHeatmapPlugin = () => {
+  return new Promise((resolve, reject) => {
+    if (L && typeof L.heatLayer !== 'undefined') {
+      resolve();
+      return;
+    }
+    const existing = document.querySelector('script[data-leaflet-heat]');
+    if (existing) {
+      existing.addEventListener('load', resolve);
+      existing.addEventListener('error', reject);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js';
+    script.dataset.leafletHeat = 'true';
+    script.onload = resolve;
+    script.onerror = () => reject(new Error('Failed to load leaflet.heat'));
+    document.head.appendChild(script);
+  });
+};
 
 // Generate micro-cluster points (~1km range) around a center point
 const generateMicroClusters = (centerLat, centerLng, country, baseLocation, numClusters, maxCount) => {
@@ -118,6 +151,17 @@ const uniqueCountries = computed(() => {
 const formatNumber = (num) => {
   return num.toLocaleString();
 };
+
+// "Mapped X records (Y% of total search)" — clarifies that the heatmap
+// only includes records with usable coordinates and may be capped by the
+// backend's geohash bucket size limit on huge searches.
+const basisText = computed(() => {
+  const local = totalRecords.value;
+  const search = props.searchTotal;
+  if (!search || !local) return '';
+  const pct = ((local / search) * 100).toFixed(local / search >= 0.995 ? 0 : 1);
+  return `Mapped ${formatNumber(local)} records with coordinates (${pct}% of ${formatNumber(search)} total)`;
+});
 
 const getHeatColor = (count, maxCount) => {
   const ratio = count / maxCount;
@@ -174,7 +218,17 @@ const initMap = async () => {
   try {
     // Dynamically import Leaflet
     L = await import('leaflet');
+    L = L.default || L;
     await import('leaflet/dist/leaflet.css');
+
+    // The leaflet.heat plugin script patches window.L. Expose our imported
+    // L so plugin extensions land on the same instance we use.
+    if (typeof window !== 'undefined') {
+      window.L = window.L || L;
+    }
+
+    // Make sure leaflet.heat is attached to L before we render.
+    await loadHeatmapPlugin();
 
     // Initialize map
     map = L.map(mapContainer.value, {
@@ -195,10 +249,7 @@ const initMap = async () => {
     });
     baseMapLayer.addTo(map);
 
-    // Create markers layer
-    markersLayer = L.layerGroup().addTo(map);
-
-    // Add markers
+    // Heat layer is created lazily by updateMarkers (it depends on the data).
     updateMarkers();
 
     // Fix size
@@ -215,37 +266,38 @@ const initMap = async () => {
 };
 
 const updateMarkers = () => {
-  if (!map || !L || !markersLayer) return;
+  if (!map || !L) return;
+  if (typeof L.heatLayer === 'undefined') return;  // plugin not ready yet
 
-  markersLayer.clearLayers();
+  // Remove the previous heat layer (if any) before re-rendering.
+  if (markersLayer) {
+    map.removeLayer(markersLayer);
+    markersLayer = null;
+  }
 
-  const maxCount = Math.max(...clusterPoints.value.map(p => p.count));
+  const points = clusterPoints.value;
+  if (!points.length) return;
 
-  clusterPoints.value.forEach(point => {
-    const color = getHeatColor(point.count, maxCount);
-    const radius = getPointRadius(point.count, maxCount);
+  // L.heatLayer expects [[lat, lng, intensity], ...]. Intensity is the
+  // bucket's record count; the layer normalizes against `max` internally.
+  const heatData = points.map(p => [p.lat, p.lng, p.count]);
+  const maxCount = Math.max(1, ...points.map(p => p.count));
 
-    const marker = L.circleMarker([point.lat, point.lng], {
-      radius: radius,
-      fillColor: color,
-      color: '#fff',
-      weight: 1,
-      opacity: 0.9,
-      fillOpacity: 0.75
-    });
-
-    marker.bindPopup(`
-      <div style="font-family: sans-serif; min-width: 150px;">
-        <div style="font-weight: 600; margin-bottom: 4px;">${point.location}</div>
-        <div style="color: #666; font-size: 12px;">${point.country}</div>
-        <div style="margin-top: 8px; font-size: 14px;">
-          <strong style="color: #3498db;">${formatNumber(point.count)}</strong> records
-        </div>
-      </div>
-    `);
-
-    markersLayer.addLayer(marker);
+  markersLayer = L.heatLayer(heatData, {
+    radius: 18,
+    blur: 22,
+    maxZoom: 12,
+    max: maxCount,
+    minOpacity: 0.35,
+    gradient: {
+      0.2: '#1a9850',
+      0.4: '#91cf60',
+      0.6: '#fee08b',
+      0.8: '#fc8d59',
+      1.0: '#d73027',
+    },
   });
+  markersLayer.addTo(map);
 };
 
 const handleResize = () => {
@@ -304,6 +356,19 @@ defineExpose({ refresh });
   font-weight: 600;
   color: #2c3e50;
   margin: 0;
+}
+
+.title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.data-basis {
+  font-size: 11px;
+  color: #888;
+  margin: 0;
+  font-style: italic;
 }
 
 .section-controls {

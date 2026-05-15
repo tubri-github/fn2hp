@@ -142,7 +142,8 @@
             <th>Species</th>
 <!--            <th>Records</th>-->
             <th>Records</th>
-            <th>Countries</th>
+            <!-- Countries column hidden: per-family countriesCount is inaccurate. See DATA_QUALITY_TODO.md -->
+            <th v-if="false">Countries</th>
             <th>Georeferenced</th>
             <th>Date Quality</th>
           </tr>
@@ -183,7 +184,7 @@
                   </div>
                 </div>
               </td>
-              <td>{{ formatNumber(family.countriesCount) }}</td>
+              <td v-if="false">{{ formatNumber(family.countriesCount) }}</td>
               <td>
                   <span
                       class="quality-badge"
@@ -227,7 +228,8 @@
                       <div class="card-stat-number">{{ formatNumber(family.recordCount, 'short') }}</div>
                       <div class="card-stat-label">Records</div>
                     </div>
-                    <div class="card-stat">
+                    <!-- Countries stat hidden: per-family countriesCount is inaccurate. See DATA_QUALITY_TODO.md -->
+                    <div class="card-stat" v-if="false">
                       <div class="card-stat-number">{{ formatNumber(family.countriesCount) }}</div>
                       <div class="card-stat-label">Countries</div>
                     </div>

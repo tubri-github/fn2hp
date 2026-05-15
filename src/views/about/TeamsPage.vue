@@ -16,7 +16,7 @@ const leadership = [
 const techTeam = [
   { name: 'Yasin Bakış', role: 'System Architect and Platform Designer', email: 'ybakis@tulane.edu', photo: ybakisPhoto },
   { name: 'Xiaojun Wang', role: 'Research Programmer – Frontend Backend Developer', email: 'xwang90@tulane.edu', photo: xiaojunPhoto },
-  { name: 'Grace Gleason', role: 'Information Coordinator', email: 'ggleason@tulane.edu', photo: gracePhoto },
+  { name: 'Roseline Ewa', role: 'Information Coordinator', email: 'rewa@tulane.edu', photo: placeholderPhoto },
 ]
 
 // Steering Committee members

@@ -121,15 +121,7 @@
               <div class="stat-context">Family coverage</div>
             </div>
           </div>
-          <div class="overview-stat-card">
-            <div class="stat-content">
-              <div class="stat-number" :class="{ 'skeleton-text': currentInstitution.countriesCount == null }">
-                {{ currentInstitution.countriesCount != null ? formatNumber(currentInstitution.countriesCount) : '' }}
-              </div>
-              <div class="stat-label">Countries</div>
-              <div class="stat-context">Geographic coverage</div>
-            </div>
-          </div>
+          <!-- Countries box removed: per-institution countriesCount is inaccurate. -->
           <div class="overview-stat-card">
             <div class="stat-content">
               <div class="stat-number" :class="{ 'skeleton-text': currentInstitution.geoReferencingQuality == null }">
@@ -316,7 +308,8 @@
                 <th>Scientific Name</th>
                 <th>Family</th>
                 <th>Records</th>
-                <th>Countries</th>
+                <!-- Countries column hidden: per-species countriesCount is inaccurate. See DATA_QUALITY_TODO.md -->
+                <th v-if="false">Countries</th>
               </tr>
             </thead>
             <tbody>
@@ -330,7 +323,7 @@
                     <div class="records-text">{{ formatNumber(sp.recordCount) }}</div>
                   </div>
                 </td>
-                <td>{{ sp.countriesCount || 0 }}</td>
+                <td v-if="false">{{ sp.countriesCount || 0 }}</td>
               </tr>
             </tbody>
           </table>

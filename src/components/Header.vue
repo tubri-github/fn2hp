@@ -1,12 +1,10 @@
 <template>
   <header class="header">
-    <div class="logo"> <img src="@/assets/fn2logo.png" alt="FishNet 2 Logo" /></div>
+    <div class="logo">FishNet Next</div>
     <nav class="nav">
       <a href="/dist/" class="nav-link">HOME</a>
       <router-link to="/about" class="nav-link">ABOUT</router-link>
       <router-link to="/search" class="nav-link">SEARCH</router-link>
-      <router-link to="/teams" class="nav-link">TEAM</router-link>
-      <router-link to="/collaborations" class="nav-link">COLLABORATIONS</router-link>
 
       <!-- Browse 下拉菜单 - 修复了鼠标移动问题 -->
       <div class="dropdown-container nav-link"
@@ -29,9 +27,13 @@
               </transition>
             </div>
             <router-link to="/browse/providers" class="dropdown-item">Providers</router-link>
+            <router-link to="/browse/countries" class="dropdown-item">Countries</router-link>
           </div>
         </transition>
       </div>
+
+      <router-link to="/teams" class="nav-link">TEAM</router-link>
+      <router-link to="/collaborations" class="nav-link">COLLABORATIONS</router-link>
 
       <!-- Tools 下拉菜单 - 暂时禁用 -->
       <div v-if="false" class="dropdown-container nav-link"
@@ -108,6 +110,7 @@ export default {
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap');
 
 .header {
   display: flex;
@@ -120,14 +123,11 @@ export default {
 }
 
 .logo {
-  font-size: 1.2rem;
-  font-weight: 500;
+  font-family: 'Fredoka', 'Inter', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
   color: #ffffff;
-}
-
-.logo img {
-  height: 40px; /* 调整 Logo 高度 */
-  filter: brightness(1.1); /* 让logo在深色背景上更明亮 */
+  letter-spacing: 0.5px;
 }
 
 .nav {

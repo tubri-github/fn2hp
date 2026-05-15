@@ -542,6 +542,27 @@ export default {
   white-space: nowrap;
 }
 
+/* Cap cell content height; scroll within the cell if it overflows. */
+.custom-table :deep(.el-table__row) .cell {
+  max-height: 72px;
+  overflow-y: auto;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.5;
+}
+
+/* Hide the scroll thumb until the cell is hovered to keep the table tidy. */
+.custom-table :deep(.el-table__row) .cell::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-table :deep(.el-table__row) .cell::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 2px;
+}
+.custom-table :deep(.el-table__row:hover) .cell::-webkit-scrollbar-thumb {
+  background: #c0c4cc;
+}
+
 /* History Column Styles */
 .history-link {
   color: #909399;

@@ -140,7 +140,8 @@
             <th>Order</th>
             <th>Species</th>
             <th>Records</th>
-            <th>Countries</th>
+            <!-- Countries column hidden: per-genus countriesCount is inaccurate. See DATA_QUALITY_TODO.md -->
+            <th v-if="false">Countries</th>
             <th>Institutions</th>
             <th>Georeferenced</th>
             <th>Date Quality</th>
@@ -188,7 +189,7 @@
                 </div>
               </div>
             </td>
-            <td>{{ formatNumber(genus.countriesCount) }}</td>
+            <td v-if="false">{{ formatNumber(genus.countriesCount) }}</td>
             <td>{{ formatNumber(genus.institutionsCount) }}</td>
             <td>
               <span

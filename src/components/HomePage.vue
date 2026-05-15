@@ -89,6 +89,7 @@ export default {
   overflow: hidden;
 }
 
+
 .hero-intro {
   position: relative;
   z-index: 1;
