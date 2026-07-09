@@ -188,6 +188,47 @@
         </div>
       </el-collapse-item>
 
+      <!-- River Drainage Filter (US HUC4 subregion) -->
+      <el-collapse-item name="drainage" class="filter-section">
+        <template #title>
+          <div class="section-header">
+            <span class="section-title">River Drainage</span>
+            <span v-if="selectedFilters.drainage.length" class="filter-count">
+              ({{ selectedFilters.drainage.length }})
+            </span>
+          </div>
+        </template>
+        <div class="filter-content">
+          <el-input
+            v-model="searchTexts.drainage"
+            placeholder="Search drainages..."
+            size="small"
+            clearable
+            class="filter-search"
+          />
+          <el-checkbox-group
+            v-model="selectedFilters.drainage"
+            class="checkbox-group"
+            @change="onFilterChange"
+          >
+            <el-checkbox
+              v-for="item in filteredOptions('drainage', aggregations.Location?.Drainage)"
+              :key="item.key"
+              :label="item.key"
+              class="filter-checkbox"
+            >
+              <span class="checkbox-label">{{ item.key }}</span>
+              <span class="checkbox-count">({{ item.doc_count }})</span>
+            </el-checkbox>
+          </el-checkbox-group>
+          <div v-if="hasMoreItems('drainage', aggregations.Location?.Drainage)" class="show-more">
+            <button @click="toggleShowMore('drainage')">
+              {{ showMore.drainage ? 'Show Less' : 'Show More' }}
+            </button>
+          </div>
+        </div>
+      </el-collapse-item>
+
       <!-- Year Range Filter (Slider) -->
       <el-collapse-item name="year" class="filter-section">
         <template #title>
@@ -259,7 +300,8 @@ const searchTexts = ref({
   family: '',
   institution: '',
   country: '',
-  stateProvince: ''
+  stateProvince: '',
+  drainage: ''
 });
 
 // Show more state
@@ -267,7 +309,8 @@ const showMore = ref({
   family: false,
   institution: false,
   country: false,
-  stateProvince: false
+  stateProvince: false,
+  drainage: false
 });
 
 const DEFAULT_VISIBLE_COUNT = 5;
@@ -278,6 +321,7 @@ const selectedFilters = ref({
   institutionCode: [],
   country: [],
   stateProvince: [],
+  drainage: [],
   yearRange: [props.yearBounds.min, props.yearBounds.max]
 });
 
@@ -304,6 +348,7 @@ const hasActiveFilters = computed(() => {
          selectedFilters.value.institutionCode.length > 0 ||
          selectedFilters.value.country.length > 0 ||
          selectedFilters.value.stateProvince.length > 0 ||
+         selectedFilters.value.drainage.length > 0 ||
          isYearRangeActive.value;
 });
 
@@ -322,6 +367,9 @@ const activeFilterTags = computed(() => {
   });
   selectedFilters.value.stateProvince.forEach(s => {
     tags.push({ key: `state-${s}`, label: s, type: 'stateProvince', value: s });
+  });
+  selectedFilters.value.drainage.forEach(d => {
+    tags.push({ key: `drainage-${d}`, label: d, type: 'drainage', value: d });
   });
   if (isYearRangeActive.value) {
     tags.push({
@@ -391,6 +439,7 @@ const clearAllFilters = () => {
     institutionCode: [],
     country: [],
     stateProvince: [],
+    drainage: [],
     yearRange: [props.yearBounds.min, props.yearBounds.max]
   };
   onFilterChange();
@@ -403,6 +452,8 @@ const onFilterChange = () => {
     InstitutionCode: selectedFilters.value.institutionCode,
     Country: selectedFilters.value.country,
     StateProvince: selectedFilters.value.stateProvince,
+    // ES field is huc4_name; the generic multi_filters path filters huc4_name.keyword
+    huc4_name: selectedFilters.value.drainage,
     YearRange: isYearRangeActive.value ? selectedFilters.value.yearRange : null
   };
 

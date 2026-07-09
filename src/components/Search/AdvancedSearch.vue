@@ -1,5 +1,5 @@
 <template>
-  <div class="advanced-search">
+  <div class="advanced-search" ref="rootEl">
     <!-- Toggle Header -->
     <div class="advanced-toggle" @click="toggleExpanded">
       <span class="toggle-icon">
@@ -16,6 +16,9 @@
 
     <!-- Search Panel -->
     <div v-show="expanded" class="search-panel">
+      <!-- Hint: clarify how advanced relates to the simple keyword search -->
+      <div class="panel-hint">Advanced search replaces the simple keyword above.</div>
+
       <!-- Conditions List -->
       <div class="conditions-list">
         <div v-for="(condition, index) in conditions" :key="condition.id" class="condition-item">
@@ -116,6 +119,7 @@
                 :key="field.value"
                 class="field-btn"
                 :class="{ selected: isSelected(field.value) }"
+                :title="field.dwc"
                 @click="selectField(field)"
               >
                 {{ field.label }}
@@ -129,10 +133,11 @@
 </template>
 
 <script>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 
 export default {
-  setup(_, { emit }) {
+  setup(_, { emit, expose }) {
+    const rootEl = ref(null);
     const expanded = ref(false);
     const popupVisible = ref(false);
     const editingIndex = ref(null);
@@ -140,41 +145,49 @@ export default {
     const results = ref([]);
     const searchQuery = ref("");
 
+    // Unique, monotonically increasing id for v-for :key. Date.now() collides
+    // when two conditions are added in the same millisecond, which makes Vue
+    // reuse nodes and removeCondition() delete the wrong row.
+    let uidSeq = 0;
+    const nextId = () => ++uidSeq;
+
+    // `dwc` is the Darwin Core term for each field, shown as a tooltip so users
+    // know which standard term they are querying.
     const groupedFields = ref([
       {
         label: "Taxonomic",
         children: [
-          { label: "Scientific Name", value: "ScientificName", type: "text" },
-          { label: "Family", value: "Family", type: "text" },
+          { label: "Scientific Name", value: "ScientificName", type: "text", dwc: "dwc:scientificName" },
+          { label: "Family", value: "Family", type: "text", dwc: "dwc:family" },
         ],
       },
       {
         label: "Occurrence",
         children: [
-          { label: "Catalog Number", value: "CatalogNumber", type: "number" },
-          { label: "Institution Code", value: "InstitutionCode", type: "text" },
-          { label: "Collection Code", value: "CollectionCode", type: "text" },
-          { label: "Individual Count", value: "IndividualCount", type: "number" },
-          { label: "Preparation Type", value: "PreparationType", type: "text" },
-          { label: "Tissues", value: "Tissues", type: "text" },
-          { label: "Date Last Modified", value: "DateLastModified", type: "date" },
-          { label: "Remarks", value: "Remarks", type: "text" },
+          { label: "Catalog Number", value: "CatalogNumber", type: "number", dwc: "dwc:catalogNumber" },
+          { label: "Institution Code", value: "InstitutionCode", type: "text", dwc: "dwc:institutionCode" },
+          { label: "Collection Code", value: "CollectionCode", type: "text", dwc: "dwc:collectionCode" },
+          { label: "Individual Count", value: "IndividualCount", type: "number", dwc: "dwc:individualCount" },
+          { label: "Preparation Type", value: "PreparationType", type: "text", dwc: "dwc:preparations" },
+          { label: "Date Last Modified", value: "DateLastModified", type: "date", dwc: "dcterms:modified" },
+          { label: "Remarks", value: "Remarks", type: "text", dwc: "dwc:occurrenceRemarks" },
         ],
       },
       {
         label: "Location",
         children: [
-          { label: "Country", value: "Country", type: "text" },
-          { label: "State/Province", value: "StateProvince", type: "text" },
-          { label: "County", value: "County", type: "text" },
-          { label: "Island", value: "Island", type: "text" },
-          { label: "Island Group", value: "IslandGroup", type: "text" },
-          { label: "Locality", value: "Locality", type: "text" },
-          { label: "Latitude", value: "Latitude", type: "number" },
-          { label: "Longitude", value: "Longitude", type: "number" },
-          { label: "Coordinate Uncertainty (m)", value: "CoordinateUncertaintyInMeters", type: "number" },
-          { label: "Verbatim Elevation", value: "VerbatimElevation", type: "text" },
-          { label: "Verbatim Depth", value: "VerbatimDepth", type: "text" },
+          { label: "Country", value: "Country", type: "text", dwc: "dwc:country" },
+          { label: "State/Province", value: "StateProvince", type: "text", dwc: "dwc:stateProvince" },
+          { label: "County", value: "County", type: "text", dwc: "dwc:county" },
+          { label: "Water Body", value: "WaterBody", type: "text", dwc: "dwc:waterBody" },
+          { label: "Island", value: "Island", type: "text", dwc: "dwc:island" },
+          { label: "Island Group", value: "IslandGroup", type: "text", dwc: "dwc:islandGroup" },
+          { label: "Locality", value: "Locality", type: "text", dwc: "dwc:locality" },
+          { label: "Latitude", value: "Latitude", type: "number", dwc: "dwc:decimalLatitude" },
+          { label: "Longitude", value: "Longitude", type: "number", dwc: "dwc:decimalLongitude" },
+          { label: "Coordinate Uncertainty (m)", value: "CoordinateUncertaintyInMeters", type: "number", dwc: "dwc:coordinateUncertaintyInMeters" },
+          { label: "Verbatim Elevation", value: "VerbatimElevation", type: "text", dwc: "dwc:verbatimElevation" },
+          { label: "Verbatim Depth", value: "VerbatimDepth", type: "text", dwc: "dwc:verbatimDepth" },
         ],
       },
     ]);
@@ -237,7 +250,7 @@ export default {
 
     const addEmptyCondition = () => {
       conditions.value.push({
-        id: Date.now(),
+        id: nextId(),
         field: "",
         fieldLabel: "",
         operator: "",
@@ -253,7 +266,7 @@ export default {
     const addOrCondition = (index) => {
       const condition = conditions.value[index];
       condition.orConditions.push({
-        id: Date.now(),
+        id: nextId(),
         operator: condition.operator || "",
         value: "",
       });
@@ -283,9 +296,36 @@ export default {
 
     const emitSearch = () => {
       emit("search", conditions.value);
+      // Collapse the panel after searching so it doesn't stay open over the results.
+      expanded.value = false;
+      popupVisible.value = false;
     };
 
+    // Reset all internal state. Called by the parent on "new search" / "clear all",
+    // and when a simple search runs (advanced and simple are mutually exclusive).
+    const clear = () => {
+      conditions.value = [];
+      expanded.value = false;
+      popupVisible.value = false;
+      editingIndex.value = null;
+      searchQuery.value = "";
+    };
+    expose({ clear });
+
+    // Collapse the panel when clicking anywhere outside it.
+    const handleClickOutside = (e) => {
+      if (!expanded.value) return;
+      if (rootEl.value && !rootEl.value.contains(e.target)) {
+        expanded.value = false;
+        popupVisible.value = false;
+      }
+    };
+
+    onMounted(() => document.addEventListener("mousedown", handleClickOutside));
+    onBeforeUnmount(() => document.removeEventListener("mousedown", handleClickOutside));
+
     return {
+      rootEl,
       expanded,
       popupVisible,
       editingIndex,
@@ -363,6 +403,12 @@ export default {
   border-radius: 6px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.1);
   z-index: 100;
+}
+
+.panel-hint {
+  font-size: 11px;
+  color: #999;
+  margin-bottom: 10px;
 }
 
 .conditions-list {

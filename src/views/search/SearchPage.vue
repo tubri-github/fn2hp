@@ -30,6 +30,8 @@ const tableFields = ref([]);
 const page = ref(0);
 const pageSize = ref(10);
 const total = ref(0);
+const sortField = ref(null);  // server-side sort (issue #2)
+const sortOrder = ref(null);  // 'asc' | 'desc'
 const currentFilter = ref({});
 
 // Filter sidebar state
@@ -40,6 +42,26 @@ const yearBounds = ref({ min: 1800, max: new Date().getFullYear() });
 
 // Geo filter state (polygon/rectangle/circle drawing on map)
 const geoFilter = ref(null);
+
+// River-drainage selection (huc4_name) made in the Location Filter, and how it
+// combines with the drawn shape ('and' = ∩, 'or' = ∪). Sent as dedicated payload
+// fields so the backend can OR them; kept separate from the sidebar facet.
+const drainageFilter = ref([]);
+const geoCombine = ref('and');
+
+// Effective drainage selection = Location Filter ∪ sidebar facet (refinement).
+// Drives the HUC4 boundary highlight on the results map.
+const activeDrainages = computed(() => {
+  const facet = multiFilters.value.huc4_name || [];
+  return [...new Set([...drainageFilter.value, ...facet])];
+});
+
+// Location Filter fields shared by every payload builder.
+const locationFields = () => ({
+  geo_filter: geoFilter.value || undefined,
+  drainages: drainageFilter.value.length ? [...drainageFilter.value] : undefined,
+  geo_combine: geoCombine.value,
+});
 
 // View state
 const activeView = ref("table");  // 'table' or 'analysis'
@@ -73,6 +95,28 @@ const quickSearches = [
 ];
 
 const hasSearched = computed(() => searchState.value !== "initial");
+
+// Search terms/filters passed to MapView so its /map_points requests (zoomed-in
+// single-point view, #19) match the current search.
+const mapSearchPayload = computed(() => {
+  const activeMulti = {};
+  Object.keys(multiFilters.value).forEach(k => {
+    if (multiFilters.value[k] && multiFilters.value[k].length > 0) activeMulti[k] = multiFilters.value[k];
+  });
+  const activeRange = {};
+  Object.keys(rangeFilters.value).forEach(k => {
+    if (rangeFilters.value[k]) activeRange[k] = rangeFilters.value[k];
+  });
+  return {
+    term: searchTerm.value || undefined,
+    conditions: conditions.value.length > 0 ? conditions.value : undefined,
+    filter_conditions: Object.keys(currentFilter.value).length > 0 ? currentFilter.value : undefined,
+    multi_filters: Object.keys(activeMulti).length > 0 ? activeMulti : undefined,
+    range_filters: Object.keys(activeRange).length > 0 ? activeRange : undefined,
+    // Location Filter (shape + drainages + combine) so the map matches the table.
+    ...locationFields(),
+  };
+});
 
 // Check for query parameter on mount (from homepage search)
 onMounted(() => {
@@ -151,7 +195,6 @@ const fetchTableData = async () => {
         activeMultiFilters[key] = multiFilters.value[key];
       }
     });
-
     // Build range filter conditions
     const activeRangeFilters = {};
     Object.keys(rangeFilters.value).forEach(key => {
@@ -166,7 +209,9 @@ const fetchTableData = async () => {
       filter_conditions: Object.keys(currentFilter.value).length > 0 ? currentFilter.value : undefined,
       multi_filters: Object.keys(activeMultiFilters).length > 0 ? activeMultiFilters : undefined,
       range_filters: Object.keys(activeRangeFilters).length > 0 ? activeRangeFilters : undefined,
-      geo_filter: geoFilter.value || undefined,
+      ...locationFields(),
+      sort_field: sortField.value || undefined,
+      sort_order: sortOrder.value || undefined,
       page: page.value,
       page_size: pageSize.value,
     };
@@ -200,7 +245,9 @@ const fetchTableData = async () => {
     if (hits && hits.length > 0) {
       // Hide higher-rank taxonomy fields — source data is dirty (sometimes
       // contains JSON fragments). Reintroduce once upstream is cleaned up.
-      const HIDDEN_FIELDS = new Set(['Order','Class', 'Phylum', 'Kingdom']);
+      // huc4 / huc4_name are search dimensions (facet + advanced search),
+      // not result columns — keep the opaque HUC id out of the table.
+      const HIDDEN_FIELDS = new Set(['Order','Class', 'Phylum', 'Kingdom', 'huc4', 'huc4_name']);
       tableFields.value = Object.keys(hits[0])
         .filter((key) => !HIDDEN_FIELDS.has(key))
         .map((key) => ({
@@ -227,6 +274,7 @@ let pendingHistoryItem = null;
 const onQuickSearch = (term) => {
   searchTerm.value = term;
   conditions.value = [];
+  advancedSearchRef.value?.clear();  // simple & advanced are mutually exclusive
   page.value = 0;
   fetchTableData();
   fetchTreeData();
@@ -253,9 +301,14 @@ watch(() => searchHistoryRef.value, (newVal) => {
 // Fetch tree data and aggregations for filter sidebar
 const fetchTreeData = async () => {
   try {
+    // Facet buckets are computed within the FIRST-LEVEL spatial constraints
+    // (drawn shape + GeoFilter drainage) so e.g. after picking Pearl the
+    // Drainage facet lists only Pearl. Sidebar facet selections are NOT applied
+    // here, so those facets stay multi-selectable (don't collapse to one value).
     const payload = {
       term: searchTerm.value || undefined,
       conditions: conditions.value.length > 0 ? conditions.value : undefined,
+      ...locationFields(),
     };
 
     const response = await api.post('/adaggregation', payload);
@@ -374,6 +427,7 @@ const fetchTreeData = async () => {
 const onSimpleSearch = (term) => {
   searchTerm.value = term;
   conditions.value = [];
+  advancedSearchRef.value?.clear();  // simple & advanced are mutually exclusive
   page.value = 0;
   fetchTableData();
   fetchTreeData();
@@ -406,6 +460,42 @@ const onAdvancedSearch = (newConditions) => {
 const onPageChange = (newPage) => {
   page.value = newPage;
   fetchTableData();
+};
+
+const onPageSizeChange = (newSize) => {
+  pageSize.value = newSize;
+  page.value = 0;
+  fetchTableData();
+};
+
+// Server-side sort (issue #2): sorts the whole result set, not just this page.
+const onSortChange = ({ field, order }) => {
+  sortField.value = field;
+  sortOrder.value = order;
+  page.value = 0;
+  fetchTableData();
+};
+
+// Clear everything and return to the initial state (issue #8: stale filters /
+// advanced conditions from a previous search conflict and return 0 results).
+const resetSearch = () => {
+  searchTerm.value = "";
+  conditions.value = [];
+  currentFilter.value = {};
+  multiFilters.value = {};
+  rangeFilters.value = {};
+  geoFilter.value = null;
+  sortField.value = null;
+  sortOrder.value = null;
+  page.value = 0;
+  tableRows.value = [];
+  tableFields.value = [];
+  total.value = 0;
+  // Going back to "initial" unmounts <main>, which unmounts FilterSidebar and
+  // clears its internal selections. AdvancedSearch lives outside <main>, so
+  // clear its conditions explicitly.
+  searchState.value = "initial";
+  advancedSearchRef.value?.clear();
 };
 
 // Load saved/history search
@@ -463,23 +553,36 @@ const onGeoFilter = (filter) => {
   }
 };
 
-// Handle geo filter apply from GeoFilter component
-const onGeoFilterApply = (filter) => {
-  geoFilter.value = filter;
+// Unified apply from the Location Filter: drawn shape + drainages + how they
+// combine (∩ / ∪), all in one go.
+const onLocationApply = ({ shape, drainages, combine }) => {
+  geoFilter.value = shape || null;
+  drainageFilter.value = drainages || [];
+  geoCombine.value = combine || 'and';
   page.value = 0;
-
   if (hasSearched.value) {
     fetchTableData();
+    fetchTreeData();
   }
 };
 
-// Handle geo filter clear from GeoFilter component
+const onLocationClear = () => {
+  geoFilter.value = null;
+  drainageFilter.value = [];
+  page.value = 0;
+  if (hasSearched.value) {
+    fetchTableData();
+    fetchTreeData();
+  }
+};
+
+// GeoFilterDisplay's clear removes just the drawn shape (keeps drainages).
 const onGeoFilterClear = () => {
   geoFilter.value = null;
   page.value = 0;
-
   if (hasSearched.value) {
     fetchTableData();
+    fetchTreeData();
   }
 };
 
@@ -494,7 +597,6 @@ const fetchAllRecordsForExport = async () => {
       activeMultiFilters[key] = multiFilters.value[key];
     }
   });
-
   const activeRangeFilters = {};
   Object.keys(rangeFilters.value).forEach(key => {
     if (rangeFilters.value[key]) {
@@ -508,7 +610,9 @@ const fetchAllRecordsForExport = async () => {
     filter_conditions: Object.keys(currentFilter.value).length > 0 ? currentFilter.value : undefined,
     multi_filters: Object.keys(activeMultiFilters).length > 0 ? activeMultiFilters : undefined,
     range_filters: Object.keys(activeRangeFilters).length > 0 ? activeRangeFilters : undefined,
-    geo_filter: geoFilter.value || undefined,
+    ...locationFields(),
+    sort_field: sortField.value || undefined,
+    sort_order: sortOrder.value || undefined,
     page: 0,
     page_size: 10000, // Fetch all records
   };
@@ -667,9 +771,21 @@ const handleChartExport = async (format) => {
           <GeoFilter
             :initial-filter="geoFilter"
             :default-collapsed="true"
-            @filter-apply="onGeoFilterApply"
-            @filter-clear="onGeoFilterClear"
+            :initial-drainages="drainageFilter"
+            :initial-combine="geoCombine"
+            @apply="onLocationApply"
+            @clear="onLocationClear"
           />
+          <template v-if="hasSearched">
+            <span class="options-divider"></span>
+            <button
+              class="reset-btn"
+              @click="resetSearch"
+              title="Clear all filters and conditions, start a new search"
+            >
+              Clear all
+            </button>
+          </template>
         </div>
       </div>
     </section>
@@ -828,6 +944,8 @@ const handleChartExport = async (format) => {
                 :pageSize="pageSize"
                 :total="total"
                 @changePage="onPageChange"
+                @changePageSize="onPageSizeChange"
+                @changeSort="onSortChange"
                 @row-click="onRowClick"
                 @flag-record="onFlagRecord"
               />
@@ -852,7 +970,7 @@ const handleChartExport = async (format) => {
               <div class="analysis-content">
                 <!-- Map View -->
                 <div v-show="activeAnalysisTab === 'map'">
-                  <MapView ref="mapViewRef" :points="mapPoints" :search-total="total" />
+                  <MapView ref="mapViewRef" :points="mapPoints" :search-total="total" :search-payload="mapSearchPayload" :drainages="activeDrainages" />
                 </div>
 
                 <!-- Timeline View -->
@@ -952,6 +1070,23 @@ const handleChartExport = async (format) => {
   border-color: #3498db;
   color: #3498db;
   background: #f0f7ff;
+}
+
+.reset-btn {
+  padding: 4px 10px;
+  border: 1px solid #e0a0a0;
+  background: white;
+  color: #c0392b;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.reset-btn:hover {
+  background: #fdecea;
+  border-color: #c0392b;
 }
 
 .main-content {

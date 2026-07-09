@@ -201,9 +201,10 @@ const basisText = computed(() => {
 
 // Generate link to fn2hp
 const getTaxonLink = (name) => {
-  const baseUrl = 'http://localhost:5173'; // fn2hp base URL
+  const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, ''); // match DataTable.vue; works in prod
   if (props.linkType === 'institutions') {
-    return `${baseUrl}/browse/institutions/${encodeURIComponent(name)}`;
+    // Live route is /browse/providers/:code (see DataTable.vue); 'institutions' 404s.
+    return `${baseUrl}/browse/providers/${encodeURIComponent(name)}`;
   }
   return `${baseUrl}/browse/${props.linkType}/${encodeURIComponent(name)}`;
 };

@@ -4,6 +4,11 @@
     <div class="table-toolbar">
       <div class="toolbar-left">
         <span class="result-count">{{ total }} records</span>
+        <span v-if="currentSort.prop" class="sort-indicator">
+          · Sorted by {{ sortLabel }}
+          <span class="sort-arrow">{{ currentSort.order === 'descending' ? '↓' : '↑' }}</span>
+          ({{ currentSort.order === 'descending' ? 'desc' : 'asc' }})
+        </span>
       </div>
       <div class="toolbar-right">
         <!-- Column Selector Button -->
@@ -81,6 +86,7 @@
       style="width: 100%"
       class="custom-table"
       @row-click="onRowClick"
+      @sort-change="onSortChange"
     >
       <!-- History Column (always visible) -->
       <el-table-column label="" width="70" fixed="left" class-name="history-column">
@@ -107,6 +113,21 @@
           >
             <span class="flag-link" @click.stop="flagRecord(scope.row)">
               <el-icon><Flag /></el-icon>
+            </span>
+          </el-tooltip>
+        </template>
+      </el-table-column>
+
+      <!-- Detail Column (always visible) — opens the full record -->
+      <el-table-column label="" width="50" fixed="left" class-name="detail-column">
+        <template #default="scope">
+          <el-tooltip
+            content="View full record"
+            placement="top"
+            :show-after="400"
+          >
+            <span class="detail-link" @click.stop="onRowClick(scope.row)">
+              <el-icon><View /></el-icon>
             </span>
           </el-tooltip>
         </template>
@@ -151,10 +172,12 @@
     <!-- Pagination -->
     <el-pagination
       @current-change="onPageChange"
+      @size-change="onSizeChange"
       :current-page="page + 1"
       :page-size="pageSize"
+      :page-sizes="[10, 50, 100]"
       :total="total"
-      layout="prev, pager, next, jumper"
+      layout="sizes, prev, pager, next, jumper"
       style="margin-top: 20px;"
     />
   </div>
@@ -162,7 +185,7 @@
 
 <script>
 import TimeLineDiffViewer from "@/components/Search/TimeLineDiffViewer.vue";
-import { Setting, Search, Flag } from "@element-plus/icons-vue";
+import { Setting, Search, Flag, View } from "@element-plus/icons-vue";
 
 // Default columns to show (recommended)
 const DEFAULT_COLUMNS = [
@@ -207,19 +230,20 @@ export default {
     TimeLineDiffViewer,
     Setting,
     Search,
-    Flag
+    Flag,
+    View
   },
-  emits: ["changePage", "row-click", "flag-record"],
+  emits: ["changePage", "row-click", "flag-record", "changePageSize", "changeSort"],
   data() {
     return {
       dialogVisible: false,
       selectedRow: null,
       fn2hpBaseUrl: import.meta.env.BASE_URL.replace(/\/$/, ''),
       linkableFields: ['ScientificName', 'ValidName', 'Family', 'InstitutionCode', 'Genus'],
-      sortableFields: ['ScientificName', 'Family', 'Genus', 'Country', 'YearCollected', 'InstitutionCode'],
       selectedColumns: [],
       columnSearchText: '',
-      initialized: false
+      initialized: false,
+      currentSort: { prop: null, order: null }  // for the sort direction indicator
     };
   },
   computed: {
@@ -244,6 +268,11 @@ export default {
     // Count of visible columns
     visibleColumnCount() {
       return this.selectedColumns.length || this.fields.length;
+    },
+    // Human label of the currently sorted column, for the indicator
+    sortLabel() {
+      const f = (this.fields || []).find(x => x.prop === this.currentSort.prop);
+      return f ? f.label : this.currentSort.prop;
     }
   },
   watch: {
@@ -316,9 +345,13 @@ export default {
     isRecommendedColumn(prop) {
       return RECOMMENDED_COLUMNS.includes(prop);
     },
-    // Check if column is sortable
-    isSortableColumn(prop) {
-      return this.sortableFields.includes(prop);
+    // Every column shown in the table is sortable (issue #17). Return 'custom'
+    // so Element Plus emits sort-change and the backend sorts the whole result
+    // set, instead of client-sorting only the current page (issue #2). The
+    // backend uses unmapped_type, so a column without a sortable subfield just
+    // no-ops rather than erroring.
+    isSortableColumn() {
+      return 'custom';
     },
     showPopup(row) {
       this.selectedRow = row;
@@ -326,6 +359,20 @@ export default {
     },
     onPageChange(newPage) {
       this.$emit("changePage", newPage - 1);
+    },
+    onSizeChange(newSize) {
+      this.$emit("changePageSize", newSize);
+    },
+    onSortChange({ prop, order }) {
+      // order is 'ascending' | 'descending' | null (when sort is toggled off)
+      const map = { ascending: "asc", descending: "desc" };
+      // Track current sort so the toolbar can show the direction (survives the
+      // data refetch, which can otherwise drop el-table's own header caret).
+      this.currentSort = { prop: order ? prop : null, order: order || null };
+      this.$emit("changeSort", {
+        field: order ? prop : null,
+        order: map[order] || null,
+      });
     },
     onRowClick(row) {
       this.$emit("row-click", row);
@@ -352,7 +399,10 @@ export default {
         case 'Genus':
           return `${this.fn2hpBaseUrl}/browse/genera/${encodedValue}`;
         case 'InstitutionCode':
-          return `${this.fn2hpBaseUrl}/browse/institutions/${encodedValue}`;
+          // The live route is /browse/providers/:code (InstitutionPage.vue),
+          // which is the contact page. /browse/institutions/:code is defined in
+          // browse.js but not loaded, so it 404s (issues #7 / #21).
+          return `${this.fn2hpBaseUrl}/browse/providers/${encodedValue}`;
         default:
           return '#';
       }
@@ -413,6 +463,16 @@ export default {
 .result-count {
   font-size: 13px;
   color: #666;
+}
+
+.sort-indicator {
+  font-size: 13px;
+  color: #409eff;
+  margin-left: 4px;
+}
+
+.sort-arrow {
+  font-weight: bold;
 }
 
 .toolbar-right {
@@ -587,6 +647,24 @@ export default {
 
 .flag-link:hover {
   color: #e6a23c;
+}
+
+.detail-link {
+  color: #909399;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  font-size: 15px;
+  transition: color 0.2s;
+}
+
+.detail-link:hover {
+  color: #409eff;
+}
+
+/* Rows are clickable (open the record detail) — hint with a pointer cursor. */
+.custom-table :deep(.el-table__row) {
+  cursor: pointer;
 }
 
 .field-link {
