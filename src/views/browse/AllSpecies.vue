@@ -1273,4 +1273,18 @@ onMounted(() => {
     padding: 8px;
   }
 }
+
+@media (max-width: 640px) {
+  .all-species-page {
+    overflow-x: hidden;
+  }
+
+  .global-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .global-stat {
+    min-width: 0;
+  }
+}
 </style>

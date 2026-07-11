@@ -42,4 +42,12 @@ body {
   flex-direction: column;
   min-height: 100vh;
 }
+/* Root cause of pages being wider than the screen: flex items default to
+   min-width:auto, so a wide descendant (a data table, a grid) refuses to shrink
+   and pushes the whole page past the viewport. Let each page shrink to the
+   viewport; wide tables then scroll inside their own .table-container. */
+#app > * {
+  min-width: 0;
+  max-width: 100%;
+}
 </style>

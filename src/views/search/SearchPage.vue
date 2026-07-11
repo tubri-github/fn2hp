@@ -102,10 +102,9 @@ const isLoading = ref(false);
 // Quick search suggestions
 const quickSearches = [
   { label: "Cyprinidae", term: "Cyprinidae" },
-  { label: "Notropis", term: "Notropis" },
   { label: "Notropis rubellus", term: "Notropis rubellus" },
   { label: "TU", term: "TU" },
-  { label: "USA", term: "USA" }
+  { label: "United States", term: "United States" }
 ];
 
 const hasSearched = computed(() => searchState.value !== "initial");
@@ -1185,7 +1184,8 @@ const handleChartExport = async (format) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  flex-wrap: wrap;
+  gap: 4px 6px;
   margin-top: 8px;
   padding-top: 8px;
   border-top: 1px solid #f0f0f0;
@@ -1329,6 +1329,28 @@ const handleChartExport = async (format) => {
 .ac-clear-all:hover {
   background: #a93226;
   box-shadow: 0 2px 6px rgba(192,57,43,0.4);
+}
+
+/* Mobile: stack label / chips / clear-all so chips wrap full-width instead of
+   being squeezed into a truncated column. */
+@media (max-width: 640px) {
+  .active-conditions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ac-chips {
+    flex: none;
+    width: 100%;
+  }
+  .ac-chip-value {
+    max-width: 55vw;
+  }
+  .ac-clear-all {
+    margin-left: 0;
+    width: 100%;
+    padding: 8px 14px;
+    text-align: center;
+  }
 }
 
 .main-content {

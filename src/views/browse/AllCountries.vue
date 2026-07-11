@@ -384,4 +384,14 @@ onMounted(() => {
   font-size: 13px;
   color: #666;
 }
+
+@media (max-width: 640px) {
+  .all-countries-page {
+    overflow-x: hidden;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+  }
+}
 </style>

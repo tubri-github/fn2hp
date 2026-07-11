@@ -1332,6 +1332,20 @@ watch(() => searchQuery.value, debouncedSearch)
 }
 
 @media (max-width: 480px) {
+  .all-institutions-page {
+    overflow-x: hidden;
+  }
+
+  .global-stats,
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .global-stat,
+  .stat-category {
+    min-width: 0;
+  }
+
   .institutions-header {
     flex-direction: column;
     align-items: flex-start;
@@ -1339,13 +1353,16 @@ watch(() => searchQuery.value, debouncedSearch)
   }
 
   .pagination {
-    flex-direction: column;
-    gap: 15px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   .pagination-info {
     margin-left: 0;
     order: -1;
+    width: 100%;
+    text-align: center;
   }
 
   .card-actions {

@@ -1098,13 +1098,32 @@ watch(() => filters.search, debouncedSearch)
   }
 
   .pagination {
-    flex-direction: column;
-    gap: 15px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   .pagination-info {
     margin-left: 0;
     order: -1;
+    width: 100%;
+    text-align: center;
+  }
+
+  /* stop the whole page scrolling sideways; the data table keeps its own
+     .table-container horizontal scroll. */
+  .all-families-page {
+    overflow-x: hidden;
+  }
+
+  .global-stats,
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .global-stat,
+  .stat-category {
+    min-width: 0;
   }
 }
 </style>

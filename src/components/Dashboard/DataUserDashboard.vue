@@ -623,6 +623,9 @@ onMounted(() => {
 .main-content {
   padding: 20px;
   overflow-y: auto;
+  /* grid item: allow it to shrink so wide tables/charts scroll inside it
+     instead of pushing the whole dashboard past the viewport. */
+  min-width: 0;
 }
 
 .header {
@@ -630,6 +633,11 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  /* Header.vue's global (un-scoped) .header leaks position:relative + z-index:1000
+     onto this div, putting the page title in the same stacking layer as the nav
+     bar and (being later in the DOM) over the nav's user dropdown. Drop out of
+     that positioned layer so the nav dropdown stays on top. */
+  position: static;
 }
 
 .page-title {
@@ -1271,5 +1279,48 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+/* Responsive (2026-07-11): the dashboard had no @media at all — the fixed
+   240px sidebar + multi-column grids overflowed on tablet/phone. Collapse the
+   sidebar to a top strip with a horizontal menu and stack the content. */
+@media (max-width: 900px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    padding: 12px 0 0;
+  }
+  .sidebar-menu {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 4px;
+    margin: 12px 0 0;
+    padding: 0 12px 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .sidebar-menu li {
+    white-space: nowrap;
+    border-radius: 6px;
+    padding: 8px 14px;
+  }
+  .panels-grid {
+    grid-template-columns: 1fr;
+  }
+  .main-content {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .header-actions {
+    width: 100%;
+  }
 }
 </style>

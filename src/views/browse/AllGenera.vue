@@ -1058,4 +1058,20 @@ watch(() => filters.search, debouncedSearch)
     justify-content: center;
   }
 }
+
+@media (max-width: 640px) {
+  .all-genera-page {
+    overflow-x: hidden;
+  }
+
+  .global-stats,
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .global-stat,
+  .stat-category {
+    min-width: 0;
+  }
+}
 </style>
