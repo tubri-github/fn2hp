@@ -156,11 +156,11 @@ export default {
 
 .section-title {
   font-family: 'Montserrat', sans-serif;
-  font-size: 2.5rem;
-  font-weight: 200;
-  color: #333;
+  font-size: clamp(1.8rem, 3.5vw, 2.4rem);
+  font-weight: 700;
+  color: #16232e;
   margin-bottom: 60px;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.02em;
   text-align: center;
   position: relative;
 }
@@ -173,7 +173,7 @@ export default {
   transform: translateX(-50%);
   width: 50px;
   height: 3px;
-  background: linear-gradient(90deg, #2c7cb9, #4a90e2);
+  background: linear-gradient(90deg, #2c7cb9, #5aa7d8);
   border-radius: 2px;
 }
 
@@ -203,41 +203,39 @@ export default {
 }
 
 .project-slide {
-  min-width: 100%;
-  flex-shrink: 0;
+  flex: 0 0 100%;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
   padding: 30px 0;
 }
 
 /* 图片固定大小布局 */
 .grid-layout {
   display: grid;
-  grid-template-columns: repeat(4, 250px);
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 16px;
   justify-content: center;
   padding: 20px;
-  max-width: 800px;
+  max-width: 720px;
+  width: 100%;
+  box-sizing: border-box;
   margin: 0 auto;
 }
 
 .grid-item {
-  width: 250px;
+  width: 100%;
   height: 150px;
   overflow: hidden;
   border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
-}
-
-.grid-item:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
 .grid-item img {
   width: 100%;
   height: 100%;
-  /*object-fit: cover;*/
+  object-fit: cover;
   transition: transform 0.5s ease;
 }
 
@@ -275,7 +273,7 @@ export default {
 }
 
 .circular-image:hover {
-  transform: translateY(-5px);
+  transform: translateY(-3px);
  /* box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);*/
 }
 
@@ -306,7 +304,7 @@ export default {
 }
 
 .hydroclim-slide {
-  background: linear-gradient(135deg, #2c7cb9 0%, #4a90e2 100%);
+  background: linear-gradient(135deg, #2c7cb9 0%, #5aa7d8 100%);
   padding: 40px 0;
   width: 100%;
 }
@@ -339,7 +337,7 @@ export default {
   font-family: 'Inter', sans-serif;
   font-size: 1.1rem;
   line-height: 1.6;
-  color: #444;
+  color: #566672;
   max-width: 800px;
   margin: 0 auto;
 }
@@ -357,8 +355,7 @@ export default {
   font-size: 1rem;
   padding: 12px 28px;
   border-radius: 25px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 18px rgba(20, 35, 46, 0.06);
   cursor: pointer;
   transition: all 0.3s ease;
 }
@@ -389,7 +386,7 @@ export default {
 }
 
 .nav-button svg {
-  stroke: #555;
+  stroke: #566672;
   transition: stroke 0.3s ease;
 }
 
@@ -440,5 +437,40 @@ export default {
 .dot.active {
   background-color: #2c7cb9;
   transform: scale(1.2);
+}
+
+/* ===== 平板 / 手机：修复滚动错位 + 隐藏两侧箭头改用圆点 ===== */
+@media (max-width: 768px) {
+  .related-projects {
+    padding: 40px 12px;
+  }
+  .section-title {
+    margin-bottom: 40px;
+  }
+  /* 两侧留白，给缩小后的箭头让位，箭头不再压住内容 */
+  .project-slide {
+    padding: 24px 42px;
+  }
+  .grid-layout {
+    gap: 12px;
+    padding: 8px;
+    max-width: 100%;
+  }
+  .grid-item {
+    height: 120px;
+  }
+  .circular-image {
+    width: 120px;
+    height: 120px;
+  }
+  .text-section {
+    padding: 0 4px;
+  }
+  .nav-button {
+    width: 34px;
+    height: 34px;
+  }
+  .prev { left: 2px; }
+  .next { right: 2px; }
 }
 </style>

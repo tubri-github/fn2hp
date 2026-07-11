@@ -2,6 +2,7 @@
   <div class="all-countries-page">
     <!-- Page Header -->
     <div class="page-header">
+      <span class="eyebrow">Browse</span>
       <h1 class="page-title">Browse Countries</h1>
       <p class="page-subtitle">
         Explore fish specimen records by country. Each country links to a
@@ -196,29 +197,49 @@ onMounted(() => {
 
 <style scoped>
 .all-countries-page {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 40px 24px 64px;
   font-family: 'Inter', sans-serif;
 }
 
 .page-header {
-  margin-bottom: 24px;
+  margin-bottom: 32px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #2c7cb9;
+}
+.eyebrow::before {
+  content: '';
+  width: 24px;
+  height: 2px;
+  background: #2c7cb9;
+  border-radius: 2px;
+  margin-right: 10px;
 }
 
 .page-title {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 1.8rem;
-  font-weight: 600;
-  color: #2c3e50;
-  margin: 0 0 8px 0;
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+  margin: 14px 0 0;
+  color: #16232e;
 }
 
 .page-subtitle {
-  font-size: 0.95rem;
-  color: #666;
-  margin: 0;
-  line-height: 1.5;
+  font-size: clamp(15px, 2vw, 18px);
+  color: #566672;
+  line-height: 1.6;
+  margin: 12px 0 0;
+  max-width: 70ch;
 }
 
 .world-map-block {

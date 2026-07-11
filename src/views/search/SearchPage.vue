@@ -19,6 +19,7 @@ import RecordFlagDialog from "@/components/Search/RecordFlagDialog.vue";
 import SearchGuide from "@/components/Search/SearchGuide.vue";
 import { exportToCSV, exportToXLSX, exportRecordsToGeoJSON, generateFilename, exportChartToSVG, exportChartToPDF, exportChartToPNG } from "@/utils/exportUtils.js";
 import { ArrowDown } from '@element-plus/icons-vue';
+import { ElMessage } from 'element-plus';
 
 const route = useRoute();
 
@@ -62,6 +63,19 @@ const locationFields = () => ({
   drainages: drainageFilter.value.length ? [...drainageFilter.value] : undefined,
   geo_combine: geoCombine.value,
 });
+
+// True when the user has given something to search on — a term, advanced
+// conditions, a sidebar/facet filter, a numeric range, or a location (drawn
+// shape / drainage). Used to prompt for input instead of running an empty search
+// (which would otherwise return nothing but look like a real "0 results").
+const hasSearchInput = () =>
+  !!searchTerm.value?.trim()
+  || conditions.value.length > 0
+  || Object.keys(currentFilter.value).length > 0
+  || Object.values(multiFilters.value).some(v => Array.isArray(v) && v.length > 0)
+  || Object.values(rangeFilters.value).some(v => v != null)
+  || !!geoFilter.value
+  || drainageFilter.value.length > 0;
 
 // View state
 const activeView = ref("table");  // 'table' or 'analysis'
@@ -184,6 +198,13 @@ const onFlagRecord = (row) => {
 
 // Fetch table data
 const fetchTableData = async () => {
+  // Nothing to search on: prompt the user for input instead of firing an empty
+  // request (which returns 0 rows and reads like a failed search).
+  if (!hasSearchInput()) {
+    ElMessage.warning("Please enter a search term or select a filter to search.");
+    searchState.value = "initial";
+    return;
+  }
   isLoading.value = true;
   searchState.value = "loading";
 
@@ -300,6 +321,9 @@ watch(() => searchHistoryRef.value, (newVal) => {
 
 // Fetch tree data and aggregations for filter sidebar
 const fetchTreeData = async () => {
+  // No active search -> no facets. Skip silently (fetchTableData already prompts
+  // the user), so the sidebar stays empty instead of the backend returning zeros.
+  if (!hasSearchInput()) return;
   try {
     // Facet buckets are computed within the FIRST-LEVEL spatial constraints
     // (drawn shape + GeoFilter drainage) so e.g. after picking Pearl the
@@ -494,9 +518,126 @@ const resetSearch = () => {
   // Going back to "initial" unmounts <main>, which unmounts FilterSidebar and
   // clears its internal selections. AdvancedSearch lives outside <main>, so
   // clear its conditions explicitly.
+  drainageFilter.value = [];
+  geoCombine.value = 'and';
   searchState.value = "initial";
   advancedSearchRef.value?.clear();
 };
+
+// --- Persistent active-conditions bar (issue #3) ------------------------------
+// Users forgot they still had filters/conditions selected and got silent
+// 0-result searches. This surfaces every active condition as a removable chip
+// right under the search box, with a prominent "Clear all".
+const filterSidebarRef = ref(null);
+
+// parent multiFilters use ES field keys; FilterSidebar's removeFilter wants its
+// internal type. Mapping lets a chip's × also uncheck the sidebar box.
+const FACET_TYPE_MAP = {
+  Family: 'family',
+  InstitutionCode: 'institutionCode',
+  Country: 'country',
+  StateProvince: 'stateProvince',
+  huc4_name: 'drainage',
+};
+const FACET_GROUP = {
+  Family: 'Family',
+  InstitutionCode: 'Institution',
+  Country: 'Country',
+  StateProvince: 'State/Prov',
+  huc4_name: 'Drainage',
+};
+
+// Re-run the current search after a chip is removed; if nothing is left to
+// search on, drop back to the clean initial state instead of an empty query.
+const rerunOrReset = () => {
+  if (!hasSearchInput()) { resetSearch(); return; }
+  page.value = 0;
+  fetchTableData();
+  fetchTreeData();
+};
+
+const activeConditions = computed(() => {
+  const chips = [];
+
+  if (searchTerm.value?.trim()) {
+    chips.push({
+      key: 'term', group: 'Search', label: searchTerm.value.trim(),
+      remove: () => { searchTerm.value = ''; rerunOrReset(); },
+    });
+  }
+
+  conditions.value.forEach((c, i) => {
+    chips.push({
+      key: `cond-${c.id ?? i}`, group: 'Advanced',
+      label: `${c.fieldLabel || c.field} ${c.operator || ''} ${c.value}`.replace(/\s+/g, ' ').trim(),
+      remove: () => advancedSearchRef.value?.removeConditionAt(i),
+    });
+  });
+
+  Object.keys(multiFilters.value).forEach(field => {
+    const vals = multiFilters.value[field];
+    if (!Array.isArray(vals)) return;
+    const type = FACET_TYPE_MAP[field];
+    vals.forEach(v => {
+      chips.push({
+        key: `facet-${field}-${v}`, group: FACET_GROUP[field] || field, label: String(v),
+        remove: () => {
+          if (type && filterSidebarRef.value?.removeFilter) {
+            filterSidebarRef.value.removeFilter({ type, value: v });
+          } else {
+            multiFilters.value = { ...multiFilters.value, [field]: vals.filter(x => x !== v) };
+            rerunOrReset();
+          }
+        },
+      });
+    });
+  });
+
+  const yr = rangeFilters.value.YearCollected;
+  if (yr && (yr.min != null || yr.max != null)) {
+    chips.push({
+      key: 'year-range', group: 'Year', label: `${yr.min}–${yr.max}`,
+      remove: () => {
+        if (filterSidebarRef.value?.removeFilter) {
+          filterSidebarRef.value.removeFilter({ type: 'yearRange' });
+        } else {
+          const next = { ...rangeFilters.value }; delete next.YearCollected;
+          rangeFilters.value = next; rerunOrReset();
+        }
+      },
+    });
+  }
+
+  if (geoFilter.value) {
+    chips.push({
+      key: 'geo-shape', group: 'Location',
+      label: geoFilter.value.type ? `${geoFilter.value.type} area` : 'Map area',
+      remove: () => onGeoFilterClear(),
+    });
+  }
+
+  drainageFilter.value.forEach(d => {
+    chips.push({
+      key: `loc-drainage-${d}`, group: 'Drainage', label: String(d),
+      remove: () => {
+        drainageFilter.value = drainageFilter.value.filter(x => x !== d);
+        rerunOrReset();
+      },
+    });
+  });
+
+  Object.keys(currentFilter.value).forEach(f => {
+    chips.push({
+      key: `cf-${f}`, group: f, label: String(currentFilter.value[f]),
+      remove: () => {
+        const next = { ...currentFilter.value }; delete next[f];
+        currentFilter.value = next; rerunOrReset();
+      },
+    });
+  });
+
+  return chips;
+});
 
 // Load saved/history search
 const onLoadSearch = (item) => {
@@ -776,16 +917,22 @@ const handleChartExport = async (format) => {
             @apply="onLocationApply"
             @clear="onLocationClear"
           />
-          <template v-if="hasSearched">
-            <span class="options-divider"></span>
-            <button
-              class="reset-btn"
-              @click="resetSearch"
-              title="Clear all filters and conditions, start a new search"
-            >
-              Clear all
-            </button>
-          </template>
+        </div>
+
+        <!-- Active conditions bar (issue #3): every active filter/condition as a
+             removable chip, so users always see what they're searching on. -->
+        <div v-if="activeConditions.length" class="active-conditions">
+          <span class="ac-label">Active filters:</span>
+          <div class="ac-chips">
+            <span v-for="chip in activeConditions" :key="chip.key" class="ac-chip">
+              <span class="ac-chip-group">{{ chip.group }}</span>
+              <span class="ac-chip-value">{{ chip.label }}</span>
+              <button class="ac-chip-x" @click="chip.remove" title="Remove this filter">×</button>
+            </span>
+          </div>
+          <button class="ac-clear-all" @click="resetSearch" title="Clear all filters and start over">
+            Clear all ({{ activeConditions.length }})
+          </button>
         </div>
       </div>
     </section>
@@ -830,6 +977,7 @@ const handleChartExport = async (format) => {
 
           <!-- Filter Sidebar -->
           <FilterSidebar
+            ref="filterSidebarRef"
             :aggregations="aggregations"
             :yearBounds="yearBounds"
             @filterChange="onFilterChange"
@@ -1087,6 +1235,100 @@ const handleChartExport = async (format) => {
 .reset-btn:hover {
   background: #fdecea;
   border-color: #c0392b;
+}
+
+/* Active conditions bar (issue #3) */
+.active-conditions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.ac-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #7a8290;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.ac-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Two-segment pill: muted field/group segment + emphasised value segment. */
+.ac-chip {
+  display: inline-flex;
+  align-items: stretch;
+  border-radius: 6px;
+  overflow: hidden;
+  font-size: 12px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+}
+
+.ac-chip-group {
+  display: flex;
+  align-items: center;
+  padding: 3px 7px;
+  background: #dfe7f3;
+  color: #48566e;
+  font-weight: 600;
+}
+
+.ac-chip-value {
+  display: flex;
+  align-items: center;
+  padding: 3px 7px;
+  background: #eef3fb;
+  color: #2c3e50;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ac-chip-x {
+  border: none;
+  background: #eef3fb;
+  color: #90a0b8;
+  padding: 0 8px 0 4px;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.ac-chip-x:hover {
+  background: #f8d7da;
+  color: #c0392b;
+}
+
+.ac-clear-all {
+  margin-left: auto;
+  padding: 5px 14px;
+  border: none;
+  border-radius: 6px;
+  background: #c0392b;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(192,57,43,0.3);
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+.ac-clear-all:hover {
+  background: #a93226;
+  box-shadow: 0 2px 6px rgba(192,57,43,0.4);
 }
 
 .main-content {

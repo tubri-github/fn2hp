@@ -60,280 +60,288 @@ const getPhoto = (member) => {
 </script>
 
 <template>
-  <div class="teams-page">
-    <!-- Page Header -->
-    <div class="page-header">
-      <h1 class="page-title">Teams</h1>
-      <p class="page-subtitle">
+  <div class="doc-page">
+    <!-- Hero -->
+    <header class="doc-hero">
+      <span class="eyebrow">Team</span>
+      <h1 class="doc-title">Teams</h1>
+      <p class="lead">
         FishNet 2 is developed and maintained through collaboration among researchers, collections professionals,
         and technical staff working together to support access to specimen-based data from ichthyological collections.
       </p>
-    </div>
+    </header>
 
-    <!-- Project Leadership -->
-    <div class="section-card">
-      <h2 class="section-title">Project Leadership</h2>
-      <p class="section-desc">
-        Project leadership provides overall direction for FishNet 2 and coordinates activities among participating
-        institutions. Leadership oversees development priorities, project management, community engagement, and
-        collaboration with supporting organizations.
-      </p>
-      <div class="members-grid">
-        <div class="member-card" v-for="member in leadership" :key="member.name">
-          <img :src="getPhoto(member)" :alt="member.name" class="member-photo" />
-          <div class="member-info">
-            <div class="member-name">{{ member.name }}</div>
-            <div class="member-role">{{ member.role }}</div>
-            <a :href="'mailto:' + member.email" class="member-email" :title="member.email"><el-icon><Message /></el-icon></a>
+    <article class="doc-body">
+      <!-- Project Leadership -->
+      <section class="doc-section">
+        <h2>Project Leadership</h2>
+        <p>
+          Project leadership provides overall direction for FishNet 2 and coordinates activities among participating
+          institutions. Leadership oversees development priorities, project management, community engagement, and
+          collaboration with supporting organizations.
+        </p>
+        <div class="people">
+          <div class="person" v-for="member in leadership" :key="member.name">
+            <img :src="getPhoto(member)" :alt="member.name" class="person-photo" />
+            <div class="person-info">
+              <div class="person-name">{{ member.name }}</div>
+              <div class="person-role">{{ member.role }}</div>
+              <a :href="'mailto:' + member.email" class="person-email" :title="member.email">
+                <el-icon><Message /></el-icon><span>Email</span>
+              </a>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
 
-    <!-- Technical Development -->
-    <div class="section-card">
-      <h2 class="section-title">Technical Development &amp; Data Integration and Curation</h2>
-      <p class="section-desc">
-        The technical development team is responsible for the design, implementation, and maintenance of the
-        FishNet 2 platform. This work includes database architecture, web application development, search
-        functionality, mapping tools, and system integration.
-      </p>
-      <p class="section-desc">
-        Data integration efforts focus on the ingestion, validation, and indexing of specimen records contributed
-        by participating collections. This work includes managing data harvesting workflows, supporting taxonomic
-        linkages, and maintaining reliable search and retrieval across the platform.
-      </p>
-      <div class="members-grid">
-        <div class="member-card" v-for="member in techTeam" :key="member.name">
-          <img :src="getPhoto(member)" :alt="member.name" class="member-photo" />
-          <div class="member-info">
-            <div class="member-name">{{ member.name }}</div>
-            <div class="member-role">{{ member.role }}</div>
-            <a :href="'mailto:' + member.email" class="member-email" :title="member.email"><el-icon><Message /></el-icon></a>
+      <!-- Technical Development -->
+      <section class="doc-section">
+        <h2>Technical Development &amp; Data Integration and Curation</h2>
+        <p>
+          The technical development team is responsible for the design, implementation, and maintenance of the
+          FishNet 2 platform. This work includes database architecture, web application development, search
+          functionality, mapping tools, and system integration.
+        </p>
+        <p>
+          Data integration efforts focus on the ingestion, validation, and indexing of specimen records contributed
+          by participating collections. This work includes managing data harvesting workflows, supporting taxonomic
+          linkages, and maintaining reliable search and retrieval across the platform.
+        </p>
+        <div class="people">
+          <div class="person" v-for="member in techTeam" :key="member.name">
+            <img :src="getPhoto(member)" :alt="member.name" class="person-photo" />
+            <div class="person-info">
+              <div class="person-name">{{ member.name }}</div>
+              <div class="person-role">{{ member.role }}</div>
+              <a :href="'mailto:' + member.email" class="person-email" :title="member.email">
+                <el-icon><Message /></el-icon><span>Email</span>
+              </a>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
 
-    <!-- Steering Committee -->
-    <div class="section-card">
-      <h2 class="section-title">Steering Committee</h2>
-      <p class="section-desc">
-        The FishNet 2 Steering Committee provides strategic guidance and community oversight. Members represent
-        participating institutions and help guide priorities for development, data services, and long-term
-        sustainability of the network.
-      </p>
-      <div v-if="steeringCommittee.length" class="committee-list">
-        <div class="committee-member" v-for="member in steeringCommittee" :key="member.name">
-          <span class="committee-name">{{ member.name }}</span>
-          <span v-if="member.institution" class="committee-institution">{{ member.institution }}</span>
+      <!-- Steering Committee -->
+      <section class="doc-section">
+        <h2>Steering Committee</h2>
+        <p>
+          The FishNet 2 Steering Committee provides strategic guidance and community oversight. Members represent
+          participating institutions and help guide priorities for development, data services, and long-term
+          sustainability of the network.
+        </p>
+        <div v-if="steeringCommittee.length" class="roster">
+          <div class="roster-item" v-for="member in steeringCommittee" :key="member.name">
+            <span class="roster-name">{{ member.name }}</span>
+            <span v-if="member.institution" class="roster-inst">{{ member.institution }}</span>
+          </div>
         </div>
-      </div>
-      <p v-else class="section-desc placeholder-text">Members to be announced.</p>
-    </div>
+        <p v-else class="placeholder-text">Members to be announced.</p>
+      </section>
 
-    <!-- Testing and User Feedback Group -->
-    <div class="section-card">
-      <h2 class="section-title">Testing and User Feedback Group</h2>
-      <p class="section-desc">
-        The testing group evaluates new features and updates prior to wider release. Members provide feedback on
-        usability, functionality, and data workflows to help ensure that the platform meets the needs of
-        researchers, collections staff, and educators.
-      </p>
-      <div v-if="testingGroup.length" class="committee-list">
-        <div class="committee-member" v-for="member in testingGroup" :key="member.name">
-          <span class="committee-name">{{ member.name }}</span>
-          <span v-if="member.institution" class="committee-institution">{{ member.institution }}</span>
+      <!-- Testing and User Feedback Group -->
+      <section class="doc-section">
+        <h2>Testing and User Feedback Group</h2>
+        <p>
+          The testing group evaluates new features and updates prior to wider release. Members provide feedback on
+          usability, functionality, and data workflows to help ensure that the platform meets the needs of
+          researchers, collections staff, and educators.
+        </p>
+        <div v-if="testingGroup.length" class="roster">
+          <div class="roster-item" v-for="member in testingGroup" :key="member.name">
+            <span class="roster-name">{{ member.name }}</span>
+            <span v-if="member.institution" class="roster-inst">{{ member.institution }}</span>
+          </div>
         </div>
-      </div>
-      <p v-else class="section-desc placeholder-text">Members to be announced.</p>
-    </div>
+        <p v-else class="placeholder-text">Members to be announced.</p>
+      </section>
 
-    <!-- Participating Institutions -->
-    <div class="section-card">
-      <h2 class="section-title">Participating Institutions</h2>
-      <p class="section-desc">
-        FishNet 2 operates as a network of natural history collections that contribute specimen data to the
-        platform. Participating institutions maintain their own databases and publish selected records through
-        established data-sharing workflows.
-      </p>
-      <p class="section-desc">
-        Through collaboration among these institutions, FishNet 2 provides unified discovery of fish specimen
-        records while allowing collections to retain stewardship of their own data.
-      </p>
-    </div>
+      <!-- Participating Institutions -->
+      <section class="doc-section">
+        <h2>Participating Institutions</h2>
+        <p>
+          FishNet 2 operates as a network of natural history collections that contribute specimen data to the
+          platform. Participating institutions maintain their own databases and publish selected records through
+          established data-sharing workflows.
+        </p>
+        <p>
+          Through collaboration among these institutions, FishNet 2 provides unified discovery of fish specimen
+          records while allowing collections to retain stewardship of their own data.
+        </p>
+      </section>
+    </article>
   </div>
 </template>
 
 <style scoped>
-.teams-page {
-  max-width: 1000px;
+.doc-page {
+  max-width: 800px;
   margin: 0 auto;
-  padding: 20px;
-  background-color: #f5f5f5;
-  min-height: calc(100vh - 200px);
+  padding: 72px 24px 112px;
+  color: #40515f;
 }
 
-.page-header {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 30px;
+/* ===== Hero（与 About / Collaborations 一致）===== */
+.doc-hero {
   margin-bottom: 20px;
 }
 
-.page-title {
-  font-size: 28px;
-  font-weight: bold;
-  margin: 0 0 12px 0;
-  color: #2c3e50;
-}
-
-.page-subtitle {
-  font-size: 15px;
-  line-height: 1.8;
-  color: #666;
-  margin: 0;
-}
-
-.section-card {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 30px;
-  margin-bottom: 20px;
-}
-
-.section-title {
-  font-size: 20px;
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
   font-weight: 600;
-  color: #2c3e50;
-  margin: 0 0 16px 0;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #2c7cb9;
 }
 
-.section-desc {
-  font-size: 15px;
-  line-height: 1.8;
-  color: #555;
-  margin: 0 0 14px 0;
+.eyebrow::before {
+  content: '';
+  width: 24px;
+  height: 2px;
+  background: #2c7cb9;
+  border-radius: 2px;
+  margin-right: 10px;
 }
 
-.section-desc:last-of-type {
-  margin-bottom: 0;
+.doc-title {
+  font-size: clamp(32px, 5vw, 44px);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+  color: #16232e;
+  margin: 16px 0 0;
+}
+
+.lead {
+  font-size: clamp(17px, 2.4vw, 20px);
+  line-height: 1.65;
+  color: #566672;
+  margin: 22px 0 0;
+  max-width: 64ch;
+}
+
+/* ===== Sections ===== */
+.doc-body {
+  font-size: 16.5px;
+  line-height: 1.85;
+}
+
+.doc-section {
+  margin-top: 56px;
+}
+
+.doc-section > p {
+  margin: 0 0 18px;
+  max-width: 72ch;
+}
+
+.doc-section h2 {
+  font-size: clamp(22px, 3vw, 26px);
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  font-weight: 700;
+  color: #16232e;
+  margin: 0 0 16px;
 }
 
 .placeholder-text {
-  color: #999;
+  color: #9aa7b2;
   font-style: italic;
 }
 
-/* Members with photos */
-.members-grid {
+/* ===== 带照片的成员：去掉灰底边框卡片，纯净排布 ===== */
+.people {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
-  margin-top: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 30px 28px;
+  margin-top: 30px;
 }
 
-.member-card {
+.person {
   display: flex;
   align-items: center;
   gap: 16px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  padding: 16px 20px;
-  border: 1px solid #e9ecef;
 }
 
-.member-photo {
-  width: 96px;
-  height: 96px;
+.person-photo {
+  width: 76px;
+  height: 76px;
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
+  box-shadow: 0 3px 10px rgba(20, 35, 46, 0.12);
 }
 
-.member-info {
+.person-info {
   min-width: 0;
 }
 
-.member-name {
-  font-size: 15px;
-  font-weight: 600;
-  color: #2c3e50;
-  margin-bottom: 4px;
+.person-name {
+  font-size: 16px;
+  font-weight: 650;
+  color: #16232e;
 }
 
-.member-role {
+.person-role {
   font-size: 13px;
-  color: #666;
-  line-height: 1.4;
+  color: #6b7a88;
+  line-height: 1.45;
+  margin-top: 3px;
 }
 
-.member-email {
+.person-email {
   display: inline-flex;
   align-items: center;
-  font-size: 16px;
-  color: #999;
-  text-decoration: none;
-  margin-top: 6px;
-  transition: color 0.2s;
-}
-
-.member-email:hover {
-  color: #3498db;
-}
-
-/* Committee list (name + email, many members) */
-.committee-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 8px 24px;
-  margin-top: 16px;
-}
-
-.committee-member {
-  padding: 8px 0;
-}
-
-.committee-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: #2c3e50;
-}
-
-.committee-institution {
+  gap: 5px;
   font-size: 13px;
-  color: #888;
+  font-weight: 500;
+  color: #2c7cb9;
+  text-decoration: none;
+  margin-top: 8px;
+  transition: color 0.18s;
+}
+
+.person-email:hover {
+  color: #1f6fb2;
+}
+
+/* ===== 名单：细线分隔的花名册 ===== */
+.roster {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 22px 36px;
+  margin-top: 26px;
+}
+
+.roster-item {
+  padding: 0;
+}
+
+.roster-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #16232e;
+}
+
+.roster-inst {
   display: block;
+  font-size: 13px;
+  color: #7d8b97;
   margin-top: 2px;
 }
 
-@media (max-width: 768px) {
-  .teams-page {
-    padding: 15px;
+@media (max-width: 600px) {
+  .doc-page {
+    padding: 44px 20px 80px;
   }
-
-  .page-header,
-  .section-card {
-    padding: 20px;
+  .doc-section {
+    margin-top: 44px;
   }
-
-  .page-title {
-    font-size: 24px;
+  .doc-body {
+    font-size: 16px;
   }
-
-  .members-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .committee-list {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-@media (max-width: 480px) {
-  .committee-list {
+  .people {
     grid-template-columns: 1fr;
   }
 }

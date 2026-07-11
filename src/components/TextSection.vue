@@ -111,11 +111,10 @@
 }
 
 .section-title {
-  font-size: 2.5rem;
-  font-weight: bolder;
-  color: #3f8ba1;
-  /*margin-bottom: 60px;*/
-  letter-spacing: -0.5px;
+  font-size: clamp(1.8rem, 3.5vw, 2.4rem);
+  font-weight: 700;
+  color: #16232e;
+  letter-spacing: -0.02em;
 }
 
 /* Features Section */
@@ -133,26 +132,46 @@
 
 .feature-icon {
   margin-bottom: 24px;
-  color: #3b82f6;
+  color: #2c7cb9;
   display: flex;
   justify-content: center;
 }
 
 .feature-card h3 {
   font-size: 1.25rem;
-  font-weight: 400;
-  color: #333;
+  font-weight: 600;
+  color: #16232e;
   margin-bottom: 16px;
 }
 
 .feature-card p {
   font-size: 1rem;
-  line-height: 1.6;
-  color: #666;
-  font-weight: 300;
+  line-height: 1.65;
+  color: #566672;
+  font-weight: 400;
 }
 
-/* Improvements Section */
+/* Improvements Section —— 通栏淡蓝绿色带 + 波浪分隔 */
+.improvements-section {
+  position: relative;
+  padding: 88px 0;
+}
+
+.improvements-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  margin-left: -50vw;
+  z-index: -1;
+  background:
+    url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201440%2048'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23ffffff'%20d='M0,0%20H1440%20V22%20C1140,46%20900,8%20600,24%20C372,36%20168,32%200,22%20Z'/%3E%3C/svg%3E") top center / 100% 48px no-repeat,
+    url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201440%2048'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23ffffff'%20d='M0,48%20H1440%20V26%20C1140,2%20900,40%20600,24%20C372,12%20168,16%200,26%20Z'/%3E%3C/svg%3E") bottom center / 100% 48px no-repeat,
+    linear-gradient(135deg, #eef5fb 0%, #edf6f0 100%);
+}
+
 .improvements-title {
   text-align: center;
   margin-bottom: 40px;
@@ -161,35 +180,25 @@
 .improvements-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  gap: 10px 40px;
 }
 
 .improvement-box {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 20px 24px;
-  background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
-}
-
-.improvement-box:hover {
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-  transform: translateY(-2px);
+  gap: 12px;
+  padding: 12px 2px;
 }
 
 .improvement-icon {
   flex-shrink: 0;
-  color: #3b82f6;
+  color: #2c7cb9;
 }
 
 .improvement-box span {
-  font-size: 0.95rem;
-  font-weight: 400;
-  color: #334155;
+  font-size: 0.98rem;
+  font-weight: 500;
+  color: #33465a;
   line-height: 1.4;
 }
 
@@ -202,37 +211,25 @@
 .users-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  gap: 48px;
 }
 
 .user-card {
-  padding: 32px 28px;
-  background: linear-gradient(145deg, #fafafa 0%, #fff 100%);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04),
-              0 1px 2px rgba(0, 0, 0, 0.06);
-  transition: all 0.4s cubic-bezier(0.215, 0.61, 0.355, 1);
-}
-
-.user-card:hover {
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
-  transform: translateY(-4px);
-  border-color: rgba(0, 0, 0, 0.12);
+  padding: 0;
 }
 
 .user-card-label {
   font-size: 1.15rem;
-  font-weight: 600;
-  color: #1e293b;
+  font-weight: 650;
+  color: #16232e;
   margin-bottom: 10px;
 }
 
 .user-card p {
   font-size: 0.95rem;
-  line-height: 1.6;
-  color: #6b7280;
-  font-weight: 300;
+  line-height: 1.65;
+  color: #566672;
+  font-weight: 400;
   margin: 0;
 }
 

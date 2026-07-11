@@ -3,18 +3,21 @@
     <Header />
     <router-view :key="route.path" />
     <Footer />
+    <FeedbackButton />
   </div>
 </template>
 
 <script>
 import Header from "./components/Header.vue";
 import Footer from "./components/Footer.vue";
+import FeedbackButton from "./components/FeedbackButton.vue";
 import { useRoute } from 'vue-router'
 
 export default {
   components: {
     Header,
     Footer,
+    FeedbackButton,
   },
   setup() {
     const route = useRoute()

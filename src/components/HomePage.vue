@@ -111,18 +111,19 @@ export default {
 
 .hero-title {
   font-family: 'Montserrat', 'Inter', sans-serif;
-  font-size: 2.2rem;
-  font-weight: 600;
-  color: #2c3e50;
-  margin: 0 0 16px 0;
-  letter-spacing: -0.5px;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  font-weight: 700;
+  color: #16232e;
+  margin: 0 0 18px 0;
+  line-height: 1.14;
+  letter-spacing: -0.02em;
 }
 
 .hero-desc {
   font-size: 1.05rem;
-  line-height: 1.8;
-  color: #555;
-  font-weight: 300;
+  line-height: 1.75;
+  color: #40515f;
+  font-weight: 400;
   margin: 0;
 }
 
@@ -132,7 +133,7 @@ export default {
 
 .hero-image img {
   width: 100%;
-  border-radius: 4px;
+  border-radius: 14px;
 }
 
 .hero-image-caption {
@@ -167,21 +168,9 @@ export default {
 }
 
 .content-section {
-  width: 90%;
-  max-width: 1200px;
-  padding: 30px;
-
-  border-radius: 14px;
-  /*box-shadow: 0 8px 25px rgba(0, 0, 0, 0.04);*/
-  /*border: 1px solid rgba(0, 0, 0, 0.05);*/
-  transition: all 0.3s ease;
+  width: 100%;
   z-index: 10;
   position: relative;
-}
-
-.content-section:hover {
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
-  transform: translateY(-5px);
 }
 
 /* 响应式设计 */
@@ -200,8 +189,7 @@ export default {
   }
 
   .content-section {
-    width: 95%;
-    padding: 20px;
+    width: 100%;
   }
 }
 </style>

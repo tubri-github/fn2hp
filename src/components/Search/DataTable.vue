@@ -190,7 +190,10 @@ import { Setting, Search, Flag, View } from "@element-plus/icons-vue";
 // Default columns to show (recommended)
 const DEFAULT_COLUMNS = [
   'ScientificName',
+  'ValidName',
+  'Genus',
   'Family',
+  'TypeStatus',
   'InstitutionCode',
   'CatalogNumber',
   'Country',
@@ -201,8 +204,10 @@ const DEFAULT_COLUMNS = [
 // Recommended columns (highlighted in selector)
 const RECOMMENDED_COLUMNS = [
   'ScientificName',
+  'ValidName',
   'Family',
   'Genus',
+  'TypeStatus',
   'InstitutionCode',
   'CollectionCode',
   'CatalogNumber',

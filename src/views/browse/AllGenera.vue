@@ -2,6 +2,7 @@
   <div class="all-genera-page">
     <!-- Page Header -->
     <div class="page-header">
+      <span class="eyebrow">Browse</span>
       <h1 class="page-title">Browse All Fish Genera</h1>
       <p class="page-subtitle">Explore taxonomic diversity across all fish genera in the FishNet 2 database</p>
 
@@ -409,59 +410,75 @@ watch(() => filters.search, debouncedSearch)
 .all-genera-page {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 20px;
-  background-color: #f5f5f5;
+  padding: 40px 24px 64px;
 }
 
-/* 页面基础样式复用AllFamilies的样式 */
+/* 页面头部 —— 编辑风格 hero，无卡片无边框 */
 .page-header {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  padding: 30px;
-  margin-bottom: 20px;
+  margin-bottom: 32px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #2c7cb9;
+}
+
+.eyebrow::before {
+  content: '';
+  width: 24px;
+  height: 2px;
+  background: #2c7cb9;
+  border-radius: 2px;
+  margin-right: 10px;
 }
 
 .page-title {
-  font-size: 32px;
-  font-weight: bold;
-  margin: 0 0 10px 0;
-  color: #2c3e50;
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+  margin: 14px 0 0;
+  color: #16232e;
 }
 
 .page-subtitle {
-  font-size: 16px;
-  color: #666;
-  margin-bottom: 25px;
+  font-size: clamp(15px, 2vw, 18px);
+  color: #566672;
+  line-height: 1.6;
+  margin: 12px 0 0;
+  max-width: 70ch;
 }
 
 .global-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 15px;
-  margin-bottom: 25px;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 24px 32px;
+  margin-top: 30px;
 }
 
 .global-stat {
-  text-align: center;
-  padding: 15px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
+  text-align: left;
 }
 
 .global-stat-number {
-  font-size: 28px;
-  font-weight: bold;
-  color: #3498db;
-  margin-bottom: 5px;
+  font-size: clamp(24px, 3vw, 30px);
+  font-weight: 700;
+  color: #16232e;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin-bottom: 6px;
 }
 
 .global-stat-label {
   font-size: 12px;
-  color: #666;
+  color: #7d8b97;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.06em;
 }
 
 .page-actions {

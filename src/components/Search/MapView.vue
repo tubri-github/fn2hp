@@ -107,6 +107,7 @@ const selectedBaseMap = ref('google-roadmap');
 let map = null;
 let markersLayer = null;   // L.heatLayer instance (low zoom)
 let pointsLayer = null;    // L.layerGroup of circle markers (high zoom, #19)
+let pointsRenderer = null; // canvas renderer bound to pointsPane (above drainage)
 let baseMapLayer = null;
 let L = null;
 let pointsDebounce = null;
@@ -347,11 +348,20 @@ const initMap = async () => {
     });
 
     // Dedicated pane for drainage boundaries: above the heatmap canvas (~400)
-    // so the outline is always visible, but below markers (600) so points stay
-    // clickable.
+    // so the outline is always visible.
     map.createPane('drainagePane');
     map.getPane('drainagePane').style.zIndex = 450;
     map.getPane('drainagePane').style.pointerEvents = 'auto';
+
+    // The red record points are circleMarkers (vectors). With preferCanvas they
+    // render on a canvas in the default overlayPane (zIndex 400) — BELOW the
+    // drainage pane (450), so the HUC polygons would swallow their clicks.
+    // Give the points their own pane above the drainage boundaries, with a
+    // dedicated canvas renderer so they stay hoverable/clickable.
+    map.createPane('pointsPane');
+    map.getPane('pointsPane').style.zIndex = 460;
+    map.getPane('pointsPane').style.pointerEvents = 'auto';
+    pointsRenderer = L.canvas({ pane: 'pointsPane' });
 
     // Add base map
     const config = getTileConfig(selectedBaseMap.value);
@@ -467,6 +477,7 @@ const renderPoints = (points, capped) => {
   for (const p of points) {
     const marker = L.circleMarker([p.lat, p.lng], {
       radius: 4, weight: 1, color: '#c0392b', fillColor: '#e74c3c', fillOpacity: 0.7,
+      renderer: pointsRenderer,   // pointsPane (460) — above drainage boundaries
     });
     const name = p.scientificName || '(no name)';
     marker.bindPopup(

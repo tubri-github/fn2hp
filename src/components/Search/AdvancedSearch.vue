@@ -158,17 +158,27 @@ export default {
         label: "Taxonomic",
         children: [
           { label: "Scientific Name", value: "ScientificName", type: "text", dwc: "dwc:scientificName" },
+          { label: "Genus", value: "Genus", type: "text", dwc: "dwc:genus" },
+          { label: "Specific Epithet", value: "SpecificEpithet", type: "text", dwc: "dwc:specificEpithet" },
           { label: "Family", value: "Family", type: "text", dwc: "dwc:family" },
+          { label: "Valid Name", value: "ValidName", type: "text", dwc: "dwc:acceptedScientificName" },
+          { label: "Vernacular Name", value: "VernacularName", type: "text", dwc: "dwc:vernacularName" },
         ],
       },
       {
         label: "Occurrence",
         children: [
-          { label: "Catalog Number", value: "CatalogNumber", type: "number", dwc: "dwc:catalogNumber" },
+          { label: "Catalog Number", value: "CatalogNumber", type: "text", dwc: "dwc:catalogNumber" },
           { label: "Institution Code", value: "InstitutionCode", type: "text", dwc: "dwc:institutionCode" },
           { label: "Collection Code", value: "CollectionCode", type: "text", dwc: "dwc:collectionCode" },
           { label: "Individual Count", value: "IndividualCount", type: "number", dwc: "dwc:individualCount" },
           { label: "Preparation Type", value: "PreparationType", type: "text", dwc: "dwc:preparations" },
+          { label: "Type Status", value: "TypeStatus", type: "text", dwc: "dwc:typeStatus" },
+          { label: "Basis of Record", value: "BasisOfRecord", type: "text", dwc: "dwc:basisOfRecord" },
+          { label: "Recorded By", value: "RecordedBy", type: "text", dwc: "dwc:recordedBy" },
+          { label: "Year Collected", value: "YearCollected", type: "number", dwc: "dwc:year" },
+          { label: "Sex", value: "Sex", type: "text", dwc: "dwc:sex" },
+          { label: "Life Stage", value: "LifeStage", type: "text", dwc: "dwc:lifeStage" },
           { label: "Date Last Modified", value: "DateLastModified", type: "date", dwc: "dcterms:modified" },
           { label: "Remarks", value: "Remarks", type: "text", dwc: "dwc:occurrenceRemarks" },
         ],
@@ -176,10 +186,13 @@ export default {
       {
         label: "Location",
         children: [
+          { label: "Continent/Ocean", value: "ContinentOcean", type: "text", dwc: "dwc:continent" },
           { label: "Country", value: "Country", type: "text", dwc: "dwc:country" },
           { label: "State/Province", value: "StateProvince", type: "text", dwc: "dwc:stateProvince" },
           { label: "County", value: "County", type: "text", dwc: "dwc:county" },
+          { label: "Municipality", value: "Municipality", type: "text", dwc: "dwc:municipality" },
           { label: "Water Body", value: "WaterBody", type: "text", dwc: "dwc:waterBody" },
+          { label: "Habitat", value: "Habitat", type: "text", dwc: "dwc:habitat" },
           { label: "Island", value: "Island", type: "text", dwc: "dwc:island" },
           { label: "Island Group", value: "IslandGroup", type: "text", dwc: "dwc:islandGroup" },
           { label: "Locality", value: "Locality", type: "text", dwc: "dwc:locality" },
@@ -194,22 +207,37 @@ export default {
 
     const operatorsMap = {
       number: [">", "<", ">=", "<=", "=", "!="],
+      // Ordered by importance (everyday + intuitive first, power/technical last).
+      // `contains` stays the default (set in selectField); this only orders the
+      // dropdown so the operators most users need are at the top.
       text: [
         { value: "contains", label: "Contains" },
         { value: "=", label: "Exact Match" },
-        { value: "phrase", label: "Phrase Match" },
         { value: "prefix", label: "Starts With" },
-        { value: "wildcard", label: "Wildcard (*?)" },
         { value: "fuzzy", label: "Fuzzy" },
-        { value: "regexp", label: "Regex" },
+        { value: "phrase", label: "Phrase Match" },
         { value: "!=", label: "Not Equal" },
+        { value: "wildcard", label: "Wildcard (*?)" },
+        { value: "regexp", label: "Regex" },
+      ],
+      // date fields have no `.keyword`, so only range operators work (= / != would
+      // hit a non-existent keyword sub-field). Values must be ISO yyyy-MM-dd.
+      date: [
+        { value: ">=", label: "On or after" },
+        { value: "<=", label: "On or before" },
+        { value: ">", label: "After" },
+        { value: "<", label: "Before" },
       ],
     };
 
     const inputComponentsMap = {
       text: { component: "el-input", props: { placeholder: "Enter text" } },
       number: { component: "el-input", props: { type: "number", placeholder: "Enter number" } },
-      date: { component: "el-date-picker", props: { type: "daterange", placeholder: "Select date range" } },
+      // Reuse the native <input> render path with type=date — a raw date picker
+      // emits ISO yyyy-MM-dd, which the ES date field parses correctly (a bare
+      // yyyyMMdd string gets mis-read as epoch millis). The old "el-date-picker"
+      // value was never rendered (template only renders inputComponent==='el-input').
+      date: { component: "el-input", props: { type: "date", placeholder: "Select date" } },
     };
 
     const toggleExpanded = () => {
@@ -233,13 +261,15 @@ export default {
       condition.field = field.value;
       condition.fieldLabel = field.label;
       condition.fieldType = fieldType;
-      condition.showOperator = fieldType === "number" || fieldType === "text";
+      condition.showOperator = fieldType === "number" || fieldType === "text" || fieldType === "date";
       condition.availableOperators = operatorsMap[fieldType] || [];
 
       if (fieldType === "text") {
         condition.operator = "contains";
       } else if (fieldType === "number") {
         condition.operator = "=";
+      } else if (fieldType === "date") {
+        condition.operator = ">=";
       }
 
       condition.inputComponent = inputComponentsMap[fieldType]?.component || "el-input";
@@ -310,7 +340,14 @@ export default {
       editingIndex.value = null;
       searchQuery.value = "";
     };
-    expose({ clear });
+
+    // Remove one condition and re-run the search with what's left. Called by the
+    // parent's persistent conditions bar (issue #3) when a chip's × is clicked.
+    const removeConditionAt = (index) => {
+      conditions.value.splice(index, 1);
+      emitSearch();
+    };
+    expose({ clear, removeConditionAt });
 
     // Collapse the panel when clicking anywhere outside it.
     const handleClickOutside = (e) => {
@@ -402,7 +439,10 @@ export default {
   border: 1px solid #e0e0e0;
   border-radius: 6px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-  z-index: 100;
+  /* Must sit above the Analysis-view Leaflet map, whose panes/controls reach
+     z-index 400–1000 in the same root stacking context. 100 let the map paint
+     over this dropdown. 2000 matches Element Plus's popper range. */
+  z-index: 2000;
 }
 
 .panel-hint {

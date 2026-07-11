@@ -477,9 +477,11 @@ watch(() => props.yearBounds, (newBounds) => {
   }
 }, { deep: true });
 
-// Expose method to reset filters
+// Expose to parent: clear everything, or remove one facet value (keeps the
+// sidebar checkboxes in sync when a chip is removed from the conditions bar).
 defineExpose({
-  clearAllFilters
+  clearAllFilters,
+  removeFilter
 });
 </script>
 

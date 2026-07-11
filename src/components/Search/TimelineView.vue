@@ -240,8 +240,11 @@ const chartData = computed(() => {
 
 const xScale = (year) => {
   const years = chartData.value.map(d => d.year);
+  if (years.length === 0) return padding.left;
   const minYear = Math.min(...years);
   const maxYear = Math.max(...years);
+  // Single year (or all-same-year results): avoid 0/0 -> NaN; center the point.
+  if (maxYear === minYear) return (padding.left + (width - padding.right)) / 2;
   return padding.left + ((year - minYear) / (maxYear - minYear)) * (width - padding.left - padding.right);
 };
 
@@ -252,9 +255,12 @@ const yScale = (count) => {
 
 const xTicks = computed(() => {
   const years = chartData.value.map(d => d.year);
+  if (years.length === 0) return [];
   const minYear = Math.min(...years);
   const maxYear = Math.max(...years);
-  const step = Math.ceil((maxYear - minYear) / 8);
+  // Guard step >= 1: when all results are in one year, (max-min)/8 = 0 would make
+  // the loop below never advance and grow `ticks` until "Invalid array length".
+  const step = Math.max(1, Math.ceil((maxYear - minYear) / 8));
   const ticks = [];
   for (let y = minYear; y <= maxYear; y += step) {
     ticks.push(y);
@@ -263,8 +269,11 @@ const xTicks = computed(() => {
 });
 
 const yTicks = computed(() => {
-  const maxCount = Math.max(...chartData.value.map(d => d.count));
-  const step = Math.ceil(maxCount / 5 / 1000) * 1000;
+  const counts = chartData.value.map(d => d.count);
+  const maxCount = counts.length ? Math.max(...counts) : 0;
+  // Guard step >= 1000: when maxCount is 0 (or empty) the old step would be 0 and
+  // the loop would grow `ticks` forever ("Invalid array length").
+  const step = Math.max(1000, Math.ceil(maxCount / 5 / 1000) * 1000);
   const ticks = [];
   for (let i = 0; i <= maxCount; i += step) {
     ticks.push(i);

@@ -149,14 +149,33 @@ onUnmounted(() => {
 
 <style scoped>
 .carousel {
+  position: relative;
   max-width: 900px;
   margin: 0 auto;
+  padding: 88px 20px;
+}
+
+/* 通栏淡蓝绿色带 + 波浪分隔（与 Improvements 一致）*/
+.carousel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  margin-left: -50vw;
+  z-index: -1;
+  background:
+    url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201440%2048'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23ffffff'%20d='M0,0%20H1440%20V22%20C1140,46%20900,8%20600,24%20C372,36%20168,32%200,22%20Z'/%3E%3C/svg%3E") top center / 100% 48px no-repeat,
+    url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201440%2048'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23ffffff'%20d='M0,48%20H1440%20V26%20C1140,2%20900,40%20600,24%20C372,12%20168,16%200,26%20Z'/%3E%3C/svg%3E") bottom center / 100% 48px no-repeat,
+    linear-gradient(135deg, #eef5fb 0%, #edf6f0 100%);
 }
 
 .carousel-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: #2c3e50;
+  font-size: clamp(1.4rem, 3vw, 1.6rem);
+  font-weight: 700;
+  color: #16232e;
+  letter-spacing: -0.02em;
   text-align: center;
   margin: 0 0 20px 0;
 }
@@ -172,9 +191,9 @@ onUnmounted(() => {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  border: 1px solid #ddd;
-  background: white;
-  color: #666;
+  border: none;
+  background: #f4f8fc;
+  color: #2c7cb9;
   font-size: 20px;
   cursor: pointer;
   display: flex;
@@ -184,28 +203,17 @@ onUnmounted(() => {
 }
 
 .carousel-arrow:hover {
-  border-color: #3498db;
-  color: #3498db;
-  background: #f0f7ff;
+  background: #e9f1f9;
+  color: #1f6fb2;
 }
 
 .carousel-slide {
   flex: 1;
   display: flex;
-  gap: 24px;
-  background: white;
-  border: 1px solid #e9ecef;
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  gap: 28px;
+  padding: 8px 2px;
   cursor: pointer;
-  transition: box-shadow 0.2s, transform 0.2s;
   min-height: 200px;
-}
-
-.carousel-slide:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
 }
 
 .slide-image {
@@ -230,7 +238,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #e8f0fe 0%, #d4e4fc 100%);
-  color: #3498db;
+  color: #2c7cb9;
   font-size: 28px;
   font-weight: 700;
   letter-spacing: 2px;
@@ -246,14 +254,14 @@ onUnmounted(() => {
 .slide-name {
   font-size: 17px;
   font-weight: 600;
-  color: #2c3e50;
+  color: #16232e;
   margin: 0 0 10px 0;
 }
 
 .slide-summary {
   font-size: 14px;
   line-height: 1.7;
-  color: #555;
+  color: #566672;
   margin: 0 0 auto 0;
   display: -webkit-box;
   -webkit-line-clamp: 5;
@@ -263,7 +271,7 @@ onUnmounted(() => {
 
 .slide-link {
   font-size: 13px;
-  color: #3498db;
+  color: #2c7cb9;
   font-weight: 500;
   margin-top: 12px;
 }
@@ -288,7 +296,7 @@ onUnmounted(() => {
 }
 
 .dot.active {
-  background: #3498db;
+  background: #2c7cb9;
   transform: scale(1.3);
 }
 

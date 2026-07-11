@@ -3,7 +3,7 @@
     <div class="error-container">
       <div class="error-icon">
         <svg viewBox="0 0 24 24" width="80" height="80">
-          <path fill="#6c757d" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+          <path fill="#94a3b8" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
         </svg>
       </div>
       <h1 class="error-title">Page Not Found</h1>
@@ -44,14 +44,15 @@ export default {
 
 .error-title {
   font-size: 2.5rem;
-  color: #6c757d;
+  color: #16232e;
   margin-bottom: 1rem;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .error-message {
   font-size: 1.125rem;
-  color: #666;
+  color: #566672;
   margin-bottom: 2rem;
   line-height: 1.6;
 }
@@ -65,12 +66,12 @@ export default {
 
 .btn-primary, .btn-secondary {
   padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 500;
+  border-radius: 10px;
+  font-weight: 600;
   text-decoration: none;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.18s ease, transform 0.18s ease;
 }
 
 .btn-primary {
@@ -84,12 +85,12 @@ export default {
 }
 
 .btn-secondary {
-  background: #6c757d;
-  color: white;
+  background: #eef3f8;
+  color: #33546e;
 }
 
 .btn-secondary:hover {
-  background: #545b62;
+  background: #e2ebf3;
   transform: translateY(-1px);
 }
 </style>
