@@ -1,13 +1,14 @@
 <template>
   <div class="dashboard">
-    <!-- Sidebar -->
-    <div class="sidebar">
+    <!-- Sidebar (off-canvas drawer on mobile) -->
+    <div class="sidebar" :class="{ open: drawerOpen }">
       <div class="sidebar-header">
         <div class="logo">FishNet 2</div>
         <div class="user-info">Dr. Henry Bart</div>
+        <div class="drawer-close" @click="drawerOpen = false" aria-label="Close menu">&times;</div>
       </div>
-      
-      <ul class="sidebar-menu">
+
+      <ul class="sidebar-menu" @click="drawerOpen = false">
         <li :class="{ active: activeMenu === 'dashboard' }" @click="activeMenu = 'dashboard'">Dashboard</li>
         <li @click="activeMenu = 'search'">Search & Browse</li>
         <li @click="activeMenu = 'interests'">My Interests</li>
@@ -18,10 +19,16 @@
       </ul>
     </div>
 
+    <!-- Drawer overlay (mobile only) -->
+    <div v-if="drawerOpen" class="drawer-overlay" @click="drawerOpen = false"></div>
+
     <!-- Main Content -->
     <div class="main-content">
       <div class="header">
-        <h1 class="page-title">User Dashboard</h1>
+        <div class="header-left">
+          <button class="drawer-toggle" @click="drawerOpen = true" aria-label="Open menu">&#9776;</button>
+          <h1 class="page-title">User Dashboard</h1>
+        </div>
         <div class="header-actions">
           <button class="secondary-button">Export Data</button>
           <button class="button">New Search</button>
@@ -263,11 +270,21 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import * as echarts from 'echarts'
 
 // Reactive data
 const activeMenu = ref('dashboard')
+const drawerOpen = ref(false) // mobile sidebar drawer
+
+// Close the mobile drawer when the viewport grows back to desktop, otherwise
+// its leftover overlay (no longer position:fixed above 900px) would sit in the
+// normal flow and push the content down.
+const closeDrawerOnDesktop = () => {
+  if (window.innerWidth > 900) drawerOpen.value = false
+}
+onMounted(() => window.addEventListener('resize', closeDrawerOnDesktop))
+onUnmounted(() => window.removeEventListener('resize', closeDrawerOnDesktop))
 const searchQuery = ref('')
 const showFlagModal = ref(false)
 const selectedFlag = ref(null)
@@ -640,10 +657,58 @@ onMounted(() => {
   position: static;
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .page-title {
   font-size: 24px;
   font-weight: bold;
   margin: 0;
+}
+
+/* Hamburger + drawer close: hidden on desktop, shown inside the mobile @media.
+   Borderless icon buttons so they sit quietly in the header/sidebar. */
+.drawer-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  margin-left: -6px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  font-size: 22px;
+  line-height: 1;
+  color: #2c3e50;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.drawer-toggle:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.drawer-close {
+  display: none;
+  cursor: pointer;
+  font-size: 26px;
+  line-height: 1;
+  color: #ecf0f1;
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+}
+
+.drawer-close:hover {
+  opacity: 1;
+}
+
+.drawer-overlay {
+  display: none;
 }
 
 .header-actions {
@@ -1282,31 +1347,59 @@ onMounted(() => {
 }
 
 /* Responsive (2026-07-11): the dashboard had no @media at all — the fixed
-   240px sidebar + multi-column grids overflowed on tablet/phone. Collapse the
-   sidebar to a top strip with a horizontal menu and stack the content. */
+   240px sidebar + multi-column grids overflowed on phone/tablet. On mobile the
+   sidebar becomes an off-canvas drawer (hamburger opens, overlay closes) and
+   the content collapses to a single column. */
 @media (max-width: 900px) {
   .dashboard {
     grid-template-columns: 1fr;
   }
+  .drawer-toggle {
+    display: inline-flex;
+  }
+  /* Sidebar is taken out of flow so it can no longer stretch the layout past
+     the viewport; it slides in from the left when opened. */
   .sidebar {
-    padding: 12px 0 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 260px;
+    max-width: 82vw;
+    padding: 20px 0;
+    z-index: 1200;
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
   }
-  .sidebar-menu {
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    gap: 4px;
-    margin: 12px 0 0;
-    padding: 0 12px 8px;
-    -webkit-overflow-scrolling: touch;
+  .sidebar.open {
+    transform: translateX(0);
+    box-shadow: 2px 0 16px rgba(0, 0, 0, 0.28);
   }
-  .sidebar-menu li {
-    white-space: nowrap;
-    border-radius: 6px;
-    padding: 8px 14px;
+  .sidebar-header {
+    position: relative;
+  }
+  .drawer-close {
+    display: block;
+    position: absolute;
+    top: -2px;
+    right: 16px;
+  }
+  .drawer-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 1100;
   }
   .panels-grid {
     grid-template-columns: 1fr;
+  }
+  /* Single-column grid: reset the span-2/3 panels so they don't synthesize
+     implicit columns that widen the page. */
+  .panel-full-width,
+  .panel-double-width {
+    grid-column: auto;
   }
   .main-content {
     padding: 16px;

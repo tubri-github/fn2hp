@@ -11,6 +11,8 @@
           <span>Drainages</span>
         </label>
         <select v-model="selectedBaseMap" class="filter-select" @change="changeBaseMap">
+          <option value="world-topo">Topographic (detailed rivers)</option>
+          <option value="natgeo">National Geographic</option>
           <option value="google-roadmap">Google Roadmap</option>
           <option value="google-satellite">Google Satellite</option>
           <option value="google-hybrid">Google Hybrid</option>
@@ -102,7 +104,7 @@ const props = defineProps({
 });
 
 const mapContainer = ref(null);
-const selectedBaseMap = ref('google-roadmap');
+const selectedBaseMap = ref('world-topo');
 
 let map = null;
 let markersLayer = null;   // L.heatLayer instance (low zoom)
@@ -288,6 +290,26 @@ const getPointRadius = (count, maxCount) => {
 
 const getTileConfig = (mapType) => {
   switch (mapType) {
+    case 'world-topo':
+      // Esri World Topo: the most detailed water network — small tributaries
+      // stay visible when zoomed in, with full land coverage (native tiles to
+      // z23). Trade-off vs NatGeo is more roads.
+      return {
+        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+        attribution: 'Tiles &copy; Esri &mdash; Esri, USGS, NOAA',
+        maxZoom: 19
+      };
+    case 'natgeo':
+      // National Geographic World Map (Esri): one basemap that already draws
+      // rivers/water, coastlines, country borders, terrain and place names —
+      // ideal for fish distributions. Native tiles stop at z16, so let Leaflet
+      // upscale them past that instead of showing blank tiles when zoomed in.
+      return {
+        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}',
+        attribution: 'Tiles &copy; Esri &mdash; National Geographic, Esri, USGS, NOAA',
+        maxZoom: 19,
+        maxNativeZoom: 16
+      };
     case 'google-roadmap':
       return { url: 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', attribution: '© Google Maps', maxZoom: 20 };
     case 'google-satellite':
@@ -314,6 +336,7 @@ const changeBaseMap = () => {
   baseMapLayer = L.tileLayer(config.url, {
     attribution: config.attribution,
     maxZoom: config.maxZoom,
+    maxNativeZoom: config.maxNativeZoom,
     subdomains: config.subdomains || 'abc'
   });
   baseMapLayer.addTo(map);
@@ -368,6 +391,7 @@ const initMap = async () => {
     baseMapLayer = L.tileLayer(config.url, {
       attribution: config.attribution,
       maxZoom: config.maxZoom,
+      maxNativeZoom: config.maxNativeZoom,
       subdomains: config.subdomains || 'abc'
     });
     baseMapLayer.addTo(map);
