@@ -99,15 +99,24 @@ export default {
         const savedRedirectUrl = localStorage.getItem(authClient.config.storageKeys.redirectUrl)
         localStorage.removeItem(authClient.config.storageKeys.redirectUrl)
 
+        // router.push 的路径不带 base 前缀，这里先把它剥掉
+        const base = import.meta.env.BASE_URL // 结尾带 '/'
+        const stripBase = (path) => {
+          if (base !== '/' && path.startsWith(base)) {
+            path = '/' + path.slice(base.length)
+          }
+          return path || '/'
+        }
+
         let redirectPath = '/'
         if (savedRedirectUrl) {
           try {
             // 如果是完整URL，提取pathname
             const url = new URL(savedRedirectUrl)
-            redirectPath = url.pathname === '/dist/' ? '/' : url.pathname
+            redirectPath = stripBase(url.pathname)
           } catch {
             // 如果不是完整URL，直接使用
-            redirectPath = savedRedirectUrl === '/dist/' ? '/' : savedRedirectUrl
+            redirectPath = stripBase(savedRedirectUrl)
           }
         }
 

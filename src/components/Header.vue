@@ -1,12 +1,12 @@
 <template>
   <header class="header">
-    <a href="/dist/" class="logo">
+    <a :href="baseUrl" class="logo">
       <img src="@/assets/fishnet-logo.png" alt="FishNet Next" />
     </a>
 
     <!-- 桌面导航：扁平 + 下划线，无套框 -->
     <nav class="nav nav-desktop">
-      <a href="/dist/" class="nav-link">HOME</a>
+      <a :href="baseUrl" class="nav-link">HOME</a>
       <router-link to="/about" class="nav-link">ABOUT</router-link>
       <router-link to="/search" class="nav-link">SEARCH</router-link>
 
@@ -92,7 +92,7 @@
     </Teleport>
     <transition name="drawer-slide">
       <nav v-if="mobileOpen" class="nav-mobile">
-        <a href="/dist/" class="m-link" @click="closeMobile">Home</a>
+        <a :href="baseUrl" class="m-link" @click="closeMobile">Home</a>
         <router-link to="/about" class="m-link" @click="closeMobile">About</router-link>
         <router-link to="/search" class="m-link" @click="closeMobile">Search</router-link>
 
@@ -164,7 +164,8 @@ export default {
       canAccessUserDashboard,
       mobileOpen,
       mobileBrowseOpen,
-      closeMobile
+      closeMobile,
+      baseUrl: import.meta.env.BASE_URL
     }
   },
   data() {

@@ -143,7 +143,7 @@ class AuthClient {
 
     // 构建SSO登录URL - 重定向到认证中心
     const params = new URLSearchParams({
-      redirect_uri: `${window.location.origin}${import.meta.env.PROD ? '/dist' : ''}/gate/callback`,
+      redirect_uri: `${window.location.origin}${import.meta.env.BASE_URL}gate/callback`,
       project: this.config.projectCode,
       state: state
     })
@@ -202,7 +202,7 @@ class AuthClient {
     } finally {
       this.clearAuth()
       // 刷新页面或跳转到首页
-      window.location.href = import.meta.env.PROD ? '/dist/' : '/'
+      window.location.href = import.meta.env.BASE_URL
     }
   }
 
